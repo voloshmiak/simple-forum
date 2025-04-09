@@ -1,0 +1,9 @@
+<h1>Posts</h1>
+{{range .}}
+    <div>
+        Author: {{.Author}}<br>
+        <a href="http://localhost:8090/posts/{{.ID}}">{{.Name}}</a><br>
+        Was posted: <small>{{.CreatedOn}}</small>
+    </div>
+    <br>
+{{end}}
