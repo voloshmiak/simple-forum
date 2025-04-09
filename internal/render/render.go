@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 )
 
-var templatesPath string = "../../internal/web/templates/"
-
 type Renderer struct {
 	templateCache map[string]*template.Template
 	logger        *zap.SugaredLogger
@@ -58,7 +56,10 @@ func (r *Renderer) RenderTemplate(rw http.ResponseWriter, tmpl string, data any)
 func (r *Renderer) createTemplateCache() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
-	pages, err := filepath.Glob(templatesPath + "*.page.gohtml")
+	// getting path to templates
+	templatesPath := filepath.Join("..", "..", "internal", "web", "templates")
+
+	pages, err := filepath.Glob(templatesPath + "\\*.page.gohtml")
 	if err != nil {
 		return nil, err
 	}
@@ -70,14 +71,14 @@ func (r *Renderer) createTemplateCache() (map[string]*template.Template, error) 
 			return nil, err
 		}
 
-		matches, err := filepath.Glob(templatesPath + "*.layout.gohtml")
+		matches, err := filepath.Glob(templatesPath + "\\*.layout.gohtml")
 
 		if err != nil {
 			return nil, err
 		}
 
 		if len(matches) > 0 {
-			tmpl, err = tmpl.ParseGlob(templatesPath + "*.layout.gohtml")
+			tmpl, err = tmpl.ParseGlob(templatesPath + "\\*.layout.gohtml")
 			if err != nil {
 				return nil, err
 			}
