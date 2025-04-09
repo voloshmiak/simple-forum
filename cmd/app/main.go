@@ -45,6 +45,6 @@ func main() {
 	// running
 	err := server.ListenAndServe()
 	if err != nil {
-		logger.Error("Error listening and serving ", err)
+		logger.Fatal("Error listening and serving ", err)
 	}
 }
