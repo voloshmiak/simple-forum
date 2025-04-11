@@ -1,63 +1,62 @@
 package render
 
 import (
-	"go.uber.org/zap"
+	"errors"
 	"html/template"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
 type Renderer struct {
 	templateCache map[string]*template.Template
-	logger        *zap.SugaredLogger
-	Debug         bool
 }
 
-func NewRenderer(logger *zap.SugaredLogger) *Renderer {
+func NewRenderer() (*Renderer, error) {
 	r := &Renderer{
 		templateCache: make(map[string]*template.Template),
-		logger:        logger,
 	}
-	r.InitTemplates()
-	return r
+	err := r.InitTemplates()
+	return r, err
 }
 
-func (r *Renderer) InitTemplates() {
+func (r *Renderer) InitTemplates() error {
 	tc, err := r.createTemplateCache()
 	r.templateCache = tc
-	if err != nil {
-		r.logger.Fatal("init templates failed", "err", err)
-	}
+	return err
 }
 
-func (r *Renderer) RenderTemplate(rw http.ResponseWriter, tmpl string, data any) {
+func (r *Renderer) RenderTemplate(rw http.ResponseWriter, tmpl string, data any) error {
 	// if in debug mode
-	if r.Debug {
-		r.InitTemplates()
+	if os.Getenv("DEBUG_MODE") == "true" {
+		err := r.InitTemplates()
+		if err != nil {
+			return err
+		}
 	}
 
 	// get requested template
 	rt, ok := r.templateCache[tmpl+".gohtml"]
 	if !ok {
 		http.Error(rw, tmpl+".gohtml not found", http.StatusNotFound)
-		r.logger.Error(tmpl + ".gohtml not found")
-		return
+		return errors.New(tmpl + ".gohtml not found")
 	}
 
 	// render template
 	err := rt.Execute(rw, data)
 	if err != nil {
 		http.Error(rw, tmpl+".gohtml failed to render", http.StatusInternalServerError)
-		r.logger.Error(tmpl+".gohtml failed to render", "err", err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func (r *Renderer) createTemplateCache() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
 	// getting path to templates
-	templatesPath := filepath.Join("..", "..", "internal", "web", "templates")
+	templatesPath := filepath.Join("internal", "web", "templates")
 
 	pages, err := filepath.Glob(templatesPath + "\\*.page.gohtml")
 	if err != nil {

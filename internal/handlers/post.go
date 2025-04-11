@@ -3,17 +3,17 @@ package handlers
 import (
 	"forum-project/internal/models"
 	"forum-project/internal/render"
-	"go.uber.org/zap"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
 
 type PostHandler struct {
-	logger   *zap.SugaredLogger
+	logger   *slog.Logger
 	renderer *render.Renderer
 }
 
-func NewPostHandler(logger *zap.SugaredLogger, renderer *render.Renderer) *PostHandler {
+func NewPostHandler(logger *slog.Logger, renderer *render.Renderer) *PostHandler {
 	return &PostHandler{logger, renderer}
 }
 
@@ -35,7 +35,10 @@ func (p *PostHandler) GetPosts(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.renderer.RenderTemplate(rw, "posts.page", posts)
+	err = p.renderer.RenderTemplate(rw, "posts.page", posts)
+	if err != nil {
+		p.logger.Error("Unable to render template", err)
+	}
 }
 
 func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
@@ -55,5 +58,8 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.renderer.RenderTemplate(rw, "post.page", post)
+	err = p.renderer.RenderTemplate(rw, "post.page", post)
+	if err != nil {
+		p.logger.Error("Unable to render template", err)
+	}
 }

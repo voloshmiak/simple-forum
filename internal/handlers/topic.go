@@ -4,17 +4,17 @@ import (
 	"errors"
 	"forum-project/internal/models"
 	"forum-project/internal/render"
-	"go.uber.org/zap"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
 
 type TopicHandler struct {
-	logger   *zap.SugaredLogger
+	logger   *slog.Logger
 	renderer *render.Renderer
 }
 
-func NewTopicHandler(logger *zap.SugaredLogger, renderer *render.Renderer) *TopicHandler {
+func NewTopicHandler(logger *slog.Logger, renderer *render.Renderer) *TopicHandler {
 	return &TopicHandler{logger, renderer}
 }
 
@@ -23,7 +23,10 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 
 	topics := models.GetTopics()
 
-	t.renderer.RenderTemplate(rw, "topics.page", topics)
+	err := t.renderer.RenderTemplate(rw, "topics.page", topics)
+	if err != nil {
+		t.logger.Error("Unable to render template", err)
+	}
 }
 
 func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
@@ -43,6 +46,9 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t.renderer.RenderTemplate(rw, "topic.page", topic)
+	err = t.renderer.RenderTemplate(rw, "topic.page", topic)
+	if err != nil {
+		t.logger.Error("Unable to render template", err)
+	}
 
 }
