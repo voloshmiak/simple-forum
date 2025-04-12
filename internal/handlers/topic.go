@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"forum-project/internal/models"
 	"forum-project/internal/render"
 	"log/slog"
@@ -19,18 +20,18 @@ func NewTopicHandler(logger *slog.Logger, renderer *render.Renderer) *TopicHandl
 }
 
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Info("Handle GET Topics")
 
 	topics := models.GetTopics()
 
 	err := t.renderer.RenderTemplate(rw, "topics.page", topics)
 	if err != nil {
-		t.logger.Error("Unable to render template", err)
+		t.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
 	}
 }
 
 func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
-	t.logger.Info("Handle GET Topic")
+
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 
@@ -41,14 +42,15 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 
 	topic, err := models.FindTopic(id)
 	if errors.Is(err, models.TopicNotFoundError) {
-		t.logger.Error("Topic not found", err)
-		http.Error(rw, "Topic not found", http.StatusNotFound)
+		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
+		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
 		return
 	}
 
 	err = t.renderer.RenderTemplate(rw, "topic.page", topic)
 	if err != nil {
-		t.logger.Error("Unable to render template", err)
+		t.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
 	}
 
 }

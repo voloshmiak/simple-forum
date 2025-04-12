@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/handlers"
+	"forum-project/internal/middleware"
 	"forum-project/internal/render"
 	"github.com/joho/godotenv"
 	"log/slog"
@@ -69,7 +70,7 @@ func main() {
 	// server configuration
 	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
-		Handler:      mux,
+		Handler:      middleware.Logging(mux, logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
