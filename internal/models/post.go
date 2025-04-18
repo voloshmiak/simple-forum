@@ -8,11 +8,12 @@ import (
 
 type Post struct {
 	ID        int    `json:"id"`
-	Name      string `json:"title"`
+	Title     string `json:"title"`
 	Content   string `json:"content"`
-	Author    string `json:"author"`
-	TopicID   int    `json:"topic_id"`
-	CreatedOn string `json:"created_on"`
+	AuthorId  string `json:"author"`
+	TopicId   int    `json:"topic_id"`
+	CreatedAt string `json:"created_on"`
+	UpdatedAt string `json:"updated_on"`
 }
 
 type Posts []*Post

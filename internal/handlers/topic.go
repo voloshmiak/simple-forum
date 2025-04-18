@@ -54,3 +54,9 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {}
+
+func (t *TopicHandler) UpdateTopic(rw http.ResponseWriter, r *http.Request) {}
+
+func (t *TopicHandler) DeleteTopic(rw http.ResponseWriter, r *http.Request) {}

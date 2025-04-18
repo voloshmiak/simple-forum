@@ -2,8 +2,11 @@
 {{range .}}
     <div>
         Author: {{.Author}}<br>
-        <a href="http://localhost:8090/posts/{{.ID}}">{{.Name}}</a><br>
+        <a href="/posts/{{.ID}}">{{.Name}}</a><br>
         Was posted: <small>{{.CreatedOn}}</small>
     </div>
     <br>
 {{end}}
+<form action="/posts" method="post">
+    <input type="submit">
+</form>

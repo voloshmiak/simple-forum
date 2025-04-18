@@ -64,3 +64,9 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
 	}
 }
+
+func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {}
+
+func (p *PostHandler) UpdatePost(rw http.ResponseWriter, r *http.Request) {}
+
+func (p *PostHandler) DeletePost(rw http.ResponseWriter, r *http.Request) {}
