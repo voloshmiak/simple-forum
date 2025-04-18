@@ -11,7 +11,7 @@ type Topic struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	CreatedAt   string  `json:"created_at"`
-	CreatedBy   string  `json:"created_by"`
+	AuthorId    string  `json:"author_id"`
 	Posts       []*Post `json:"posts"`
 }
 
