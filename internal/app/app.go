@@ -2,11 +2,15 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
 	"forum-project/internal/render"
+	"forum-project/internal/repository"
+	"forum-project/internal/service"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
@@ -36,6 +40,21 @@ func Run() {
 		os.Exit(1)
 	}
 
+	// initialize db
+	conn, err := sql.Open("pgx", fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s",
+		os.Getenv("HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"), os.Getenv("USER"), os.Getenv("PASSWORD")))
+	if err != nil {
+		logger.Error("Failed to connect to database", err)
+		os.Exit(1)
+	}
+	defer conn.Close()
+
+	// initialize repositories
+	postRepository := repository.NewPostRepository(conn)
+
+	// initialize services
+	postService := service.NewPostService(postRepository)
+
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
@@ -43,12 +62,12 @@ func Run() {
 
 	// initialize handlers
 	th := handlers.NewTopicHandler(logger, renderer)
-	ph := handlers.NewPostHandler(logger, renderer)
+	ph := handlers.NewPostHandler(logger, renderer, postService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics/", th.GetTopics)
 	mux.HandleFunc("GET /topics/{id}", th.GetTopic)
-	mux.HandleFunc("GET /topics/{id}/posts/", ph.GetPosts)
+	// mux.HandleFunc("GET /topics/{id}/posts/", ph.GetPosts)
 	mux.HandleFunc("GET /posts/{id}", ph.GetPost)
 
 	// authorized users routing
