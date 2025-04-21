@@ -1,0 +1,12 @@
+<h1>Posts</h1>
+{{range .}}
+    <div>
+        Author: {{.AuthorId}}<br>
+        <a href="/posts/{{.ID}}">{{.Title}}</a><br>
+        Was posted: <small>{{.CreatedAt}}</small>
+    </div>
+    <br>
+{{end}}
+<form action="/posts" method="post">
+    <input type="submit">
+</form>

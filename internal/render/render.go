@@ -56,7 +56,7 @@ func (r *Renderer) createTemplateCache() (map[string]*template.Template, error) 
 	myCache := map[string]*template.Template{}
 
 	// getting path to templates
-	templatesPath := filepath.Join("internal", "web", "templates")
+	templatesPath := filepath.Join("web", "templates")
 
 	pages, err := filepath.Glob(templatesPath + "\\*.page.gohtml")
 	if err != nil {

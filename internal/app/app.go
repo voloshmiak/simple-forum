@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -16,25 +16,7 @@ import (
 	"time"
 )
 
-func gracefulShutdown(server *http.Server, logger *slog.Logger, done chan bool) {
-	// wait for interruption
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-	<-ctx.Done()
-
-	logger.Info("Shutting down server gracefully")
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logger.Error(fmt.Sprintf("Server forced to shutdown: %s", err))
-	}
-
-	done <- true
-}
-
-func main() {
+func Run() {
 	// initialize logger
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -107,4 +89,22 @@ func main() {
 	// wait for graceful shutdown to complete
 	<-done
 	logger.Info("Server shutdown complete")
+}
+
+func gracefulShutdown(server *http.Server, logger *slog.Logger, done chan bool) {
+	// wait for interruption
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
+
+	logger.Info("Shutting down server gracefully")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Error(fmt.Sprintf("Server forced to shutdown: %s", err))
+	}
+
+	done <- true
 }
