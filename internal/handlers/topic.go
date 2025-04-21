@@ -1,36 +1,39 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
-	"forum-project/internal/models"
 	"forum-project/internal/render"
+	"forum-project/internal/service"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
 type TopicHandler struct {
-	logger   *slog.Logger
-	renderer *render.Renderer
+	logger       *slog.Logger
+	renderer     *render.Renderer
+	topicService *service.TopicService
 }
 
-func NewTopicHandler(logger *slog.Logger, renderer *render.Renderer) *TopicHandler {
-	return &TopicHandler{logger, renderer}
+func NewTopicHandler(logger *slog.Logger, renderer *render.Renderer, topicService *service.TopicService) *TopicHandler {
+	return &TopicHandler{logger, renderer, topicService}
 }
 
-func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
+func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
 
-	topics := models.GetTopics()
+	topics, err := t.topicService.GetAllTopics()
+	if err != nil {
+		t.logger.Error(err.Error())
+	}
 
-	err := t.renderer.RenderTemplate(rw, "topics.page", topics)
+	err = t.renderer.RenderTemplate(rw, "topics.page", topics)
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
 	}
 }
 
-func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
+func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
@@ -40,8 +43,8 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topic, err := models.FindTopic(id)
-	if errors.Is(err, models.TopicNotFoundError) {
+	topic, err := t.topicService.GetTopicByID(id)
+	if err != nil {
 		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
 		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
 		return

@@ -13,10 +13,18 @@ func NewPostService(repository *repository.PostRepository) *PostService {
 	return &PostService{repository: repository}
 }
 
-func (p *PostService) GetPost(userID int) (*models.Post, error) {
-	post, err := p.repository.GetPost(userID)
+func (p *PostService) GetPostByID(userID int) (*models.Post, error) {
+	post, err := p.repository.GetPostByID(userID)
 	if err != nil {
 		return nil, err
 	}
 	return post, nil
+}
+
+func (p *PostService) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
+	posts, err := p.repository.GetPostsByTopicID(topicID)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
