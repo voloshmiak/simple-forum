@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (app *App) initServer() {
+func (app *App) setupServer() {
 	// server configuration
 	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
