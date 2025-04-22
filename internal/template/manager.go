@@ -12,14 +12,14 @@ type Manager struct {
 	debugMode bool
 }
 
-func NewManager(debugMode bool) (*Manager, error) {
+func NewManager() (*Manager, error) {
 	templates, err := parseTemplates()
 	if err != nil {
 		return nil, err
 	}
 	r := &Manager{
 		templates: templates,
-		debugMode: debugMode,
+		debugMode: true,
 	}
 	return r, nil
 }

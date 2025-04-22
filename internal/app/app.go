@@ -46,7 +46,7 @@ func New() *App {
 	}
 
 	// initialize template manager
-	templatesManager, err := template.NewManager(true)
+	templatesManager, err := template.NewManager()
 	if err != nil {
 		app.logger.Error("Failed to create renderer", err)
 		os.Exit(1)
