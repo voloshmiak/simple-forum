@@ -14,7 +14,7 @@ func NewTopicRepository(conn *sql.DB) *TopicRepository {
 }
 
 func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
-	query := "SELECT id, name, description, created_at, author_id FROM topics"
+	query := `SELECT * FROM topics`
 
 	rows, err := t.conn.Query(query)
 	if err != nil {
@@ -43,7 +43,7 @@ func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
 }
 
 func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
-	query := `SELECT id, name, description, created_at, author_id FROM topics WHERE id = $1`
+	query := `SELECT * FROM topics WHERE id = $1`
 
 	topic := models.NewTopic()
 

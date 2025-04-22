@@ -14,7 +14,7 @@ func NewPostRepository(conn *sql.DB) *PostRepository {
 }
 
 func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
-	query := "SELECT * FROM posts WHERE topic_id = $1"
+	query := `SELECT * FROM posts WHERE topic_id = $1`
 
 	rows, err := p.conn.Query(query, topicID)
 	if err != nil {
@@ -29,10 +29,10 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 			&post.ID,
 			&post.Title,
 			&post.Content,
+			&post.AuthorId,
+			&post.TopicId,
 			&post.CreatedAt,
 			&post.UpdatedAt,
-			&post.TopicId,
-			&post.AuthorId,
 		)
 		if err != nil {
 			return nil, err
@@ -43,7 +43,7 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 }
 
 func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
-	query := `select id, title, content, author_id, topic_id, created_at, updated_at from posts where id = $1`
+	query := `SELECT * FROM posts WHERE id = $1`
 
 	post := models.NewPost()
 
