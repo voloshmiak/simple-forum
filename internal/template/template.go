@@ -16,10 +16,7 @@ func NewManager() (*Manager, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := &Manager{
-		templates: templates,
-	}
-	return r, nil
+	return &Manager{templates: templates}, nil
 }
 
 func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
