@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (app *App) registerRoutes() {
+func (app *App) initRouter() {
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()

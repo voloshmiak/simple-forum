@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/database"
+	"forum-project/internal/middleware"
 	"forum-project/internal/repository"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
@@ -32,51 +33,66 @@ type App struct {
 func New() *App {
 	app := &App{}
 
-	// initialize logger
+	app.initLogger()
+	app.loadEnviroment()
+	app.initTemplates()
+	app.initDatabase()
+	app.initServices()
+	app.initRouter()
+	app.initServer()
+
+	return app
+}
+
+func (app *App) initLogger() {
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
-	app.logger = logger
+	app.logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
+}
 
-	// initialize environment variables
+func (app *App) loadEnviroment() {
 	if err := godotenv.Load(".env"); err != nil {
 		app.logger.Error("Failed to load .env file")
 		os.Exit(1)
 	}
+}
 
-	// initialize template manager
+func (app *App) initTemplates() {
 	templateManager, err := template.NewManager()
 	if err != nil {
 		app.logger.Error("Failed to create renderer", err)
 		os.Exit(1)
 	}
 	app.templates = templateManager
+}
 
-	// initialize db
+func (app *App) initDatabase() {
 	conn, err := database.Init()
 	if err != nil {
 		app.logger.Error("Failed to init database", err)
 		os.Exit(1)
 	}
 	app.database = conn
+}
 
+func (app *App) initServices() {
 	// initialize repositories
 	postRepository := repository.NewPostRepository(app.database)
 	topicRepository := repository.NewTopicRepository(app.database)
 
-	// initialize services
-	postService := service.NewPostService(postRepository)
-	app.postService = postService
+	app.postService = service.NewPostService(postRepository)
+	app.topicService = service.NewTopicService(topicRepository)
+}
 
-	topicService := service.NewTopicService(topicRepository)
-	app.topicService = topicService
-
-	app.registerRoutes()
-
-	app.setupServer()
-
-	return app
+func (app *App) initServer() {
+	app.server = &http.Server{
+		Addr:         ":" + os.Getenv("PORT"),
+		Handler:      middleware.Logging(app.mux, app.logger),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
 }
 
 func (app *App) gracefulShutdown(done chan bool) {
