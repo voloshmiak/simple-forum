@@ -41,7 +41,7 @@ func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
 }
 
 func parseTemplates() (map[string]*template.Template, error) {
-	myCache := map[string]*template.Template{}
+	templates := map[string]*template.Template{}
 
 	// getting path to templates
 	templatesPath := filepath.Join("web", "templates")
@@ -71,8 +71,8 @@ func parseTemplates() (map[string]*template.Template, error) {
 			}
 		}
 
-		myCache[name] = tmpl
+		templates[name] = tmpl
 	}
 
-	return myCache, nil
+	return templates, nil
 }
