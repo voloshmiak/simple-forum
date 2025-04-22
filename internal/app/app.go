@@ -72,7 +72,7 @@ func New() *App {
 
 	app.registerRoutes(renderer)
 
-	app.initServer()
+	app.setupServer()
 
 	return app
 }
