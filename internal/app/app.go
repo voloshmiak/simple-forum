@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/database"
-	"forum-project/internal/render"
 	"forum-project/internal/repository"
 	"forum-project/internal/service"
+	"forum-project/internal/template"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"log/slog"
@@ -24,6 +24,7 @@ type App struct {
 	database     *sql.DB
 	mux          *http.ServeMux
 	server       *http.Server
+	templates    *template.Manager
 	topicService *service.TopicService
 	postService  *service.PostService
 }
@@ -44,12 +45,13 @@ func New() *App {
 		os.Exit(1)
 	}
 
-	// initialize renderer
-	renderer, err := render.NewRenderer()
+	// initialize template manager
+	templatesManager, err := template.NewManager(true)
 	if err != nil {
 		app.logger.Error("Failed to create renderer", err)
 		os.Exit(1)
 	}
+	app.templates = templatesManager
 
 	// initialize db
 	conn, err := database.Init()
@@ -70,7 +72,7 @@ func New() *App {
 	topicService := service.NewTopicService(topicRepository)
 	app.topicService = topicService
 
-	app.registerRoutes(renderer)
+	app.registerRoutes()
 
 	app.setupServer()
 

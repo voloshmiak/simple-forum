@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"forum-project/internal/render"
 	"forum-project/internal/service"
+	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -11,11 +11,11 @@ import (
 
 type TopicHandler struct {
 	logger       *slog.Logger
-	renderer     *render.Renderer
+	templates    *template.Manager
 	topicService *service.TopicService
 }
 
-func NewTopicHandler(logger *slog.Logger, renderer *render.Renderer, topicService *service.TopicService) *TopicHandler {
+func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicService *service.TopicService) *TopicHandler {
 	return &TopicHandler{logger, renderer, topicService}
 }
 
@@ -26,10 +26,10 @@ func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
 		t.logger.Error(err.Error())
 	}
 
-	err = t.renderer.RenderTemplate(rw, "topics.page", topics)
+	err = t.templates.Render(rw, "topics.page", topics)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
+		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
 }
 
@@ -50,10 +50,10 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.renderer.RenderTemplate(rw, "topic.page", topic)
+	err = t.templates.Render(rw, "topic.page", topic)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
+		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
 
 }

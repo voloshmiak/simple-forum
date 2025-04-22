@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"forum-project/internal/render"
 	"forum-project/internal/service"
+	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -11,11 +11,11 @@ import (
 
 type PostHandler struct {
 	logger      *slog.Logger
-	renderer    *render.Renderer
+	templates   *template.Manager
 	postService *service.PostService
 }
 
-func NewPostHandler(logger *slog.Logger, renderer *render.Renderer, postService *service.PostService) *PostHandler {
+func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService) *PostHandler {
 	return &PostHandler{logger, renderer, postService}
 }
 
@@ -36,10 +36,10 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = p.renderer.RenderTemplate(rw, "posts.page", posts)
+	err = p.templates.Render(rw, "posts.page", posts)
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
+		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
 }
 
@@ -59,10 +59,10 @@ func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.renderer.RenderTemplate(rw, "post.page", post)
+	err = p.templates.Render(rw, "post.page", post)
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to render template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to render template: %s", err), http.StatusInternalServerError)
+		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
 }
 

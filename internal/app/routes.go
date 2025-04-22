@@ -2,19 +2,18 @@ package app
 
 import (
 	"forum-project/internal/handlers"
-	"forum-project/internal/render"
 	"net/http"
 )
 
-func (app *App) registerRoutes(renderer *render.Renderer) {
+func (app *App) registerRoutes() {
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
 	adminMux := http.NewServeMux()
 
 	// initialize handlers
-	th := handlers.NewTopicHandler(app.logger, renderer, app.topicService)
-	ph := handlers.NewPostHandler(app.logger, renderer, app.postService)
+	th := handlers.NewTopicHandler(app.logger, app.templates, app.topicService)
+	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics/", th.GetAllTopics)

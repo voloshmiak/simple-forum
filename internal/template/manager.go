@@ -1,58 +1,51 @@
-package render
+package template
 
 import (
 	"errors"
 	"html/template"
 	"net/http"
-	"os"
 	"path/filepath"
 )
 
-type Renderer struct {
-	templateCache map[string]*template.Template
+type Manager struct {
+	templates map[string]*template.Template
+	debugMode bool
 }
 
-func NewRenderer() (*Renderer, error) {
-	r := &Renderer{
-		templateCache: make(map[string]*template.Template),
+func NewManager(debugMode bool) (*Manager, error) {
+	templates, err := parseTemplates()
+	if err != nil {
+		return nil, err
 	}
-	err := r.InitTemplates()
-	return r, err
+	r := &Manager{
+		templates: templates,
+		debugMode: debugMode,
+	}
+	return r, nil
 }
 
-func (r *Renderer) InitTemplates() error {
-	tc, err := r.createTemplateCache()
-	r.templateCache = tc
-	return err
-}
-
-func (r *Renderer) RenderTemplate(rw http.ResponseWriter, tmpl string, data any) error {
+func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
 	// if in debug mode
-	if os.Getenv("DEBUG_MODE") == "true" {
-		err := r.InitTemplates()
+	if m.debugMode {
+		templates, err := parseTemplates()
 		if err != nil {
-			return err
+			return nil
 		}
+		m.templates = templates
 	}
 
 	// get requested template
-	rt, ok := r.templateCache[tmpl+".gohtml"]
+	rt, ok := m.templates[tmpl+".gohtml"]
 	if !ok {
 		http.Error(rw, tmpl+".gohtml not found", http.StatusNotFound)
 		return errors.New(tmpl + ".gohtml not found")
 	}
 
-	// render template
-	err := rt.Execute(rw, data)
-	if err != nil {
-		http.Error(rw, tmpl+".gohtml failed to render", http.StatusInternalServerError)
-		return err
-	}
-
-	return nil
+	// rendering template
+	return rt.Execute(rw, data)
 }
 
-func (r *Renderer) createTemplateCache() (map[string]*template.Template, error) {
+func parseTemplates() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
 	// getting path to templates
