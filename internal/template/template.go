@@ -9,7 +9,6 @@ import (
 
 type Manager struct {
 	templates map[string]*template.Template
-	debugMode bool
 }
 
 func NewManager() (*Manager, error) {
@@ -19,14 +18,13 @@ func NewManager() (*Manager, error) {
 	}
 	r := &Manager{
 		templates: templates,
-		debugMode: true,
 	}
 	return r, nil
 }
 
 func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
 	// if in debug mode
-	if m.debugMode {
+	if true {
 		templates, err := parseTemplates()
 		if err != nil {
 			return nil
