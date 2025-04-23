@@ -20,7 +20,6 @@ func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicServi
 }
 
 func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
-
 	topics, err := t.topicService.GetAllTopics()
 	if err != nil {
 		t.logger.Error(err.Error())

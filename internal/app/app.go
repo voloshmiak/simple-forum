@@ -28,6 +28,7 @@ type App struct {
 	templates    *template.Manager
 	topicService *service.TopicService
 	postService  *service.PostService
+	userService  *service.UserService
 }
 
 func New() *App {
@@ -80,9 +81,11 @@ func (app *App) initServices() {
 	// initialize repositories
 	postRepository := repository.NewPostRepository(app.database)
 	topicRepository := repository.NewTopicRepository(app.database)
+	userRepository := repository.NewUserRepository(app.database)
 
 	app.postService = service.NewPostService(postRepository)
 	app.topicService = service.NewTopicService(topicRepository)
+	app.userService = service.NewUserService(userRepository)
 }
 
 func (app *App) initServer() {

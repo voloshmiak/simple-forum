@@ -66,7 +66,9 @@ func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {}
+func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {
+	rw.Write([]byte("Create Post"))
+}
 
 func (p *PostHandler) UpdatePost(rw http.ResponseWriter, r *http.Request) {}
 

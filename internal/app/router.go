@@ -2,6 +2,7 @@ package app
 
 import (
 	"forum-project/internal/handlers"
+	"forum-project/internal/middleware"
 	"net/http"
 )
 
@@ -14,6 +15,7 @@ func (app *App) initRouter() {
 	// initialize handlers
 	th := handlers.NewTopicHandler(app.logger, app.templates, app.topicService)
 	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService)
+	ah := handlers.NewAuthHandler(app.logger, app.templates, app.userService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics/", th.GetAllTopics)
@@ -21,12 +23,18 @@ func (app *App) initRouter() {
 	mux.HandleFunc("GET /topics/{id}/posts/", ph.GetPostsByTopicID)
 	mux.HandleFunc("GET /posts/{id}", ph.GetPostByID)
 
+	// authorization routing
+	mux.HandleFunc("GET /login", ah.GetLogin)
+	mux.HandleFunc("POST /login", ah.PostLogin)
+	mux.HandleFunc("GET /logout", ah.GetLogout)
+	mux.HandleFunc("POST /logout", ah.PostLogout)
+
 	// authorized users routing
 	authorizedMux.HandleFunc("POST /posts", ph.CreatePost)
 	authorizedMux.HandleFunc("PUT /posts/{id}", ph.UpdatePost)
 	authorizedMux.HandleFunc("DELETE /posts/{id}", ph.DeletePost)
 
-	mux.Handle("/", authorizedMux)
+	mux.Handle("/", middleware.Auth(authorizedMux))
 
 	// admin routing
 	adminMux.HandleFunc("POST /topics", th.CreateTopic)
