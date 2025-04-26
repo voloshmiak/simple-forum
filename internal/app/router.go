@@ -28,6 +28,8 @@ func (app *App) initRouter() {
 	mux.HandleFunc("POST /login", ah.PostLogin)
 	mux.HandleFunc("GET /logout", ah.GetLogout)
 	mux.HandleFunc("POST /logout", ah.PostLogout)
+	mux.HandleFunc("GET /register", ah.GetRegister)
+	mux.HandleFunc("POST /register", ah.PostRegister)
 
 	// authorized users routing
 	authorizedMux.HandleFunc("POST /posts", ph.CreatePost)
@@ -41,7 +43,7 @@ func (app *App) initRouter() {
 	adminMux.HandleFunc("PUT /topics/{id}", th.UpdateTopic)
 	adminMux.HandleFunc("DELETE /topics/{id}", th.DeleteTopic)
 
-	mux.Handle("/admin", adminMux)
+	mux.Handle("/admin", middleware.EnsureAdmin(middleware.Auth(adminMux), app.userService))
 
 	app.mux = mux
 }

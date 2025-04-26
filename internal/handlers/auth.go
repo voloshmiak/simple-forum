@@ -20,6 +20,27 @@ func NewAuthHandler(logger *slog.Logger, templates *template.Manager, userServic
 	return &AuthHandler{logger: logger, templates: templates, userService: userService}
 }
 
+func (a *AuthHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
+	err := a.templates.Render(rw, "register.page", nil)
+	if err != nil {
+		a.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (a *AuthHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
+	username := r.PostFormValue("username")
+	email := r.PostFormValue("email")
+	password1 := r.PostFormValue("password1")
+	password2 := r.PostFormValue("password2")
+	_, err := a.userService.Register(username, email, password1, password2)
+	if err != nil {
+		rw.Write([]byte(err.Error()))
+	}
+
+	http.Redirect(rw, r, "/topics", http.StatusFound)
+}
+
 func (a *AuthHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
 	err := a.templates.Render(rw, "login.page", nil)
 	if err != nil {

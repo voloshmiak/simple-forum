@@ -32,3 +32,20 @@ func (u *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 
 	return user, nil
 }
+
+func (u *UserRepository) InsertUser(user *models.User) (int, error) {
+	query := `INSERT INTO users (username, email, password_hash, created_at, role) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+
+	err := u.conn.QueryRow(query,
+		user.Username,
+		user.Email,
+		user.PasswordHash,
+		user.CreatedAt,
+		user.Role).Scan(&user.ID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return user.ID, nil
+}

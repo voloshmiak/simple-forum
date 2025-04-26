@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 )
@@ -21,8 +22,13 @@ func Auth(next http.Handler) http.Handler {
 
 		if !token.Valid {
 			http.Error(rw, "Invalid token", http.StatusUnauthorized)
+			return
 		}
 
+		claims := token.Claims.(jwt.MapClaims)
+		email := claims["email"].(string)
+
+		context.WithValue(r.Context(), "email", email)
 		next.ServeHTTP(rw, r)
 	})
 }

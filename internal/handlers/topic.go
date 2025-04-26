@@ -57,7 +57,9 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 
 }
 
-func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {}
+func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {
+	
+}
 
 func (t *TopicHandler) UpdateTopic(rw http.ResponseWriter, r *http.Request) {}
 

@@ -59,3 +59,19 @@ func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 	}
 	return topic, nil
 }
+
+func (u *UserRepository) InsertTopic(topic *models.Topic) (int, error) {
+	query := `INSERT INTO topics (name, description, created_at, author_id) VALUES ($1, $2, $3, $4) RETURNING id`
+
+	err := u.conn.QueryRow(query,
+		topic.Name,
+		topic.Description,
+		topic.CreatedAt,
+		topic.AuthorId).Scan(&topic.ID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return topic.ID, nil
+}
