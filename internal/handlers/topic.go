@@ -60,7 +60,15 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 
 }
 
-func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {
+func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
+	err := t.templates.Render(rw, "create-topic.page", nil)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 

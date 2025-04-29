@@ -19,13 +19,13 @@ type PostHandler struct {
 	postService *service.PostService
 }
 
-func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService) *PostHandler {
-	return &PostHandler{logger, renderer, postService}
+type PostHandlerData struct {
+	Posts   []*models.Post
+	TopicID int
 }
 
-type PostsPageData struct {
-	TopicID int
-	Posts   []*models.Post
+func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService) *PostHandler {
+	return &PostHandler{logger, renderer, postService}
 }
 
 func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	data := PostsPageData{
+	data := PostHandlerData{
 		Posts:   posts,
 		TopicID: id,
 	}
@@ -79,7 +79,23 @@ func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {
+func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	topicID, err := strconv.Atoi(stringID)
+	if err != nil {
+		p.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
+
+	err = p.templates.Render(rw, "create-post.page", topicID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 	topicID := r.PostFormValue("topic_id")

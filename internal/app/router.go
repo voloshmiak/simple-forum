@@ -20,7 +20,7 @@ func (app *App) initRouter() {
 	// guests routing
 	mux.HandleFunc("GET /topics", th.GetAllTopics)
 	mux.HandleFunc("GET /topics/{id}", th.GetTopicByID)
-	mux.HandleFunc("GET /topics/{id}/posts/", ph.GetPostsByTopicID)
+	mux.HandleFunc("GET /topics/{id}/posts", ph.GetPostsByTopicID)
 	mux.HandleFunc("GET /posts/{id}", ph.GetPostByID)
 
 	// authorization routing
@@ -32,14 +32,16 @@ func (app *App) initRouter() {
 	mux.HandleFunc("POST /register", ah.PostRegister)
 
 	// authorized users routing
-	authorizedMux.HandleFunc("POST /posts", ph.CreatePost)
+	authorizedMux.HandleFunc("GET /topics/{id}/posts/new", ph.GetCreatePost)
+	authorizedMux.HandleFunc("POST /posts", ph.PostCreatePost)
 	authorizedMux.HandleFunc("PUT /posts/{id}", ph.UpdatePost)
 	authorizedMux.HandleFunc("DELETE /posts/{id}", ph.DeletePost)
 
 	mux.Handle("/", middleware.UserAuthorization(authorizedMux))
 
 	// admin routing
-	mux.Handle("POST /topics", middleware.AdminAuthorization(http.HandlerFunc(th.CreateTopic)))
+	mux.Handle("GET /topics/new", middleware.AdminAuthorization(http.HandlerFunc(th.GetCreateTopic)))
+	mux.Handle("POST /topics", middleware.AdminAuthorization(http.HandlerFunc(th.PostCreateTopic)))
 	mux.Handle("PUT /topics/{id}", middleware.AdminAuthorization(http.HandlerFunc(th.UpdateTopic)))
 	mux.Handle("DELETE /topics/{id}", middleware.AdminAuthorization(http.HandlerFunc(th.DeleteTopic)))
 
