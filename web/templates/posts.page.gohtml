@@ -1,5 +1,5 @@
 <h1>Posts</h1>
-{{range .}}
+{{range .Posts}}
     <div>
         Author: {{.AuthorId}}<br>
         <a href="/posts/{{.ID}}">{{.Title}}</a><br>
@@ -19,14 +19,8 @@
             <input type="text" name="content">
         </label>
         <br>
-        AuthorId
         <label>
-            <input type="text" name="author_id">
-        </label>
-        <br>
-        TopicID
-        <label>
-            <input type="text" name="topic_id">
+            <input type="hidden" name="topic_id" value="{{.TopicID}}">
         </label>
         <br>
         <input type="submit">

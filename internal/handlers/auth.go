@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"forum-project/internal/auth"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
@@ -60,14 +59,7 @@ func (a *AuthHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":    user.ID,
-		"email": user.Email,
-		"role":  user.Role,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
-	})
-
-	token, err := claims.SignedString([]byte("secret-key"))
+	token, err := auth.GenerateToken(user)
 
 	if err != nil {
 		rw.Write([]byte(err.Error()))

@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"fmt"
+	"forum-project/internal/auth"
+	"forum-project/internal/models"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type PostHandler struct {
@@ -17,6 +21,11 @@ type PostHandler struct {
 
 func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService) *PostHandler {
 	return &PostHandler{logger, renderer, postService}
+}
+
+type PostsPageData struct {
+	TopicID int
+	Posts   []*models.Post
 }
 
 func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request) {
@@ -36,7 +45,12 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = p.templates.Render(rw, "posts.page", posts)
+	data := PostsPageData{
+		Posts:   posts,
+		TopicID: id,
+	}
+
+	err = p.templates.Render(rw, "posts.page", data)
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -75,13 +89,26 @@ func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, fmt.Sprintf("Unable to convert topic_id to integer: %s", err), http.StatusBadRequest)
 		return
 	}
-	auhorID := r.PostFormValue("author_id")
-	authorIDInt, err := strconv.Atoi(auhorID)
+	cookie, err := r.Cookie("token")
 	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to convert author_id to integer: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to convert author_id to integer: %s", err), http.StatusBadRequest)
+		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	token, err := auth.ValidateToken(cookie.Value)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	authorIDfloat, ok := claims["id"].(float64)
+	if !ok {
+		p.logger.Error("Unable to convert author id to float64")
+		http.Error(rw, "Unable to convert author id to float64", http.StatusBadRequest)
+		return
+	}
+	authorIDInt := int(authorIDfloat)
 
 	_, err = p.postService.CreatePost(title, content, topicIDInt, authorIDInt)
 	if err != nil {

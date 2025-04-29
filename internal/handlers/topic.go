@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"forum-project/internal/auth"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type TopicHandler struct {
@@ -60,13 +63,27 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
-	authorID := r.FormValue("author_id")
-	authorIDInt, err := strconv.Atoi(authorID)
+
+	cookie, err := r.Cookie("token")
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to convert author_id to integer: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to convert author_id to integer: %s", err), http.StatusBadRequest)
+		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	token, err := auth.ValidateToken(cookie.Value)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	authorIDfloat, ok := claims["id"].(float64)
+	if !ok {
+		t.logger.Error("Unable to convert author id to float64")
+		http.Error(rw, "Unable to convert author id to float64", http.StatusBadRequest)
+		return
+	}
+	authorIDInt := int(authorIDfloat)
 
 	_, err = t.topicService.CreateTopic(name, description, authorIDInt)
 	if err != nil {

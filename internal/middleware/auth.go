@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"forum-project/internal/auth"
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,14 +15,9 @@ func UserAuthorization(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) { return []byte("secret-key"), nil })
+		_, err = auth.ValidateToken(cookie.Value)
 		if err != nil {
-			http.Error(rw, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		if !token.Valid {
-			http.Error(rw, "Invalid token", http.StatusUnauthorized)
+			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -37,14 +33,9 @@ func AdminAuthorization(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) { return []byte("secret-key"), nil })
+		token, err := auth.ValidateToken(cookie.Value)
 		if err != nil {
-			http.Error(rw, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		if !token.Valid {
-			http.Error(rw, "Invalid token", http.StatusUnauthorized)
+			http.Error(rw, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
