@@ -58,7 +58,24 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) CreateTopic(rw http.ResponseWriter, r *http.Request) {
-	
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	authorID := r.FormValue("author_id")
+	authorIDInt, err := strconv.Atoi(authorID)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to convert author_id to integer: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to convert author_id to integer: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	_, err = t.topicService.CreateTopic(name, description, authorIDInt)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to create topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to create topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, r, "/topics", http.StatusFound)
 }
 
 func (t *TopicHandler) UpdateTopic(rw http.ResponseWriter, r *http.Request) {}

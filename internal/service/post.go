@@ -28,3 +28,21 @@ func (p *PostService) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
 	}
 	return posts, nil
 }
+
+func (p *PostService) CreatePost(title, content string, topicID, authorID int) (*models.Post, error) {
+	post := models.NewPost()
+	post.Title = title
+	post.Content = content
+	post.CreatedAt = "Now"
+	post.UpdatedAt = "Now"
+	post.TopicId = topicID
+	post.AuthorId = authorID
+
+	postID, err := p.repository.InsertPost(post)
+	if err != nil {
+		return nil, err
+	}
+
+	post.ID = postID
+	return post, nil
+}

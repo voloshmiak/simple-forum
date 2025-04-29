@@ -5,7 +5,7 @@ type Topic struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
-	AuthorId    string `json:"author_id"`
+	AuthorId    int    `json:"author_id"`
 }
 
 func NewTopic() *Topic {

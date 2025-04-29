@@ -44,7 +44,6 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 }
 
 func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
-
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
@@ -67,7 +66,33 @@ func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) CreatePost(rw http.ResponseWriter, r *http.Request) {
-	rw.Write([]byte("Create Post"))
+	title := r.PostFormValue("title")
+	content := r.PostFormValue("content")
+	topicID := r.PostFormValue("topic_id")
+	topicIDInt, err := strconv.Atoi(topicID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to convert topic_id to integer: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to convert topic_id to integer: %s", err), http.StatusBadRequest)
+		return
+	}
+	auhorID := r.PostFormValue("author_id")
+	authorIDInt, err := strconv.Atoi(auhorID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to convert author_id to integer: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to convert author_id to integer: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	_, err = p.postService.CreatePost(title, content, topicIDInt, authorIDInt)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to create post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to create post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	redirectedURL := fmt.Sprintf("/topics/%d/posts", topicIDInt)
+
+	http.Redirect(rw, r, redirectedURL, http.StatusFound)
 }
 
 func (p *PostHandler) UpdatePost(rw http.ResponseWriter, r *http.Request) {}

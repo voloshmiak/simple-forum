@@ -10,14 +10,15 @@ import (
 	"forum-project/internal/repository"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 )
 
 type App struct {
@@ -62,7 +63,7 @@ func (app *App) loadEnviroment() {
 func (app *App) initTemplates() {
 	templateManager, err := template.NewManager()
 	if err != nil {
-		app.logger.Error("Failed to create renderer", err)
+		app.logger.Error("Failed to create renderer", "error", err)
 		os.Exit(1)
 	}
 	app.templates = templateManager
@@ -71,7 +72,7 @@ func (app *App) initTemplates() {
 func (app *App) initDatabase() {
 	conn, err := database.Init()
 	if err != nil {
-		app.logger.Error("Failed to init database", err)
+		app.logger.Error("Failed to init database", "error", err)
 		os.Exit(1)
 	}
 	app.database = conn

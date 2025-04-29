@@ -62,3 +62,22 @@ func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
 	}
 	return post, nil
 }
+
+func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
+	query := `INSERT INTO posts (title, content, topic_id, author_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+
+	err := u.conn.QueryRow(query,
+		post.Title,
+		post.Content,
+		post.TopicId,
+		post.AuthorId,
+		post.CreatedAt,
+		post.UpdatedAt,
+	).Scan(&post.ID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return post.ID, nil
+}

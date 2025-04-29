@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	"github.com/golang-jwt/jwt/v5"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
@@ -60,7 +61,9 @@ func (a *AuthHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":    user.ID,
 		"email": user.Email,
+		"role":  user.Role,
 		"exp":   time.Now().Add(time.Hour * 24).Unix(),
 	})
 
@@ -81,7 +84,7 @@ func (a *AuthHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(rw, cookie)
 
-	a.logger.Info(fmt.Sprintf("User authenticated: %s", user))
+	a.logger.Info("User authenticated", "user", user)
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
 

@@ -20,11 +20,12 @@ func NewManager() (*Manager, error) {
 }
 
 func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
-	// if in debug mode
-	if true {
+	// if in development mode
+	isDevelopment := true
+	if isDevelopment {
 		templates, err := parseTemplates()
 		if err != nil {
-			return nil
+			return err
 		}
 		m.templates = templates
 	}
@@ -32,7 +33,6 @@ func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
 	// get requested template
 	rt, ok := m.templates[tmpl+".gohtml"]
 	if !ok {
-		http.Error(rw, tmpl+".gohtml not found", http.StatusNotFound)
 		return errors.New(tmpl + ".gohtml not found")
 	}
 
