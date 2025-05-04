@@ -103,6 +103,16 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
 }
 
-func (t *TopicHandler) UpdateTopic(rw http.ResponseWriter, r *http.Request) {}
+func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
+	err := t.templates.Render(rw, "create-topic.page", nil)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
 
-func (t *TopicHandler) DeleteTopic(rw http.ResponseWriter, r *http.Request) {}
+func (t *TopicHandler) PutEditTopic(rw http.ResponseWriter, r *http.Request) {}
+
+func (t *TopicHandler) GetRemoveTopic(rw http.ResponseWriter, r *http.Request) {}
+
+func (t *TopicHandler) DeleteRemoveTopic(rw http.ResponseWriter, r *http.Request) {}
