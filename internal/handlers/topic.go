@@ -22,6 +22,10 @@ func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicServi
 	return &TopicHandler{logger, renderer, topicService}
 }
 
+type TopicHandlerData struct {
+	TopicID int
+}
+
 func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.topicService.GetAllTopics()
 	if err != nil {
@@ -113,6 +117,37 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 
 func (t *TopicHandler) PutEditTopic(rw http.ResponseWriter, r *http.Request) {}
 
-func (t *TopicHandler) GetRemoveTopic(rw http.ResponseWriter, r *http.Request) {}
+func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	id, err := strconv.Atoi(stringID)
+	if err != nil {
+		http.Redirect(rw, r, "/topics/", http.StatusFound)
+		return
+	}
 
-func (t *TopicHandler) DeleteRemoveTopic(rw http.ResponseWriter, r *http.Request) {}
+	data := TopicHandlerData{TopicID: id}
+
+	err = t.templates.Render(rw, "delete-topic.page", data)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (t *TopicHandler) PostDeleteTopic(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	id, err := strconv.Atoi(stringID)
+	if err != nil {
+		http.Redirect(rw, r, "/topics/", http.StatusFound)
+		return
+	}
+
+	err = t.topicService.DeleteTopic(id)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to delete topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to delete topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, r, "/topics", http.StatusFound)
+}

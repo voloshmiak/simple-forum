@@ -43,9 +43,9 @@ func (app *App) initRouter() {
 	mux.Handle("GET /topics/new", middleware.AdminAuthorization(http.HandlerFunc(th.GetCreateTopic)))
 	mux.Handle("POST /topics", middleware.AdminAuthorization(http.HandlerFunc(th.PostCreateTopic)))
 	mux.Handle("GET /topics/{id}/edit", middleware.AdminAuthorization(http.HandlerFunc(th.GetEditTopic)))
-	mux.Handle("PUT /topics/{id}", middleware.AdminAuthorization(http.HandlerFunc(th.PutEditTopic)))
-	mux.Handle("GET /topics/{id}/delete", middleware.AdminAuthorization(http.HandlerFunc(th.GetRemoveTopic)))
-	mux.Handle("DELETE /topics/{id}", middleware.AdminAuthorization(http.HandlerFunc(th.DeleteRemoveTopic)))
+	mux.Handle("POST /topics/{id}/edit", middleware.AdminAuthorization(http.HandlerFunc(th.PutEditTopic)))
+	mux.Handle("GET /topics/{id}/delete", middleware.AdminAuthorization(http.HandlerFunc(th.GetDeleteTopic)))
+	mux.Handle("POST /topics/{id}/delete", middleware.AdminAuthorization(http.HandlerFunc(th.PostDeleteTopic)))
 
 	app.mux = mux
 }

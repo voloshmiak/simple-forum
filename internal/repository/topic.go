@@ -60,10 +60,10 @@ func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 	return topic, nil
 }
 
-func (u *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
+func (t *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
 	query := `INSERT INTO topics (name, description, created_at, author_id) VALUES ($1, $2, $3, $4) RETURNING id`
 
-	err := u.conn.QueryRow(query,
+	err := t.conn.QueryRow(query,
 		topic.Name,
 		topic.Description,
 		topic.CreatedAt,
@@ -74,4 +74,14 @@ func (u *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
 	}
 
 	return topic.ID, nil
+}
+
+func (t *TopicRepository) DeleteTopic(topicID int) error {
+	query := `DELETE FROM topics WHERE id = $1`
+
+	_, err := t.conn.Exec(query, topicID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

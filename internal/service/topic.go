@@ -44,3 +44,11 @@ func (t *TopicService) CreateTopic(name, description string, authorID int) (*mod
 	topic.ID = topicID
 	return topic, nil
 }
+
+func (t *TopicService) DeleteTopic(id int) error {
+	err := t.repository.DeleteTopic(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
