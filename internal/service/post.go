@@ -46,3 +46,11 @@ func (p *PostService) CreatePost(title, content string, topicID, authorID int) (
 	post.ID = postID
 	return post, nil
 }
+
+func (p *PostService) DeletePost(postID int) error {
+	err := p.repository.DeletePost(postID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

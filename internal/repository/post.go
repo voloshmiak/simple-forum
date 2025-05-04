@@ -81,3 +81,14 @@ func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
 
 	return post.ID, nil
 }
+
+func (u *PostRepository) DeletePost(postID int) error {
+	query := `DELETE FROM posts WHERE id = $1`
+
+	_, err := u.conn.Exec(query, postID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

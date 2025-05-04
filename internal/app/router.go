@@ -34,8 +34,10 @@ func (app *App) initRouter() {
 	// authorized users routing
 	authorizedMux.HandleFunc("GET /topics/{id}/posts/new", ph.GetCreatePost)
 	authorizedMux.HandleFunc("POST /posts", ph.PostCreatePost)
-	authorizedMux.HandleFunc("PUT /posts/{id}", ph.UpdatePost)
-	authorizedMux.HandleFunc("DELETE /posts/{id}", ph.DeletePost)
+	authorizedMux.HandleFunc("GET /posts/{id}/edit", ph.GetEditPost)
+	authorizedMux.HandleFunc("POST /posts/{id}/edit", ph.PostEditPost)
+	authorizedMux.HandleFunc("GET /posts/{id}/delete", ph.GetDeletePost)
+	authorizedMux.HandleFunc("POST /posts/{id}/delete", ph.PostDeletePost)
 
 	mux.Handle("/", middleware.UserAuthorization(authorizedMux))
 

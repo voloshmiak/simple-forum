@@ -138,6 +138,41 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	http.Redirect(rw, r, redirectedURL, http.StatusFound)
 }
 
-func (p *PostHandler) UpdatePost(rw http.ResponseWriter, r *http.Request) {}
+func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {}
 
-func (p *PostHandler) DeletePost(rw http.ResponseWriter, r *http.Request) {}
+func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {}
+
+func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	postID, err := strconv.Atoi(stringID)
+	if err != nil {
+		p.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
+
+	err = p.templates.Render(rw, "delete-post.page", postID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	id, err := strconv.Atoi(stringID)
+	if err != nil {
+		p.logger.Error("Unable to convert id to integer")
+		http.Redirect(rw, r, "/topics", http.StatusFound)
+		return
+	}
+
+	err = p.postService.DeletePost(id)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to delete post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to delete post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, r, "/topics", http.StatusFound)
+}

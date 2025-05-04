@@ -119,15 +119,13 @@ func (t *TopicHandler) PutEditTopic(rw http.ResponseWriter, r *http.Request) {}
 
 func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
-	id, err := strconv.Atoi(stringID)
+	topicID, err := strconv.Atoi(stringID)
 	if err != nil {
 		http.Redirect(rw, r, "/topics/", http.StatusFound)
 		return
 	}
 
-	data := TopicHandlerData{TopicID: id}
-
-	err = t.templates.Render(rw, "delete-topic.page", data)
+	err = t.templates.Render(rw, "delete-topic.page", topicID)
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
