@@ -33,69 +33,63 @@ type App struct {
 }
 
 func New() *App {
-	app := &App{}
-
-	app.initLogger()
-	app.loadEnviroment()
-	app.initTemplates()
-	app.initDatabase()
-	app.initServices()
-	app.initRouter()
-	app.initServer()
-
-	return app
-}
-
-func (app *App) initLogger() {
+	// init logger
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}
-	app.logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
-}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
 
-func (app *App) loadEnviroment() {
+	// load environment variables
 	if err := godotenv.Load(".env"); err != nil {
-		app.logger.Error("Failed to load .env file")
+		logger.Error("Failed to load .env file")
 		os.Exit(1)
 	}
-}
 
-func (app *App) initTemplates() {
+	// init template manager
 	templateManager, err := template.NewManager()
 	if err != nil {
-		app.logger.Error("Failed to create renderer", "error", err)
+		logger.Error("Failed to create renderer", "error", err)
 		os.Exit(1)
 	}
-	app.templates = templateManager
-}
 
-func (app *App) initDatabase() {
-	conn, err := database.Init()
+	// init database
+	conn, err := database.New()
 	if err != nil {
-		app.logger.Error("Failed to init database", "error", err)
+		logger.Error("Failed to init database", "error", err)
 		os.Exit(1)
 	}
-	app.database = conn
-}
 
-func (app *App) initServices() {
-	// initialize repositories
-	postRepository := repository.NewPostRepository(app.database)
-	topicRepository := repository.NewTopicRepository(app.database)
-	userRepository := repository.NewUserRepository(app.database)
+	// init repositories
+	postRepository := repository.NewPostRepository(conn)
+	topicRepository := repository.NewTopicRepository(conn)
+	userRepository := repository.NewUserRepository(conn)
 
-	app.postService = service.NewPostService(postRepository)
-	app.topicService = service.NewTopicService(topicRepository)
-	app.userService = service.NewUserService(userRepository)
-}
+	// init services
+	postService := service.NewPostService(postRepository)
+	topicService := service.NewTopicService(topicRepository)
+	userService := service.NewUserService(userRepository)
 
-func (app *App) initServer() {
-	app.server = &http.Server{
+	// init mux
+	mux := initRouter(logger, templateManager, topicService, postService, userService)
+
+	// init server
+	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
-		Handler:      middleware.Logging(app.mux, app.logger),
+		Handler:      middleware.Logging(mux, logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
+	}
+
+	return &App{
+		logger:       logger,
+		database:     conn,
+		mux:          mux,
+		server:       server,
+		templates:    templateManager,
+		topicService: topicService,
+		postService:  postService,
+		userService:  userService,
 	}
 }
 

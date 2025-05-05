@@ -3,19 +3,21 @@ package app
 import (
 	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
+	"forum-project/internal/service"
+	"forum-project/internal/template"
+	"log/slog"
 	"net/http"
 )
 
-func (app *App) initRouter() {
+func initRouter(logger *slog.Logger, templates *template.Manager, topicService *service.TopicService, postService *service.PostService, userService *service.UserService) *http.ServeMux {
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
-	//adminMux := http.NewServeMux()
 
 	// initialize handlers
-	th := handlers.NewTopicHandler(app.logger, app.templates, app.topicService)
-	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService, app.topicService)
-	uh := handlers.NewUserHandler(app.logger, app.templates, app.userService)
+	th := handlers.NewTopicHandler(logger, templates, topicService)
+	ph := handlers.NewPostHandler(logger, templates, postService, topicService)
+	uh := handlers.NewUserHandler(logger, templates, userService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics", th.GetTopics)
@@ -49,5 +51,5 @@ func (app *App) initRouter() {
 	mux.Handle("GET /topics/{id}/delete", middleware.AdminAuthorization(http.HandlerFunc(th.GetDeleteTopic)))
 	mux.Handle("POST /topics/{id}/delete", middleware.AdminAuthorization(http.HandlerFunc(th.PostDeleteTopic)))
 
-	app.mux = mux
+	return mux
 }

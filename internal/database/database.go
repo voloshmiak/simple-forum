@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Init() (*sql.DB, error) {
+func New() (*sql.DB, error) {
 	var (
 		host     = os.Getenv("DB_HOST")
 		port     = os.Getenv("DB_PORT")
