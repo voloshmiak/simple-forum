@@ -1,13 +1,18 @@
+{{$topics := index .Data "topics"}}
 <h1>Topics</h1>
-{{range index .Data "topics"}}
-    <div>
-        <a href="/topics/{{.ID}}">{{.Name}}</a>
-        <p>{{.Description}}<br>
-            Was created at: <small>{{.CreatedAt}}</small>
-    </div>
-    <br>
+{{if not $topics}}
+    <p>No topics yet</p>
+{{else}}
+    {{range index .Data "topics"}}
+        <div>
+            <a href="/topics/{{.ID}}">{{.Name}}</a>
+            <p>{{.Description}}<br>
+                Was created at: <small>{{.CreatedAt}}</small>
+        </div>
+        <br>
+    {{end}}
 {{end}}
-
+    
 {{if eq .IsAuthenticated false}}
     <a href="/login">Login</a><br>
 {{else}}

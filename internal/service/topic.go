@@ -29,6 +29,14 @@ func (t *TopicService) GetTopicByID(id int) (*models.Topic, error) {
 	return topic, nil
 }
 
+func (t *TopicService) GetTopicByPostID(id int) (*models.Topic, error) {
+	topic, err := t.repository.GetTopicByPostID(id)
+	if err != nil {
+		return nil, err
+	}
+	return topic, nil
+}
+
 func (t *TopicService) CreateTopic(name, description string, authorID int) (*models.Topic, error) {
 	topic := models.NewTopic()
 	topic.Name = name

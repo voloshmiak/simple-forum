@@ -1,3 +1,4 @@
+{{$topic := index .Data "topic"}}
 <div>
     <form action="/posts" method="post">
         Title
@@ -11,7 +12,7 @@
         </label>
         <br>
         <label>
-            <input type="hidden" name="topic_id" value="{{.}}">
+            <input type="hidden" name="topic_id" value="{{$topic.ID}}">
         </label>
         <br>
         <input type="submit">

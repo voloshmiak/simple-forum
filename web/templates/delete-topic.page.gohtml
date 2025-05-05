@@ -1,5 +1,6 @@
+{{$topic := index .Data "topic"}}
 <div>
-    <form action="/topics/{{.}}/delete" method="post">
+    <form action="/topics/{{$topic.ID}}/delete" method="post">
         Remove topic?
         <input type="submit">
     </form>

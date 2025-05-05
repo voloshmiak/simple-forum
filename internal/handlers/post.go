@@ -14,9 +14,10 @@ import (
 )
 
 type PostHandler struct {
-	logger      *slog.Logger
-	templates   *template.Manager
-	postService *service.PostService
+	logger       *slog.Logger
+	templates    *template.Manager
+	postService  *service.PostService
+	topicService *service.TopicService
 }
 
 type PostHandlerData struct {
@@ -24,12 +25,11 @@ type PostHandlerData struct {
 	TopicID int
 }
 
-func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService) *PostHandler {
-	return &PostHandler{logger, renderer, postService}
+func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService, topicService *service.TopicService) *PostHandler {
+	return &PostHandler{logger, renderer, postService, topicService}
 }
 
-func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request) {
-
+func (p *PostHandler) GetPosts(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
@@ -45,15 +45,19 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	topic, err := p.topicService.GetTopicByID(id)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	data := make(map[string]any)
 	data["posts"] = posts
-
-	intMap := make(map[string]int)
-	intMap["topic_id"] = id
+	data["topic"] = topic
 
 	err = p.templates.Render(rw, r, "posts.page", &models.ViewData{
-		Data:   data,
-		IntMap: intMap,
+		Data: data,
 	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
@@ -61,11 +65,12 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
+func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
-		http.Redirect(rw, r, "/posts/", http.StatusFound)
+		p.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
 		return
 	}
 
@@ -97,11 +102,18 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	intMap := make(map[string]int)
-	intMap["topic_id"] = topicID
+	topic, err := p.topicService.GetTopicByID(topicID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	data := make(map[string]any)
+	data["topic"] = topic
 
 	err = p.templates.Render(rw, r, "create-post.page", &models.ViewData{
-		IntMap: intMap,
+		Data: data,
 	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
@@ -165,11 +177,18 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	intMap := make(map[string]int)
-	intMap["post_id"] = postID
+	post, err := p.postService.GetPostByID(postID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	data := make(map[string]any)
+	data["post"] = post
 
 	err = p.templates.Render(rw, r, "delete-post.page", &models.ViewData{
-		IntMap: intMap,
+		Data: data,
 	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
@@ -182,7 +201,14 @@ func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
 		p.logger.Error("Unable to convert id to integer")
-		http.Redirect(rw, r, "/topics", http.StatusFound)
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
+
+	topic, err := p.topicService.GetTopicByPostID(id)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -193,5 +219,7 @@ func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(rw, r, "/topics", http.StatusFound)
+	url := fmt.Sprintf("/topics/%v/posts", topic.ID)
+
+	http.Redirect(rw, r, url, http.StatusFound)
 }

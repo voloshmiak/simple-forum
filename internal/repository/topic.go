@@ -60,6 +60,26 @@ func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 	return topic, nil
 }
 
+func (t *TopicRepository) GetTopicByPostID(postID int) (*models.Topic, error) {
+	query := `SELECT t.* FROM topics t JOIN posts p ON t.id = p.topic_id WHERE p.id = $1`
+
+	topic := models.NewTopic()
+
+	err := t.conn.QueryRow(query, postID).Scan(
+		&topic.ID,
+		&topic.Name,
+		&topic.Description,
+		&topic.CreatedAt,
+		&topic.AuthorId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return topic, nil
+}
+
 func (t *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
 	query := `INSERT INTO topics (name, description, created_at, author_id) VALUES ($1, $2, $3, $4) RETURNING id`
 

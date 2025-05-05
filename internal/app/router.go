@@ -14,14 +14,14 @@ func (app *App) initRouter() {
 
 	// initialize handlers
 	th := handlers.NewTopicHandler(app.logger, app.templates, app.topicService)
-	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService)
+	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService, app.topicService)
 	uh := handlers.NewUserHandler(app.logger, app.templates, app.userService)
 
 	// guests routing
-	mux.HandleFunc("GET /topics", th.GetAllTopics)
-	mux.HandleFunc("GET /topics/{id}", th.GetTopicByID)
-	mux.HandleFunc("GET /topics/{id}/posts", ph.GetPostsByTopicID)
-	mux.HandleFunc("GET /posts/{id}", ph.GetPostByID)
+	mux.HandleFunc("GET /topics", th.GetTopics)
+	mux.HandleFunc("GET /topics/{id}", th.GetTopic)
+	mux.HandleFunc("GET /topics/{id}/posts", ph.GetPosts)
+	mux.HandleFunc("GET /posts/{id}", ph.GetPost)
 
 	// authorization routing
 	mux.HandleFunc("GET /login", uh.GetLogin)

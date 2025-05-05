@@ -27,7 +27,7 @@ type TopicHandlerData struct {
 	TopicID int
 }
 
-func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
+func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.topicService.GetAllTopics()
 	if err != nil {
 		t.logger.Error(err.Error())
@@ -45,7 +45,7 @@ func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
+func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
@@ -136,11 +136,18 @@ func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	intMap := make(map[string]int)
-	intMap["topic_id"] = topicID
+	topic, err := t.topicService.GetTopicByID(topicID)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
+		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		return
+	}
+
+	data := make(map[string]any)
+	data["topic"] = topic
 
 	err = t.templates.Render(rw, r, "delete-topic.page", &models.ViewData{
-		IntMap: intMap,
+		Data: data,
 	})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
