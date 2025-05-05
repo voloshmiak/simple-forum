@@ -45,12 +45,16 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	data := PostHandlerData{
-		Posts:   posts,
-		TopicID: id,
-	}
+	data := make(map[string]any)
+	data["posts"] = posts
 
-	err = p.templates.Render(rw, "posts.page", data)
+	intMap := make(map[string]int)
+	intMap["topic_id"] = id
+
+	err = p.templates.Render(rw, "posts.page", &models.ViewData{
+		Data:   data,
+		IntMap: intMap,
+	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)

@@ -46,29 +46,27 @@ func parseTemplates() (map[string]*template.Template, error) {
 	// getting path to templates
 	templatesPath := filepath.Join("web", "templates")
 
+	layouts, err := filepath.Glob(templatesPath + "\\*.layout.gohtml")
+	if err != nil {
+		return templates, err
+	}
+
 	pages, err := filepath.Glob(templatesPath + "\\*.page.gohtml")
 	if err != nil {
-		return nil, err
+		return templates, err
 	}
 
 	for _, page := range pages {
 		name := filepath.Base(page)
-		tmpl, err := template.New(name).ParseFiles(page)
+
+		filenames := make([]string, 0, len(layouts)+1)
+
+		filenames = append(filenames, page)
+		filenames = append(filenames, layouts...)
+
+		tmpl, err := template.New(name).ParseFiles(filenames...)
 		if err != nil {
-			return nil, err
-		}
-
-		matches, err := filepath.Glob(templatesPath + "\\*.layout.gohtml")
-
-		if err != nil {
-			return nil, err
-		}
-
-		if len(matches) > 0 {
-			tmpl, err = tmpl.ParseGlob(templatesPath + "\\*.layout.gohtml")
-			if err != nil {
-				return nil, err
-			}
+			return templates, err
 		}
 
 		templates[name] = tmpl
