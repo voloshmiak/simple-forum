@@ -1,9 +1,14 @@
-<h1>{{.Name}}</h1>
+{{$topic := index .Data "topic"}}
+<h1>{{$topic.Name}}</h1>
 <div>
-    <p>{{.Description}}</p>
-    Was created at: <small>{{.CreatedAt}}</small>
+    <p>{{$topic.Description}}</p>
+    Was created at: <small>{{$topic.CreatedAt}}</small>
 </div>
-<a href="/topics/{{.ID}}/posts">Posts</a><br>
-<br><a href="/topics/{{.ID}}/delete">Delete topic</a><br>
-<br><a href="/login">Login</a><br>
-<a href="/logout">Logout</a><br>
+<a href="/topics/{{$topic.ID}}/posts">Posts</a><br>
+<br><a href="/topics/{{$topic.ID}}/delete">Delete topic</a><br>
+<br>
+{{if eq .IsAuthenticated false}}
+    <a href="/login">Login</a><br>
+{{else}}
+    <a href="/logout">Logout</a><br>
+{{end}}
