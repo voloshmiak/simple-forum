@@ -3,21 +3,13 @@ package app
 import (
 	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
-	"forum-project/internal/service"
-	"forum-project/internal/template"
-	"log/slog"
 	"net/http"
 )
 
-func initRouter(logger *slog.Logger, templates *template.Manager, topicService *service.TopicService, postService *service.PostService, userService *service.UserService) *http.ServeMux {
+func registerRoutes(th *handlers.TopicHandler, ph *handlers.PostHandler, uh *handlers.UserHandler) *http.ServeMux {
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
-
-	// initialize handlers
-	th := handlers.NewTopicHandler(logger, templates, topicService)
-	ph := handlers.NewPostHandler(logger, templates, postService, topicService)
-	uh := handlers.NewUserHandler(logger, templates, userService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics", th.GetTopics)

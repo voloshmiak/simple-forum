@@ -20,11 +20,6 @@ type PostHandler struct {
 	topicService *service.TopicService
 }
 
-type PostHandlerData struct {
-	Posts   []*models.Post
-	TopicID int
-}
-
 func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService *service.PostService, topicService *service.TopicService) *PostHandler {
 	return &PostHandler{logger, renderer, postService, topicService}
 }

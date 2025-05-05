@@ -23,10 +23,6 @@ func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicServi
 	return &TopicHandler{logger, renderer, topicService}
 }
 
-type TopicHandlerData struct {
-	TopicID int
-}
-
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.topicService.GetAllTopics()
 	if err != nil {

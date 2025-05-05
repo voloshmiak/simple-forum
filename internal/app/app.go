@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/database"
+	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
 	"forum-project/internal/repository"
 	"forum-project/internal/service"
@@ -69,8 +70,13 @@ func New() *App {
 	topicService := service.NewTopicService(topicRepository)
 	userService := service.NewUserService(userRepository)
 
+	//init handlers
+	th := handlers.NewTopicHandler(logger, templateManager, topicService)
+	ph := handlers.NewPostHandler(logger, templateManager, postService, topicService)
+	uh := handlers.NewUserHandler(logger, templateManager, userService)
+
 	// init mux
-	mux := initRouter(logger, templateManager, topicService, postService, userService)
+	mux := registerRoutes(th, ph, uh)
 
 	// init server
 	server := &http.Server{
