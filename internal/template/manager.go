@@ -2,6 +2,8 @@ package template
 
 import (
 	"errors"
+	"forum-project/internal/auth"
+	"forum-project/internal/models"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -19,25 +21,22 @@ func NewManager() (*Manager, error) {
 	return &Manager{templates: templates}, nil
 }
 
-func (m *Manager) Render(rw http.ResponseWriter, tmpl string, data any) error {
-	// if in development mode
-	isDevelopment := true
-	if isDevelopment {
-		templates, err := parseTemplates()
-		if err != nil {
-			return err
-		}
-		m.templates = templates
+func AddDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		td.IsAuthenticated = false
+		return td
 	}
 
-	// get requested template
-	rt, ok := m.templates[tmpl+".gohtml"]
-	if !ok {
-		return errors.New(tmpl + ".gohtml not found")
+	_, err = auth.ValidateToken(cookie.Value)
+	if err != nil {
+		td.IsAuthenticated = false
+		return td
 	}
 
-	// rendering template
-	return rt.Execute(rw, data)
+	td.IsAuthenticated = true
+
+	return td
 }
 
 func parseTemplates() (map[string]*template.Template, error) {
@@ -73,4 +72,27 @@ func parseTemplates() (map[string]*template.Template, error) {
 	}
 
 	return templates, nil
+}
+
+func (m *Manager) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.ViewData) error {
+	// if in development mode
+	isDevelopment := true
+	if isDevelopment {
+		templates, err := parseTemplates()
+		if err != nil {
+			return err
+		}
+		m.templates = templates
+	}
+
+	// get requested template
+	rt, ok := m.templates[tmpl+".gohtml"]
+	if !ok {
+		return errors.New(tmpl + ".gohtml not found")
+	}
+
+	td = AddDefaultData(td, r)
+
+	// rendering template
+	return rt.Execute(rw, td)
 }

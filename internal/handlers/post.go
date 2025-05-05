@@ -51,7 +51,7 @@ func (p *PostHandler) GetPostsByTopicID(rw http.ResponseWriter, r *http.Request)
 	intMap := make(map[string]int)
 	intMap["topic_id"] = id
 
-	err = p.templates.Render(rw, "posts.page", &models.ViewData{
+	err = p.templates.Render(rw, r, "posts.page", &models.ViewData{
 		Data:   data,
 		IntMap: intMap,
 	})
@@ -76,7 +76,12 @@ func (p *PostHandler) GetPostByID(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.templates.Render(rw, "post.page", post)
+	data := make(map[string]any)
+	data["post"] = post
+
+	err = p.templates.Render(rw, r, "post.page", &models.ViewData{
+		Data: data,
+	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -92,7 +97,12 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.templates.Render(rw, "create-post.page", topicID)
+	intMap := make(map[string]int)
+	intMap["topic_id"] = topicID
+
+	err = p.templates.Render(rw, r, "create-post.page", &models.ViewData{
+		IntMap: intMap,
+	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -155,7 +165,12 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = p.templates.Render(rw, "delete-post.page", postID)
+	intMap := make(map[string]int)
+	intMap["post_id"] = postID
+
+	err = p.templates.Render(rw, r, "delete-post.page", &models.ViewData{
+		IntMap: intMap,
+	})
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)

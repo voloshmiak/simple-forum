@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"forum-project/internal/auth"
+	"forum-project/internal/models"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
@@ -32,7 +33,12 @@ func (t *TopicHandler) GetAllTopics(rw http.ResponseWriter, r *http.Request) {
 		t.logger.Error(err.Error())
 	}
 
-	err = t.templates.Render(rw, "topics.page", topics)
+	data := make(map[string]any)
+	data["topics"] = topics
+
+	err = t.templates.Render(rw, r, "topics.page", &models.ViewData{
+		Data: data,
+	})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -56,7 +62,12 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.templates.Render(rw, "topic.page", topic)
+	data := make(map[string]any)
+	data["topic"] = topic
+
+	err = t.templates.Render(rw, r, "topic.page", &models.ViewData{
+		Data: data,
+	})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -65,7 +76,7 @@ func (t *TopicHandler) GetTopicByID(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.templates.Render(rw, "create-topic.page", nil)
+	err := t.templates.Render(rw, r, "create-topic.page", &models.ViewData{})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -108,7 +119,7 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 }
 
 func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.templates.Render(rw, "create-topic.page", nil)
+	err := t.templates.Render(rw, r, "create-topic.page", &models.ViewData{})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -125,7 +136,12 @@ func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.templates.Render(rw, "delete-topic.page", topicID)
+	intMap := make(map[string]int)
+	intMap["topic_id"] = topicID
+
+	err = t.templates.Render(rw, r, "delete-topic.page", &models.ViewData{
+		IntMap: intMap,
+	})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)

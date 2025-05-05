@@ -1,5 +1,5 @@
 <h1>Topics</h1>
-{{range .}}
+{{range index .Data "topics"}}
     <div>
         <a href="/topics/{{.ID}}">{{.Name}}</a>
         <p>{{.Description}}<br>
@@ -8,5 +8,8 @@
     <br>
 {{end}}
 
-<a href="/login">Login</a><br>
-<a href="/logout">Logout</a><br>
+{{if eq .IsAuthenticated false}}
+    <a href="/login">Login</a><br>
+{{else}}
+    <a href="/logout">Logout</a><br>
+{{end}}

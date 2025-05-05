@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"forum-project/internal/auth"
+	"forum-project/internal/models"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
@@ -21,7 +22,7 @@ func NewUserHandler(logger *slog.Logger, templates *template.Manager, userServic
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.templates.Render(rw, "register.page", nil)
+	err := u.templates.Render(rw, r, "register.page", &models.ViewData{})
 	if err != nil {
 		u.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -42,7 +43,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.templates.Render(rw, "login.page", nil)
+	err := u.templates.Render(rw, r, "login.page", &models.ViewData{})
 	if err != nil {
 		u.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
@@ -83,7 +84,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
-	err := a.templates.Render(rw, "logout.page", nil)
+	err := a.templates.Render(rw, r, "logout.page", &models.ViewData{})
 	if err != nil {
 		a.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
