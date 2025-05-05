@@ -15,7 +15,7 @@ func (app *App) initRouter() {
 	// initialize handlers
 	th := handlers.NewTopicHandler(app.logger, app.templates, app.topicService)
 	ph := handlers.NewPostHandler(app.logger, app.templates, app.postService)
-	ah := handlers.NewAuthHandler(app.logger, app.templates, app.userService)
+	uh := handlers.NewUserHandler(app.logger, app.templates, app.userService)
 
 	// guests routing
 	mux.HandleFunc("GET /topics", th.GetAllTopics)
@@ -24,12 +24,12 @@ func (app *App) initRouter() {
 	mux.HandleFunc("GET /posts/{id}", ph.GetPostByID)
 
 	// authorization routing
-	mux.HandleFunc("GET /login", ah.GetLogin)
-	mux.HandleFunc("POST /login", ah.PostLogin)
-	mux.HandleFunc("GET /logout", ah.GetLogout)
-	mux.HandleFunc("POST /logout", ah.PostLogout)
-	mux.HandleFunc("GET /register", ah.GetRegister)
-	mux.HandleFunc("POST /register", ah.PostRegister)
+	mux.HandleFunc("GET /login", uh.GetLogin)
+	mux.HandleFunc("POST /login", uh.PostLogin)
+	mux.HandleFunc("GET /logout", uh.GetLogout)
+	mux.HandleFunc("POST /logout", uh.PostLogout)
+	mux.HandleFunc("GET /register", uh.GetRegister)
+	mux.HandleFunc("POST /register", uh.PostRegister)
 
 	// authorized users routing
 	authorizedMux.HandleFunc("GET /topics/{id}/posts/new", ph.GetCreatePost)
