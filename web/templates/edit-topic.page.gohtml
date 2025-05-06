@@ -1,0 +1,13 @@
+{{$topic := index .Data "topic"}}
+<div>
+    <form action="/admin/topics/{{$topic.ID}}/edit" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="{{$topic.Name}}">
+        <br>
+        <label for="description">Description:</label>
+        <textarea id="description" name="description">{{$topic.Description}}</textarea>
+        <br>
+        Edit topic?
+        <input type="submit">
+    </form>
+</div>

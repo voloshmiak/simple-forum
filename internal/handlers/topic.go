@@ -115,14 +115,54 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 }
 
 func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.templates.Render(rw, r, "create-topic.page", &models.ViewData{})
+	stringID := r.PathValue("id")
+	topicID, err := strconv.Atoi(stringID)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
+		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+	}
+
+	topic, err := t.topicService.GetTopicByID(topicID)
+
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
+		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		return
+	}
+
+	data := make(map[string]any)
+	data["topic"] = topic
+
+	err = t.templates.Render(rw, r, "edit-topic.page", &models.ViewData{
+		Data: data,
+	})
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
 }
 
-func (t *TopicHandler) PutEditTopic(rw http.ResponseWriter, r *http.Request) {}
+func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	topicID, err := strconv.Atoi(stringID)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
+		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		return
+	}
+
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+
+	_, err = t.topicService.EditTopic(topicID, name, description)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to update topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to update topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, r, "/topics", http.StatusFound)
+}
 
 func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")

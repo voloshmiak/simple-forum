@@ -47,6 +47,14 @@ func (p *PostService) CreatePost(title, content string, topicID, authorID int) (
 	return post, nil
 }
 
+func (p *PostService) EditPost(post *models.Post) (*models.Post, error) {
+	err := p.repository.UpdatePost(post)
+	if err != nil {
+		return nil, err
+	}
+	return post, nil
+}
+
 func (p *PostService) DeletePost(postID int) error {
 	err := p.repository.DeletePost(postID)
 	if err != nil {

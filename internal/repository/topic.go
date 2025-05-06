@@ -96,6 +96,20 @@ func (t *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
 	return topic.ID, nil
 }
 
+func (t *TopicRepository) UpdateTopic(topic *models.Topic) error {
+	query := `UPDATE topics SET name = $1, description = $2 WHERE id = $3`
+
+	_, err := t.conn.Exec(query,
+		topic.Name,
+		topic.Description,
+		topic.ID)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (t *TopicRepository) DeleteTopic(topicID int) error {
 	query := `DELETE FROM topics WHERE id = $1`
 

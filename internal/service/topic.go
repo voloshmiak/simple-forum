@@ -53,6 +53,19 @@ func (t *TopicService) CreateTopic(name, description string, authorID int) (*mod
 	return topic, nil
 }
 
+func (t *TopicService) EditTopic(id int, name, description string) (*models.Topic, error) {
+	topic := models.NewTopic()
+	topic.ID = id
+	topic.Name = name
+	topic.Description = description
+
+	err := t.repository.UpdateTopic(topic)
+	if err != nil {
+		return nil, err
+	}
+	return topic, nil
+}
+
 func (t *TopicService) DeleteTopic(id int) error {
 	err := t.repository.DeleteTopic(id)
 	if err != nil {

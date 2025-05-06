@@ -82,6 +82,24 @@ func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
 	return post.ID, nil
 }
 
+func (u *PostRepository) UpdatePost(post *models.Post) error {
+	query := `UPDATE posts SET title = $1, content = $2, topic_id = $3, author_id = $4, updated_at = $5 WHERE id = $6`
+
+	_, err := u.conn.Exec(query,
+		post.Title,
+		post.Content,
+		post.TopicId,
+		post.AuthorId,
+		post.UpdatedAt,
+		post.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *PostRepository) DeletePost(postID int) error {
 	query := `DELETE FROM posts WHERE id = $1`
 

@@ -159,9 +159,67 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	http.Redirect(rw, r, redirectedURL, http.StatusFound)
 }
 
-func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {}
+func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	postID, err := strconv.Atoi(stringID)
+	if err != nil {
+		p.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
 
-func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {}
+	post, err := p.postService.GetPostByID(postID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	data := make(map[string]any)
+	data["post"] = post
+
+	err = p.templates.Render(rw, r, "edit-post.page", &models.ViewData{
+		Data: data,
+	})
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+	}
+}
+
+func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
+	stringID := r.PathValue("id")
+	postID, err := strconv.Atoi(stringID)
+	if err != nil {
+		p.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostFormValue("title")
+	content := r.PostFormValue("content")
+
+	post, err := p.postService.GetPostByID(postID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	post.Title = title
+	post.Content = content
+
+	_, err = p.postService.EditPost(post)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to edit post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to edit post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	redirectedURL := fmt.Sprintf("/posts/%d", post.ID)
+
+	http.Redirect(rw, r, redirectedURL, http.StatusFound)
+}
 
 func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")

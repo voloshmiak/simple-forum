@@ -1,0 +1,13 @@
+{{$post := index .Data "post"}}
+<div>
+    <form action="/user/posts/{{$post.ID}}/edit" method="post">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" value="{{$post.Title}}">
+        <br>
+        <label for="content">Description:</label>
+        <textarea id="content" name="content">{{$post.Content}}</textarea>
+        <br>
+        Edit post?
+        <input type="submit">
+    </form>
+</div>
