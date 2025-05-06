@@ -77,28 +77,19 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	viedData := &models.ViewData{}
-	viedData.IsAuthenticated = false
+	viedData.IsAuthor = false
 
-	cookie, err := r.Cookie("token")
+	token, err := auth.ValidateTokenFromRequest(r)
 	if err == nil {
-		token, err := auth.ValidateToken(cookie.Value)
-		if err == nil {
-			claims, ok := token.Claims.(jwt.MapClaims)
-			if !ok || !token.Valid {
-				viedData.IsAuthor = false
-			}
+		claims := token.Claims.(jwt.MapClaims)
 
-			userIDClaim := claims["id"]
+		userIDClaim := claims["id"]
+		userIDFloat := userIDClaim.(float64)
+		userIDInt := int(userIDFloat)
 
-			userIDFloat := userIDClaim.(float64)
-
-			userIDInt := int(userIDFloat)
-
-			if post.AuthorId == userIDInt {
-				viedData.IsAuthor = true
-			}
+		if post.AuthorId == userIDInt {
+			viedData.IsAuthor = true
 		}
-
 	}
 
 	data := make(map[string]any)
