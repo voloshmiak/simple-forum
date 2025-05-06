@@ -5,9 +5,17 @@
     Author: {{$post.AuthorId}}<br>
     Was posted: <small>{{$post.CreatedAt}}</small>
 </div>
+{{if eq .IsAuthor true}}
 <br><a href="/user/posts/{{$post.ID}}/edit">Edit post</a><br>
-<br><a href="/user/posts/{{$post.ID}}/delete">Delete post</a><br>
 <br>
+{{end}}
+
+    {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
+        <a href="/user/posts/{{$post.ID}}/delete">Delete post</a><br>
+    {{end}}
+
+    <br>
+
 {{if eq .IsAuthenticated false}}
     <a href="/login">Login</a><br>
 {{else}}

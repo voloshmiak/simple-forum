@@ -4,6 +4,7 @@ import (
 	"errors"
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
+	"github.com/golang-jwt/jwt/v5"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -25,16 +26,28 @@ func AddDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		td.IsAuthenticated = false
+		td.IsAdmin = false
 		return td
 	}
 
-	_, err = auth.ValidateToken(cookie.Value)
+	token, err := auth.ValidateToken(cookie.Value)
 	if err != nil {
 		td.IsAuthenticated = false
+		td.IsAdmin = false
 		return td
 	}
 
 	td.IsAuthenticated = true
+
+	claims := token.Claims.(jwt.MapClaims)
+	role := claims["role"].(string)
+
+	if role == "admin" {
+		td.IsAdmin = true
+		return td
+	}
+
+	td.IsAdmin = false
 
 	return td
 }

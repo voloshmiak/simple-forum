@@ -76,12 +76,37 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	viedData := &models.ViewData{}
+	viedData.IsAuthenticated = false
+
+	cookie, err := r.Cookie("token")
+	if err == nil {
+		token, err := auth.ValidateToken(cookie.Value)
+		if err == nil {
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok || !token.Valid {
+				viedData.IsAuthor = false
+			}
+
+			userIDClaim := claims["id"]
+
+			userIDFloat := userIDClaim.(float64)
+
+			userIDInt := int(userIDFloat)
+
+			if post.AuthorId == userIDInt {
+				viedData.IsAuthor = true
+			}
+		}
+
+	}
+
 	data := make(map[string]any)
 	data["post"] = post
 
-	err = p.templates.Render(rw, r, "post.page", &models.ViewData{
-		Data: data,
-	})
+	viedData.Data = data
+
+	err = p.templates.Render(rw, r, "post.page", viedData)
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)

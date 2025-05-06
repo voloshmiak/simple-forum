@@ -6,4 +6,6 @@ type ViewData struct {
 	FloatMap        map[string]float64
 	Data            map[string]any
 	IsAuthenticated bool
+	IsAuthor        bool
+	IsAdmin         bool
 }
