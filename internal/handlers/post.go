@@ -24,44 +24,8 @@ func NewPostHandler(logger *slog.Logger, renderer *template.Manager, postService
 	return &PostHandler{logger, renderer, postService, topicService}
 }
 
-func (p *PostHandler) GetPosts(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	id, err := strconv.Atoi(stringID)
-	if err != nil {
-		p.logger.Error("Unable to convert id to integer")
-		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
-		return
-	}
-
-	posts, err := p.postService.GetPostsByTopicID(id)
-	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to get posts: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to get posts: %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	topic, err := p.topicService.GetTopicByID(id)
-	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	data := make(map[string]any)
-	data["posts"] = posts
-	data["topic"] = topic
-
-	err = p.templates.Render(rw, r, "posts.page", &models.ViewData{
-		Data: data,
-	})
-	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
-	}
-}
-
 func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
+	stringID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
 		p.logger.Error("Unable to convert id to integer")
@@ -83,9 +47,9 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		claims := token.Claims.(jwt.MapClaims)
 
-		userIDClaim := claims["id"]
-		userIDFloat := userIDClaim.(float64)
-		userIDInt := int(userIDFloat)
+		userClaim := claims["user"].(map[string]interface{})
+		userIDClaim := userClaim["id"].(float64)
+		userIDInt := int(userIDClaim)
 
 		if post.AuthorId == userIDInt {
 			viedData.IsAuthor = true
@@ -155,12 +119,13 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
-	authorIDfloat, ok := claims["id"].(float64)
+	user, ok := claims["user"].(map[string]interface{})
 	if !ok {
 		p.logger.Error("Unable to convert author id to float64")
 		http.Error(rw, "Unable to convert author id to float64", http.StatusBadRequest)
 		return
 	}
+	authorIDfloat, ok := user["id"].(float64)
 	authorIDInt := int(authorIDfloat)
 
 	_, err = p.postService.CreatePost(title, content, topicIDInt, authorIDInt)
@@ -170,7 +135,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectedURL := fmt.Sprintf("/topics/%d/posts", topicIDInt)
+	redirectedURL := fmt.Sprintf("/topics/%d", topicIDInt)
 
 	http.Redirect(rw, r, redirectedURL, http.StatusFound)
 }
@@ -188,6 +153,16 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
+
+	if userID != post.AuthorId {
+		p.logger.Error("Forbidden")
+		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -222,6 +197,23 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
+
+	if userID != post.AuthorId {
+		p.logger.Error("Forbidden")
+		http.Error(rw, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	topic, err := p.topicService.GetTopicByPostID(postID)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	post.Title = title
 	post.Content = content
 
@@ -232,40 +224,12 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectedURL := fmt.Sprintf("/posts/%d", post.ID)
+	redirectedURL := fmt.Sprintf("/topics/%v", topic.ID)
 
 	http.Redirect(rw, r, redirectedURL, http.StatusFound)
 }
 
 func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	postID, err := strconv.Atoi(stringID)
-	if err != nil {
-		p.logger.Error("Unable to convert id to integer")
-		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
-		return
-	}
-
-	post, err := p.postService.GetPostByID(postID)
-	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	data := make(map[string]any)
-	data["post"] = post
-
-	err = p.templates.Render(rw, r, "delete-post.page", &models.ViewData{
-		Data: data,
-	})
-	if err != nil {
-		p.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
-	}
-}
-
-func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
@@ -281,6 +245,25 @@ func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	post, err := p.postService.GetPostByID(id)
+	if err != nil {
+		p.logger.Error(fmt.Sprintf("Unable to get post: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get post: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
+
+	userRole := user.(map[string]interface{})["role"].(string)
+
+	if userID != post.AuthorId && userRole != "admin" {
+		p.logger.Error("Forbidden")
+		http.Error(rw, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	err = p.postService.DeletePost(id)
 	if err != nil {
 		p.logger.Error(fmt.Sprintf("Unable to delete post: %s", err))
@@ -288,7 +271,7 @@ func (p *PostHandler) PostDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := fmt.Sprintf("/topics/%v/posts", topic.ID)
+	url := fmt.Sprintf("/topics/%v", topic.ID)
 
 	http.Redirect(rw, r, url, http.StatusFound)
 }

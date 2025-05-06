@@ -12,9 +12,12 @@
         <br>
     {{end}}
 {{end}}
-    
-{{if eq .IsAuthenticated false}}
-    <a href="/login">Login</a><br>
-{{else}}
+
+{{if eq .IsAdmin true}}
+    <a href="/admin/topics/new">Create topic</a> <br>
+{{end}}
+{{if eq .IsAuthenticated true}}
     <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
+{{else}}
+    <a href="/login">Login</a><br>
 {{end}}

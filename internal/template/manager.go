@@ -31,16 +31,18 @@ func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
 	}
 
 	td.IsAuthenticated = true
+	td.IsAdmin = false
 
 	claims := token.Claims.(jwt.MapClaims)
-	role := claims["role"].(string)
+
+	user := claims["user"].(map[string]interface{})
+	role := user["role"].(string)
 
 	if role == "admin" {
 		td.IsAdmin = true
 		return td
 	}
 
-	td.IsAdmin = false
 	return td
 }
 

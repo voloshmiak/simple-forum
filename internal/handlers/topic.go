@@ -17,10 +17,11 @@ type TopicHandler struct {
 	logger       *slog.Logger
 	templates    *template.Manager
 	topicService *service.TopicService
+	postService  *service.PostService
 }
 
-func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicService *service.TopicService) *TopicHandler {
-	return &TopicHandler{logger, renderer, topicService}
+func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicService *service.TopicService, postService *service.PostService) *TopicHandler {
+	return &TopicHandler{logger, renderer, topicService, postService}
 }
 
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
@@ -42,23 +43,30 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
-
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
-
 	if err != nil {
-		http.Redirect(rw, r, "/topics/", http.StatusFound)
+		t.logger.Error("Unable to convert id to integer")
+		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := t.postService.GetPostsByTopicID(id)
+	if err != nil {
+		t.logger.Error(fmt.Sprintf("Unable to get posts: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get posts: %s", err), http.StatusInternalServerError)
 		return
 	}
 
 	topic, err := t.topicService.GetTopicByID(id)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
-		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		t.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
+		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
 		return
 	}
 
 	data := make(map[string]any)
+	data["posts"] = posts
 	data["topic"] = topic
 
 	err = t.templates.Render(rw, r, "topic.page", &models.ViewData{
@@ -68,7 +76,6 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
 	}
-
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
@@ -96,15 +103,17 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
-	authorIDfloat, ok := claims["id"].(float64)
+	user, ok := claims["user"].(map[string]interface{})
+	userIDfloat := user["id"].(float64)
+	userID := int(userIDfloat)
+
 	if !ok {
 		t.logger.Error("Unable to convert author id to float64")
 		http.Error(rw, "Unable to convert author id to float64", http.StatusBadRequest)
 		return
 	}
-	authorIDInt := int(authorIDfloat)
 
-	_, err = t.topicService.CreateTopic(name, description, authorIDInt)
+	_, err = t.topicService.CreateTopic(name, description, userID)
 	if err != nil {
 		t.logger.Error(fmt.Sprintf("Unable to create topic: %s", err))
 		http.Error(rw, fmt.Sprintf("Unable to create topic: %s", err), http.StatusInternalServerError)
@@ -165,33 +174,6 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	topicID, err := strconv.Atoi(stringID)
-	if err != nil {
-		http.Redirect(rw, r, "/topics/", http.StatusFound)
-		return
-	}
-
-	topic, err := t.topicService.GetTopicByID(topicID)
-	if err != nil {
-		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
-		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
-		return
-	}
-
-	data := make(map[string]any)
-	data["topic"] = topic
-
-	err = t.templates.Render(rw, r, "delete-topic.page", &models.ViewData{
-		Data: data,
-	})
-	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
-	}
-}
-
-func (t *TopicHandler) PostDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {

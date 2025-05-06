@@ -11,7 +11,7 @@
 {{end}}
 
     {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
-        <a href="/user/posts/{{$post.ID}}/delete">Delete post</a><br>
+        <a href="/user/posts/{{$post.ID}}/delete" onclick="return confirm('Are you sure?')">Delete post</a><br>
     {{end}}
 
     <br>

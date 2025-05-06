@@ -71,12 +71,13 @@ func New() *App {
 	userService := service.NewUserService(userRepository)
 
 	//init handlers
-	th := handlers.NewTopicHandler(logger, templateManager, topicService)
+	hh := handlers.NewHomeHandler(logger, templateManager)
+	th := handlers.NewTopicHandler(logger, templateManager, topicService, postService)
 	ph := handlers.NewPostHandler(logger, templateManager, postService, topicService)
 	uh := handlers.NewUserHandler(logger, templateManager, userService)
 
 	// init mux
-	mux := registerRoutes(th, ph, uh)
+	mux := registerRoutes(hh, th, ph, uh)
 
 	// init server
 	server := &http.Server{
