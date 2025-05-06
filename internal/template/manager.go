@@ -22,15 +22,8 @@ func NewManager() (*Manager, error) {
 	return &Manager{templates: templates}, nil
 }
 
-func AddDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		td.IsAuthenticated = false
-		td.IsAdmin = false
-		return td
-	}
-
-	token, err := auth.ValidateToken(cookie.Value)
+func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
+	token, err := auth.ValidateTokenFromRequest(r)
 	if err != nil {
 		td.IsAuthenticated = false
 		td.IsAdmin = false
@@ -48,7 +41,6 @@ func AddDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
 	}
 
 	td.IsAdmin = false
-
 	return td
 }
 
@@ -104,7 +96,7 @@ func (m *Manager) Render(rw http.ResponseWriter, r *http.Request, tmpl string, t
 		return errors.New(tmpl + ".gohtml not found")
 	}
 
-	td = AddDefaultData(td, r)
+	td = addDefaultData(td, r)
 
 	// rendering template
 	return rt.Execute(rw, td)

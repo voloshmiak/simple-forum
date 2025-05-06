@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"forum-project/internal/models"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -34,6 +35,20 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 
 	if !token.Valid {
 		return nil, errors.New("invalid token")
+	}
+
+	return token, nil
+}
+
+func ValidateTokenFromRequest(r *http.Request) (*jwt.Token, error) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		return nil, errors.New("unauthorized")
+	}
+
+	token, err := ValidateToken(cookie.Value)
+	if err != nil {
+		return nil, err
 	}
 
 	return token, nil

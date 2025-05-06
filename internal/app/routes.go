@@ -22,7 +22,6 @@ func registerRoutes(th *handlers.TopicHandler, ph *handlers.PostHandler, uh *han
 	mux.HandleFunc("GET /login", uh.GetLogin)
 	mux.HandleFunc("POST /login", uh.PostLogin)
 	mux.HandleFunc("GET /logout", uh.GetLogout)
-	mux.HandleFunc("POST /logout", uh.PostLogout)
 	mux.HandleFunc("GET /register", uh.GetRegister)
 	mux.HandleFunc("POST /register", uh.PostRegister)
 

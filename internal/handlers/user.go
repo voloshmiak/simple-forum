@@ -84,14 +84,6 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
-	err := a.templates.Render(rw, r, "logout.page", &models.ViewData{})
-	if err != nil {
-		a.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
-	}
-}
-
-func (a *UserHandler) PostLogout(rw http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    "",

@@ -6,8 +6,19 @@
 </div>
 <a href="/topics/{{$topic.ID}}/posts">Posts</a><br>
 <br>
+
+{{if eq .IsAdmin true}}
+    <a href="/admin/topics/{{$topic.ID}}/edit">Edit topic</a><br>
+    <br>
+{{end}}
+
+{{if eq .IsAdmin true}}
+    <a href="/admin/topics/{{$topic.ID}}/delete">Delete topic</a><br>
+    <br>
+{{end}}
+
 {{if eq .IsAuthenticated false}}
     <a href="/login">Login</a><br>
 {{else}}
-    <a href="/logout">Logout</a><br>
+    <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
 {{end}}

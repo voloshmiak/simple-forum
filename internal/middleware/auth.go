@@ -9,13 +9,7 @@ import (
 
 func UserAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
-		if err != nil {
-			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		_, err = auth.ValidateToken(cookie.Value)
+		_, err := auth.ValidateTokenFromRequest(r)
 		if err != nil {
 			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -27,15 +21,9 @@ func UserAuthorization(next http.Handler) http.Handler {
 
 func AdminAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
+		token, err := auth.ValidateTokenFromRequest(r)
 		if err != nil {
 			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		token, err := auth.ValidateToken(cookie.Value)
-		if err != nil {
-			http.Error(rw, err.Error(), http.StatusUnauthorized)
 			return
 		}
 

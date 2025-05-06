@@ -19,5 +19,5 @@
 {{else}}
     <a href="/user/topics/{{$topic.ID}}/posts/new">Create Post</a><br>
     <br>
-    <a href="/logout">Logout</a><br>
+    <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
 {{end}}

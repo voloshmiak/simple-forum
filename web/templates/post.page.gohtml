@@ -19,5 +19,5 @@
 {{if eq .IsAuthenticated false}}
     <a href="/login">Login</a><br>
 {{else}}
-    <a href="/logout">Logout</a><br>
+    <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
 {{end}}
