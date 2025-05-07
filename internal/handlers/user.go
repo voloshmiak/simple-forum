@@ -72,13 +72,13 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 24),
 	}
 
-	http.SetCookie(rw, cookie)``
+	http.SetCookie(rw, cookie)
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
 
 }
 
-func (a *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Name:     "token",
 		Value:    "",

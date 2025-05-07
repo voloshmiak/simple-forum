@@ -19,20 +19,20 @@ func NewLogger() *WrappedLogger {
 	return &WrappedLogger{Logger: logger}
 }
 
-func (el *WrappedLogger) ServerInternalError(rw http.ResponseWriter, msg string, err error) {
-	el.Logger.Error(msg, "error", err)
+func (wl *WrappedLogger) ServerInternalError(rw http.ResponseWriter, msg string, err error) {
+	wl.Logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusInternalServerError)
 }
 
-func (el *WrappedLogger) NotFoundError(rw http.ResponseWriter, msg string, err error) {
-	el.Logger.Error(msg, "error", err)
+func (wl *WrappedLogger) NotFoundError(rw http.ResponseWriter, msg string, err error) {
+	wl.Logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusNotFound)
 }
 
-func (el *WrappedLogger) BadRequestError(rw http.ResponseWriter, msg string, err error) {
-	el.Logger.Error(msg, "error", err)
+func (wl *WrappedLogger) BadRequestError(rw http.ResponseWriter, msg string, err error) {
+	wl.Logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusBadRequest)
 }
