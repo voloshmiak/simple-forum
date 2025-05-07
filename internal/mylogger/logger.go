@@ -36,3 +36,9 @@ func (wl *WrappedLogger) BadRequestError(rw http.ResponseWriter, msg string, err
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusBadRequest)
 }
+
+func (wl *WrappedLogger) UnauthorizedError(rw http.ResponseWriter, msg string, err error) {
+	wl.Logger.Error(msg, "error", err)
+	msg = fmt.Sprintf("%s: %s", msg, err)
+	http.Error(rw, msg, http.StatusUnauthorized)
+}

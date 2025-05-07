@@ -7,10 +7,9 @@ import (
 	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strconv"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type PostHandler struct {
@@ -25,8 +24,8 @@ func NewPostHandler(logger *mylogger.WrappedLogger, renderer *template.Manager, 
 }
 
 func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("postID")
-	id, err := strconv.Atoi(stringID)
+	stringPostID := r.PathValue("postID")
+	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
 		p.logger.BadRequestError(rw, "Invalid Post ID", err)
 		return
@@ -49,7 +48,8 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		userIDClaim := userClaim["id"].(float64)
 		userIDInt := int(userIDClaim)
 
-		if post.AuthorId == userIDInt {
+		isAuthor := p.postService.VerifyPostAuthor(post, userIDInt)
+		if isAuthor {
 			viedData.IsAuthor = true
 		}
 	}
@@ -66,14 +66,14 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	topicID, err := strconv.Atoi(stringID)
+	stringTopicID := r.PathValue("topicID")
+	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		p.logger.BadRequestError(rw, "Invalid Post ID", err)
 		return
 	}
 
-	topic, err := p.topicService.GetTopicByID(topicID)
+	topic, err := p.topicService.GetTopicByID(id)
 	if err != nil {
 		p.logger.NotFoundError(rw, "Topic Not Found", err)
 		return
@@ -99,25 +99,12 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 		p.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
 	}
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
 
-	token, err := auth.ValidateToken(cookie.Value)
-	if err != nil {
-		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
 
-	claims := token.Claims.(jwt.MapClaims)
-
-	user := claims["user"].(map[string]interface{})
-	authorIDfloat := user["id"].(float64)
-	authorIDInt := int(authorIDfloat)
-
-	_, err = p.postService.CreatePost(title, content, topicIDInt, authorIDInt)
+	err = p.postService.CreatePost(title, content, topicIDInt, userID)
 	if err != nil {
 		p.logger.ServerInternalError(rw, "Unable to create post", err)
 		return
@@ -129,16 +116,10 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	postID, err := strconv.Atoi(stringID)
+	stringPostID := r.PathValue("postID")
+	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
 		p.logger.BadRequestError(rw, "Invalid Post ID", err)
-		return
-	}
-
-	post, err := p.postService.GetPostByID(postID)
-	if err != nil {
-		p.logger.NotFoundError(rw, "Post Not Found", err)
 		return
 	}
 
@@ -146,7 +127,14 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
 
-	if userID != post.AuthorId {
+	post, err := p.postService.GetPostByID(id)
+	if err != nil {
+		p.logger.NotFoundError(rw, "Post Not Found", err)
+		return
+	}
+
+	isAuthor := p.postService.VerifyPostAuthor(post, userID)
+	if !isAuthor {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -163,8 +151,8 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	postID, err := strconv.Atoi(stringID)
+	stringPostID := r.PathValue("postID")
+	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
 		p.logger.BadRequestError(rw, "Invalid Post ID", err)
 		return
@@ -173,22 +161,23 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 
-	post, err := p.postService.GetPostByID(postID)
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
+
+	post, err := p.postService.GetPostByID(id)
 	if err != nil {
 		p.logger.NotFoundError(rw, "Post Not Found", err)
 		return
 	}
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
-
-	if userID != post.AuthorId {
+	isAuthor := p.postService.VerifyPostAuthor(post, userID)
+	if !isAuthor {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	topic, err := p.topicService.GetTopicByPostID(postID)
+	topic, err := p.topicService.GetTopicByPostID(id)
 	if err != nil {
 		p.logger.NotFoundError(rw, "Topic Not Found", err)
 		return
@@ -197,7 +186,7 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	post.Title = title
 	post.Content = content
 
-	_, err = p.postService.EditPost(post)
+	err = p.postService.EditPost(post)
 	if err != nil {
 		p.logger.ServerInternalError(rw, "Unable to edit post", err)
 		return
@@ -209,8 +198,8 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	id, err := strconv.Atoi(stringID)
+	stringPostID := r.PathValue("postID")
+	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
 		p.logger.BadRequestError(rw, "Invalid Post ID", err)
 		return
@@ -222,19 +211,19 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
+	userID := int(userIDfloat)
+	userRole := user.(map[string]interface{})["role"].(string)
+
 	post, err := p.postService.GetPostByID(id)
 	if err != nil {
 		p.logger.NotFoundError(rw, "Post Not Found", err)
 		return
 	}
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
-
-	userRole := user.(map[string]interface{})["role"].(string)
-
-	if userID != post.AuthorId && userRole != "admin" {
+	isAuthorOrAdmin := p.postService.VerifyPostAuthorOrAdmin(post, userID, userRole)
+	if !isAuthorOrAdmin {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}

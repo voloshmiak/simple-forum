@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"forum-project/internal/models"
 	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
@@ -34,7 +35,14 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 
 	err := u.userService.Register(username, email, password1, password2)
 	if err != nil {
-		u.logger.ServerInternalError(rw, "Unable to register user", err)
+		switch {
+		case errors.Is(err, service.ErrMissmatchPassword):
+			u.logger.BadRequestError(rw, "Passwords do not match", err)
+			return
+		default:
+			u.logger.ServerInternalError(rw, "Failed to register user", err)
+			return
+		}
 	}
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
@@ -53,8 +61,17 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 
 	token, err := u.userService.Authenticate(email, password)
 	if err != nil {
-		u.logger.ServerInternalError(rw, "Unable to authenticate user", err)
-		return
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			u.logger.NotFoundError(rw, "User not found", err)
+			return
+		case errors.Is(err, service.ErrWrongPassword):
+			u.logger.UnauthorizedError(rw, "Wrong password", err)
+			return
+		default:
+			u.logger.ServerInternalError(rw, "Failed to login user", err)
+			return
+		}
 	}
 
 	cookie := &http.Cookie{

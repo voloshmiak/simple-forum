@@ -37,23 +37,22 @@ func (t *TopicService) GetTopicByPostID(id int) (*models.Topic, error) {
 	return topic, nil
 }
 
-func (t *TopicService) CreateTopic(name, description string, authorID int) (*models.Topic, error) {
+func (t *TopicService) CreateTopic(name, description string, authorID int) error {
 	topic := models.NewTopic()
 	topic.Name = name
 	topic.Description = description
 	topic.CreatedAt = "Now"
 	topic.AuthorId = authorID
 
-	topicID, err := t.repository.InsertTopic(topic)
+	_, err := t.repository.InsertTopic(topic)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	topic.ID = topicID
-	return topic, nil
+	return nil
 }
 
-func (t *TopicService) EditTopic(id int, name, description string) (*models.Topic, error) {
+func (t *TopicService) EditTopic(id int, name, description string) error {
 	topic := models.NewTopic()
 	topic.ID = id
 	topic.Name = name
@@ -61,9 +60,9 @@ func (t *TopicService) EditTopic(id int, name, description string) (*models.Topi
 
 	err := t.repository.UpdateTopic(topic)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return topic, nil
+	return nil
 }
 
 func (t *TopicService) DeleteTopic(id int) error {

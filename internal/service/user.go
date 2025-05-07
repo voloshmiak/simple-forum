@@ -8,6 +8,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var ErrUserNotFound = errors.New("user not found")
+var ErrWrongPassword = errors.New("wrong password")
+var ErrMissmatchPassword = errors.New("passwords do not match")
+
 type UserService struct {
 	repository *repository.UserRepository
 }
@@ -19,17 +23,17 @@ func NewUserService(repository *repository.UserRepository) *UserService {
 func (u *UserService) Authenticate(email, password string) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
-		return "", errors.New("user not found")
+		return "", ErrUserNotFound
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", errors.New("wrong password")
+		return "", ErrWrongPassword
 	}
 
 	token, err := auth.GenerateToken(user)
 	if err != nil {
-		return "", errors.New("failed to generate token")
+		return "", err
 	}
 
 	return token, nil
@@ -37,7 +41,7 @@ func (u *UserService) Authenticate(email, password string) (string, error) {
 
 func (u *UserService) Register(username, email, password1, password2 string) error {
 	if password1 != password2 {
-		return errors.New("passwords do not match")
+		return ErrMissmatchPassword
 	}
 
 	user := models.NewUser()
@@ -58,10 +62,10 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	return nil
 }
 
-func (u *UserService) GetUserByMail(email string) (*models.User, error) {
-	user, err := u.repository.GetUserByEmail(email)
+func (u *UserService) GetUserByID(id int) (*models.User, error) {
+	user, err := u.repository.GetUserByID(id)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return nil, ErrUserNotFound
 	}
 	return user, nil
 }

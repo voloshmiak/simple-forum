@@ -15,7 +15,7 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	// guests routing
 	mux.HandleFunc("GET /home", hh.GetHome)
 	mux.HandleFunc("GET /topics", th.GetTopics)
-	mux.HandleFunc("GET /topics/{id}", th.GetTopic)
+	mux.HandleFunc("GET /topics/{topicID}", th.GetTopic)
 	mux.HandleFunc("GET /topics/{topicID}/posts/{postID}", ph.GetPost)
 
 	// authorization routing
@@ -26,11 +26,11 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	mux.HandleFunc("POST /register", uh.PostRegister)
 
 	// authorized users routing
-	authorizedMux.HandleFunc("GET /topics/{id}/posts/new", ph.GetCreatePost)
+	authorizedMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)
 	authorizedMux.HandleFunc("POST /posts", ph.PostCreatePost)
-	authorizedMux.HandleFunc("GET /posts/{id}/edit", ph.GetEditPost)
-	authorizedMux.HandleFunc("POST /posts/{id}/edit", ph.PostEditPost)
-	authorizedMux.HandleFunc("GET /posts/{id}/delete", ph.GetDeletePost)
+	authorizedMux.HandleFunc("GET /posts/{postID}/edit", ph.GetEditPost)
+	authorizedMux.HandleFunc("POST /posts/{postID}/edit", ph.PostEditPost)
+	authorizedMux.HandleFunc("GET /posts/{postID}/delete", ph.GetDeletePost)
 
 	authware := middleware.AuthMiddleware
 
@@ -39,9 +39,9 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	// admin routing
 	adminMux.HandleFunc("GET /topics/new", th.GetCreateTopic)
 	adminMux.HandleFunc("POST /topics", th.PostCreateTopic)
-	adminMux.HandleFunc("GET /topics/{id}/edit", th.GetEditTopic)
-	adminMux.HandleFunc("POST /topics/{id}/edit", th.PostEditTopic)
-	adminMux.HandleFunc("GET /topics/{id}/delete", th.GetDeleteTopic)
+	adminMux.HandleFunc("GET /topics/{topicID}/edit", th.GetEditTopic)
+	adminMux.HandleFunc("POST /topics/{topicID}/edit", th.PostEditTopic)
+	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
 	adminware := middleware.CreateStack(
 		middleware.AuthMiddleware,

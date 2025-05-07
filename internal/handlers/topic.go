@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"forum-project/internal/auth"
 	"forum-project/internal/models"
 	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"net/http"
 	"strconv"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type TopicHandler struct {
@@ -41,8 +38,8 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	id, err := strconv.Atoi(stringID)
+	stringTopicID := r.PathValue("topicID")
+	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
@@ -83,24 +80,11 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	token, err := auth.ValidateToken(cookie.Value)
-	if err != nil {
-		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	claims := token.Claims.(jwt.MapClaims)
-	user := claims["user"].(map[string]interface{})
-	userIDfloat := user["id"].(float64)
+	user := r.Context().Value("user")
+	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
 
-	_, err = t.topicService.CreateTopic(name, description, userID)
+	err := t.topicService.CreateTopic(name, description, userID)
 	if err != nil {
 		t.logger.ServerInternalError(rw, "Unable to create topic", err)
 		return
@@ -110,13 +94,13 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 }
 
 func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	topicID, err := strconv.Atoi(stringID)
+	stringTopicID := r.PathValue("topicID")
+	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 	}
 
-	topic, err := t.topicService.GetTopicByID(topicID)
+	topic, err := t.topicService.GetTopicByID(id)
 
 	if err != nil {
 		t.logger.NotFoundError(rw, "Topic Not Found", err)
@@ -135,8 +119,8 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	topicID, err := strconv.Atoi(stringID)
+	stringTopicID := r.PathValue("topicID")
+	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
@@ -145,7 +129,7 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 
-	_, err = t.topicService.EditTopic(topicID, name, description)
+	err = t.topicService.EditTopic(id, name, description)
 	if err != nil {
 		t.logger.ServerInternalError(rw, "Unable to edit topic", err)
 		return
@@ -155,8 +139,8 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
-	stringID := r.PathValue("id")
-	id, err := strconv.Atoi(stringID)
+	stringTopicID := r.PathValue("topicID")
+	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return

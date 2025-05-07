@@ -49,3 +49,23 @@ func (u *UserRepository) InsertUser(user *models.User) (int, error) {
 
 	return user.ID, nil
 }
+
+func (u *UserRepository) GetUserByID(id int) (*models.User, error) {
+	query := `SELECT * FROM users WHERE id = $1`
+
+	user := models.NewUser()
+
+	err := u.conn.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.Role,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
