@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"forum-project/internal/auth"
 	"forum-project/internal/models"
 	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
@@ -32,7 +31,8 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password1 := r.PostFormValue("password1")
 	password2 := r.PostFormValue("password2")
-	_, err := u.userService.Register(username, email, password1, password2)
+
+	err := u.userService.Register(username, email, password1, password2)
 	if err != nil {
 		u.logger.ServerInternalError(rw, "Unable to register user", err)
 	}
@@ -51,16 +51,10 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 
-	user, err := u.userService.Authenticate(email, password)
+	token, err := u.userService.Authenticate(email, password)
 	if err != nil {
 		u.logger.ServerInternalError(rw, "Unable to authenticate user", err)
 		return
-	}
-
-	token, err := auth.GenerateToken(user)
-
-	if err != nil {
-		u.logger.ServerInternalError(rw, "Unable to generate token", err)
 	}
 
 	cookie := &http.Cookie{

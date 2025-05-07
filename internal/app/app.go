@@ -39,7 +39,7 @@ func New() *App {
 
 	// load environment variables
 	if err := godotenv.Load(".env"); err != nil {
-		logger.Error("Failed to load .env file")
+		logger.Error("Failed to load .env file", "error", err)
 		os.Exit(1)
 	}
 

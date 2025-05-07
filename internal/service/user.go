@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"forum-project/internal/auth"
 	"forum-project/internal/models"
 	"forum-project/internal/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -15,23 +16,28 @@ func NewUserService(repository *repository.UserRepository) *UserService {
 	return &UserService{repository: repository}
 }
 
-func (u *UserService) Authenticate(email, password string) (*models.User, error) {
+func (u *UserService) Authenticate(email, password string) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
-		return nil, errors.New("user not found")
+		return "", errors.New("user not found")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return nil, errors.New("wrong password")
+		return "", errors.New("wrong password")
 	}
 
-	return user, nil
+	token, err := auth.GenerateToken(user)
+	if err != nil {
+		return "", errors.New("failed to generate token")
+	}
+
+	return token, nil
 }
 
-func (u *UserService) Register(username, email, password1, password2 string) (*models.User, error) {
+func (u *UserService) Register(username, email, password1, password2 string) error {
 	if password1 != password2 {
-		return nil, errors.New("passwords do not match")
+		return errors.New("passwords do not match")
 	}
 
 	user := models.NewUser()
@@ -44,13 +50,12 @@ func (u *UserService) Register(username, email, password1, password2 string) (*m
 	user.CreatedAt = "Now"
 	user.Role = "user"
 
-	userid, err := u.repository.InsertUser(user)
+	_, err = u.repository.InsertUser(user)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	user.ID = userid
-	return user, nil
+	return nil
 }
 
 func (u *UserService) GetUserByMail(email string) (*models.User, error) {
