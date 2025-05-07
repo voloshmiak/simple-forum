@@ -32,7 +32,9 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	authorizedMux.HandleFunc("POST /posts/{id}/edit", ph.PostEditPost)
 	authorizedMux.HandleFunc("GET /posts/{id}/delete", ph.GetDeletePost)
 
-	mux.Handle("/user/", http.StripPrefix("/user", middleware.AuthMiddleware(authorizedMux)))
+	authware := middleware.AuthMiddleware
+
+	mux.Handle("/user/", http.StripPrefix("/user", authware(authorizedMux)))
 
 	// admin routing
 	adminMux.HandleFunc("GET /topics/new", th.GetCreateTopic)
@@ -41,7 +43,12 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	adminMux.HandleFunc("POST /topics/{id}/edit", th.PostEditTopic)
 	adminMux.HandleFunc("GET /topics/{id}/delete", th.GetDeleteTopic)
 
-	mux.Handle("/admin/", http.StripPrefix("/admin", middleware.AuthMiddleware(middleware.IsAdmin(adminMux))))
+	adminware := middleware.CreateStack(
+		middleware.AuthMiddleware,
+		middleware.IsAdmin,
+	)
+
+	mux.Handle("/admin/", http.StripPrefix("/admin", adminware(adminMux)))
 
 	return mux
 }
