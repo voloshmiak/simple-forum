@@ -1,12 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
+	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -14,20 +13,20 @@ import (
 )
 
 type TopicHandler struct {
-	logger       *slog.Logger
+	logger       *mylogger.WrappedLogger
 	templates    *template.Manager
 	topicService *service.TopicService
 	postService  *service.PostService
 }
 
-func NewTopicHandler(logger *slog.Logger, renderer *template.Manager, topicService *service.TopicService, postService *service.PostService) *TopicHandler {
+func NewTopicHandler(logger *mylogger.WrappedLogger, renderer *template.Manager, topicService *service.TopicService, postService *service.PostService) *TopicHandler {
 	return &TopicHandler{logger, renderer, topicService, postService}
 }
 
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.topicService.GetAllTopics()
 	if err != nil {
-		t.logger.Error(err.Error())
+		t.logger.ServerInternalError(rw, "Unable to get topics", err)
 	}
 
 	data := make(map[string]any)
@@ -37,8 +36,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
@@ -46,22 +44,19 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
-		t.logger.Error("Unable to convert id to integer")
-		http.Error(rw, "Unable to convert id to integer", http.StatusBadRequest)
-		return
-	}
-
-	posts, err := t.postService.GetPostsByTopicID(id)
-	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to get posts: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to get posts: %s", err), http.StatusInternalServerError)
+		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
 	}
 
 	topic, err := t.topicService.GetTopicByID(id)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to get topic: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to get topic: %s", err), http.StatusInternalServerError)
+		t.logger.NotFoundError(rw, "Topic Not Found", err)
+		return
+	}
+
+	posts, err := t.postService.GetPostsByTopicID(id)
+	if err != nil {
+		t.logger.ServerInternalError(rw, "Unable to get posts", err)
 		return
 	}
 
@@ -73,16 +68,14 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
 	err := t.templates.Render(rw, r, "create-topic.page", &models.ViewData{})
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
@@ -98,25 +91,18 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 
 	token, err := auth.ValidateToken(cookie.Value)
 	if err != nil {
-		http.Error(rw, err.Error(), http.StatusUnauthorized)
+		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
-	user, ok := claims["user"].(map[string]interface{})
+	user := claims["user"].(map[string]interface{})
 	userIDfloat := user["id"].(float64)
 	userID := int(userIDfloat)
 
-	if !ok {
-		t.logger.Error("Unable to convert author id to float64")
-		http.Error(rw, "Unable to convert author id to float64", http.StatusBadRequest)
-		return
-	}
-
 	_, err = t.topicService.CreateTopic(name, description, userID)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to create topic: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to create topic: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to create topic", err)
 		return
 	}
 
@@ -127,15 +113,13 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	topicID, err := strconv.Atoi(stringID)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
-		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 	}
 
 	topic, err := t.topicService.GetTopicByID(topicID)
 
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
-		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		t.logger.NotFoundError(rw, "Topic Not Found", err)
 		return
 	}
 
@@ -146,8 +130,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
@@ -155,8 +138,7 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	topicID, err := strconv.Atoi(stringID)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Topic not found: %s", err))
-		http.Error(rw, fmt.Sprintf("Topic not found: %s", err), http.StatusNotFound)
+		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
 	}
 
@@ -165,8 +147,7 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 
 	_, err = t.topicService.EditTopic(topicID, name, description)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to update topic: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to update topic: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to edit topic", err)
 		return
 	}
 
@@ -177,14 +158,13 @@ func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringID := r.PathValue("id")
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
-		http.Redirect(rw, r, "/topics/", http.StatusFound)
+		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
 		return
 	}
 
 	err = t.topicService.DeleteTopic(id)
 	if err != nil {
-		t.logger.Error(fmt.Sprintf("Unable to delete topic: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to delete topic: %s", err), http.StatusInternalServerError)
+		t.logger.ServerInternalError(rw, "Unable to delete topic", err)
 		return
 	}
 

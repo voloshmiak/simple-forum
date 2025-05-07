@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log/slog"
+	"forum-project/internal/mylogger"
 	"net/http"
 	"strconv"
 )
@@ -16,7 +16,7 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
-func Logging(next http.Handler, logger *slog.Logger) http.Handler {
+func Logging(next http.Handler, logger *mylogger.WrappedLogger) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
 		wrappedWriter := &wrappedWriter{

@@ -1,31 +1,29 @@
 package handlers
 
 import (
-	"fmt"
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
+	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	"log/slog"
 	"net/http"
 	"time"
 )
 
 type UserHandler struct {
-	logger      *slog.Logger
+	logger      *mylogger.WrappedLogger
 	templates   *template.Manager
 	userService *service.UserService
 }
 
-func NewUserHandler(logger *slog.Logger, templates *template.Manager, userService *service.UserService) *UserHandler {
+func NewUserHandler(logger *mylogger.WrappedLogger, templates *template.Manager, userService *service.UserService) *UserHandler {
 	return &UserHandler{logger: logger, templates: templates, userService: userService}
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
 	err := u.templates.Render(rw, r, "register.page", &models.ViewData{})
 	if err != nil {
-		u.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		u.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
@@ -36,7 +34,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	password2 := r.PostFormValue("password2")
 	_, err := u.userService.Register(username, email, password1, password2)
 	if err != nil {
-		rw.Write([]byte(err.Error()))
+		u.logger.ServerInternalError(rw, "Unable to register user", err)
 	}
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
@@ -45,8 +43,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
 	err := u.templates.Render(rw, r, "login.page", &models.ViewData{})
 	if err != nil {
-		u.logger.Error(fmt.Sprintf("Unable to template template: %s", err))
-		http.Error(rw, fmt.Sprintf("Unable to template template: %s", err), http.StatusInternalServerError)
+		u.logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }
 
@@ -56,14 +53,14 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 
 	user, err := u.userService.Authenticate(email, password)
 	if err != nil {
-		http.Error(rw, fmt.Sprintf("Unable to login: %s", err), http.StatusInternalServerError)
+		u.logger.ServerInternalError(rw, "Unable to authenticate user", err)
 		return
 	}
 
 	token, err := auth.GenerateToken(user)
 
 	if err != nil {
-		rw.Write([]byte(err.Error()))
+		u.logger.ServerInternalError(rw, "Unable to generate token", err)
 	}
 
 	cookie := &http.Cookie{
@@ -75,9 +72,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(time.Hour * 24),
 	}
 
-	http.SetCookie(rw, cookie)
-
-	u.logger.Info("User authenticated", "user", user)
+	http.SetCookie(rw, cookie)``
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
 

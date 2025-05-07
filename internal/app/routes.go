@@ -13,7 +13,7 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	adminMux := http.NewServeMux()
 
 	// guests routing
-	mux.HandleFunc("GET /about", hh.GetAbout)
+	mux.HandleFunc("GET /home", hh.GetHome)
 	mux.HandleFunc("GET /topics", th.GetTopics)
 	mux.HandleFunc("GET /topics/{id}", th.GetTopic)
 	mux.HandleFunc("GET /topics/{topicID}/posts/{postID}", ph.GetPost)

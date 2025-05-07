@@ -8,10 +8,10 @@ import (
 	"forum-project/internal/database"
 	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
+	"forum-project/internal/mylogger"
 	"forum-project/internal/repository"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,7 +23,7 @@ import (
 )
 
 type App struct {
-	logger       *slog.Logger
+	logger       *mylogger.WrappedLogger
 	database     *sql.DB
 	mux          *http.ServeMux
 	server       *http.Server
@@ -35,10 +35,7 @@ type App struct {
 
 func New() *App {
 	// init logger
-	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, opts))
+	logger := mylogger.NewLogger()
 
 	// load environment variables
 	if err := godotenv.Load(".env"); err != nil {
