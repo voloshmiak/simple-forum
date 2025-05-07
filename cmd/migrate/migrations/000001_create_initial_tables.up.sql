@@ -13,6 +13,7 @@ CREATE TABLE posts
     title      VARCHAR(255) NOT NULL,
     content    TEXT         NOT NULL,
     author_id  int          NOT NULL,
+    author_name VARCHAR(50) NOT NULL,
     topic_id   INTEGER      NOT NULL REFERENCES topics (id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
