@@ -30,6 +30,7 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 			&post.Title,
 			&post.Content,
 			&post.AuthorId,
+			&post.AuthorName,
 			&post.TopicId,
 			&post.CreatedAt,
 			&post.UpdatedAt,
@@ -52,6 +53,7 @@ func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
 		&post.Title,
 		&post.Content,
 		&post.AuthorId,
+		&post.AuthorName,
 		&post.TopicId,
 		&post.CreatedAt,
 		&post.UpdatedAt,
@@ -64,13 +66,14 @@ func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
 }
 
 func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
-	query := `INSERT INTO posts (title, content, topic_id, author_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	query := `INSERT INTO posts (title, content, topic_id, author_id, author_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	err := u.conn.QueryRow(query,
 		post.Title,
 		post.Content,
 		post.TopicId,
 		post.AuthorId,
+		post.AuthorName,
 		post.CreatedAt,
 		post.UpdatedAt,
 	).Scan(&post.ID)
@@ -90,6 +93,7 @@ func (u *PostRepository) UpdatePost(post *models.Post) error {
 		post.Content,
 		post.TopicId,
 		post.AuthorId,
+		post.AuthorName,
 		post.UpdatedAt,
 		post.ID,
 	)

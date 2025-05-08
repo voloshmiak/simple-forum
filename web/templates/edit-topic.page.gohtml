@@ -1,3 +1,5 @@
+{{template "base" .}}
+{{define "content"}}
 {{$topic := index .Data "topic"}}
 <div>
     <form action="/admin/topics/{{$topic.ID}}/edit" method="post">
@@ -11,3 +13,4 @@
         <input type="submit">
     </form>
 </div>
+{{end}}

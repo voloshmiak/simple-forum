@@ -103,8 +103,9 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value("user")
 	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
+	userName := user.(map[string]interface{})["username"].(string)
 
-	err = p.postService.CreatePost(title, content, topicIDInt, userID)
+	err = p.postService.CreatePost(title, content, topicIDInt, userID, userName)
 	if err != nil {
 		p.logger.ServerInternalError(rw, "Unable to create post", err)
 		return

@@ -1,5 +1,8 @@
+{{template "base" .}}
+{{define "content"}}
 {{$topic := index .Data "topic"}}
 {{$posts := index .Data "posts"}}
+
 <h1>{{$topic.Name}}</h1>
 <div>
     <p>{{$topic.Description}}</p>
@@ -22,7 +25,7 @@
 {{else}}
     {{range $posts}}
         <div>
-            Author: {{.AuthorId}}<br>
+            Author: {{.AuthorName}}<br>
             <a href="/topics/{{$topic.ID}}/posts/{{.ID}}">{{.Title}}</a><br>
             Was posted: <small>{{.CreatedAt}}</small>
         </div>
@@ -35,8 +38,4 @@
         {{end}}
 
     <br>
-{{if eq .IsAuthenticated false}}
-    <a href="/login">Login</a><br>
-{{else}}
-    <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
 {{end}}

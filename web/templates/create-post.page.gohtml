@@ -1,3 +1,5 @@
+{{template "base" .}}
+{{define "content"}}
 {{$topic := index .Data "topic"}}
 <div>
     <form action="/user/posts" method="post">
@@ -19,3 +21,4 @@
     </form>
 </div>
 <br>
+{{end}}

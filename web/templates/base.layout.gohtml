@@ -1,0 +1,36 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Forum</title>
+</head>
+<body>
+    <header>
+        <h1>My Forum</h1>
+        <nav>
+            <ul>
+                <li><a href="/home">Home</a></li>
+                <li><a href="/topics">Topics</a></li>
+                {{if eq .IsAuthenticated false}}
+                    <li><a href="/login">Login</a></li>
+                {{else}}
+                    <li><a href="/logout" onclick="return confirm('Are you sure?')">Logout</a></li>
+                        <br>
+                        Profile: <br>
+                    Username: {{ index .StringMap "username"}}, ID : {{index .IntMap "id"}}<br>
+                    Role: {{ index .StringMap "role"}}<br><br>
+                {{end}}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {{block "content" .}} {{end}}
+    </main>
+
+    <footer>
+        <p>2025 My Forum</p>
+    </footer>
+{{end}}

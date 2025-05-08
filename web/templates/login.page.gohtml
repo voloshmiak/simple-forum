@@ -1,3 +1,5 @@
+{{template "base" .}}
+{{define "content"}}
 <div>
 <form action="/login" method="post">
     Email
@@ -15,3 +17,4 @@
 </div>
 
 <a href="/register">Register</a>
+{{end}}

@@ -1,4 +1,6 @@
-{{$topics := index .Data "topics"}}
+ {{template "base" .}}
+    {{define "content"}}
+        {{$topics := index .Data "topics"}}
 <h1>Topics</h1>
 {{if not $topics}}
     <p>No topics yet</p>
@@ -16,8 +18,4 @@
 {{if eq .IsAdmin true}}
     <a href="/admin/topics/new">Create topic</a> <br>
 {{end}}
-{{if eq .IsAuthenticated true}}
-    <a href="/logout"  onclick="return confirm('Are you sure?')">Logout</a><br>
-{{else}}
-    <a href="/login">Login</a><br>
 {{end}}

@@ -36,7 +36,22 @@ func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
 	claims := token.Claims.(jwt.MapClaims)
 
 	user := claims["user"].(map[string]interface{})
+
 	role := user["role"].(string)
+
+	userIDstring := user["id"].(float64)
+	userID := int(userIDstring)
+	userName := user["username"].(string)
+
+	stringMap := make(map[string]string)
+	stringMap["role"] = role
+	stringMap["username"] = userName
+
+	intMap := make(map[string]int)
+	intMap["id"] = userID
+
+	td.StringMap = stringMap
+	td.IntMap = intMap
 
 	if role == "admin" {
 		td.IsAdmin = true
