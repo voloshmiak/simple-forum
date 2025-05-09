@@ -101,5 +101,5 @@ func (u *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(rw, cookie)
 
-	http.Redirect(rw, r, "/topics", http.StatusFound)
+	http.Redirect(rw, r, "/home", http.StatusFound)
 }

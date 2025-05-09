@@ -1,27 +1,24 @@
 package handlers
 
 import (
+	"forum-project/internal/app"
 	"forum-project/internal/models"
-	"forum-project/internal/mylogger"
-	"forum-project/internal/template"
 	"net/http"
 )
 
 type HomeHandler struct {
-	logger    *mylogger.WrappedLogger
-	templates *template.Manager
+	app *app.Config
 }
 
-func NewHomeHandler(logger *mylogger.WrappedLogger, templates *template.Manager) *HomeHandler {
+func NewHomeHandler(app *app.Config) *HomeHandler {
 	return &HomeHandler{
-		logger:    logger,
-		templates: templates,
+		app: app,
 	}
 }
 
 func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
-	err := h.templates.Render(rw, r, "home.page", &models.ViewData{})
+	err := h.app.Templates.Render(rw, r, "home.page", &models.ViewData{})
 	if err != nil {
-		h.logger.ServerInternalError(rw, "Unable to render template", err)
+		h.app.Logger.ServerInternalError(rw, "Unable to render template", err)
 	}
 }

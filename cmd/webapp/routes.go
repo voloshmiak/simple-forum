@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"forum-project/internal/handlers"
@@ -11,6 +11,10 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
 	adminMux := http.NewServeMux()
+
+	// serve static files
+	fileServer := http.FileServer(http.Dir("./web/static"))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
 	// guests routing
 	mux.HandleFunc("GET /home", hh.GetHome)
