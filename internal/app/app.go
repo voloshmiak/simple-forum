@@ -54,7 +54,7 @@ func New() *App {
 
 	config.Templates = templateManager
 
-	// init database
+	// connect database
 	var (
 		host     = os.Getenv("DB_HOST")
 		port     = os.Getenv("DB_PORT")
