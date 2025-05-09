@@ -2,28 +2,25 @@ package handlers
 
 import (
 	"errors"
+	"forum-project/internal/config"
 	"forum-project/internal/models"
-	"forum-project/internal/mylogger"
 	"forum-project/internal/service"
-	"forum-project/internal/template"
 	"net/http"
 	"time"
 )
 
 type UserHandler struct {
-	logger      *mylogger.WrappedLogger
-	templates   *template.Manager
-	userService *service.UserService
+	app *config.AppConfig
 }
 
-func NewUserHandler(logger *mylogger.WrappedLogger, templates *template.Manager, userService *service.UserService) *UserHandler {
-	return &UserHandler{logger: logger, templates: templates, userService: userService}
+func NewUserHandler(app *config.AppConfig) *UserHandler {
+	return &UserHandler{app: app}
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.templates.Render(rw, r, "register.page", &models.ViewData{})
+	err := u.app.Templates.Render(rw, r, "register.page", &models.ViewData{})
 	if err != nil {
-		u.logger.ServerInternalError(rw, "Unable to render template", err)
+		u.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -33,14 +30,14 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	password1 := r.PostFormValue("password1")
 	password2 := r.PostFormValue("password2")
 
-	err := u.userService.Register(username, email, password1, password2)
+	err := u.app.UserService.Register(username, email, password1, password2)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrMissmatchPassword):
-			u.logger.BadRequestError(rw, "Passwords do not match", err)
+			u.app.Errors.BadRequest(rw, "Passwords do not match", err)
 			return
 		default:
-			u.logger.ServerInternalError(rw, "Failed to register user", err)
+			u.app.Errors.InternalServer(rw, "Failed to register user", err)
 			return
 		}
 	}
@@ -49,9 +46,9 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.templates.Render(rw, r, "login.page", &models.ViewData{})
+	err := u.app.Templates.Render(rw, r, "login.page", &models.ViewData{})
 	if err != nil {
-		u.logger.ServerInternalError(rw, "Unable to render template", err)
+		u.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -59,17 +56,17 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 
-	token, err := u.userService.Authenticate(email, password)
+	token, err := u.app.UserService.Authenticate(email, password)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			u.logger.NotFoundError(rw, "User not found", err)
+			u.app.Errors.NotFound(rw, "User not found", err)
 			return
 		case errors.Is(err, service.ErrWrongPassword):
-			u.logger.UnauthorizedError(rw, "Wrong password", err)
+			u.app.Errors.Unauthorized(rw, "Wrong password", err)
 			return
 		default:
-			u.logger.ServerInternalError(rw, "Failed to login user", err)
+			u.app.Errors.InternalServer(rw, "Failed to login user", err)
 			return
 		}
 	}

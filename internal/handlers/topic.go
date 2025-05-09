@@ -1,39 +1,34 @@
 package handlers
 
 import (
+	"forum-project/internal/config"
 	"forum-project/internal/models"
-	"forum-project/internal/mylogger"
-	"forum-project/internal/service"
-	"forum-project/internal/template"
 	"net/http"
 	"strconv"
 )
 
 type TopicHandler struct {
-	logger       *mylogger.WrappedLogger
-	templates    *template.Manager
-	topicService *service.TopicService
-	postService  *service.PostService
+	app *config.AppConfig
 }
 
-func NewTopicHandler(logger *mylogger.WrappedLogger, renderer *template.Manager, topicService *service.TopicService, postService *service.PostService) *TopicHandler {
-	return &TopicHandler{logger, renderer, topicService, postService}
+func NewTopicHandler(app *config.AppConfig) *TopicHandler {
+	return &TopicHandler{app: app}
 }
 
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
-	topics, err := t.topicService.GetAllTopics()
+	topics, err := t.app.TopicService.GetAllTopics()
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to get topics", err)
+		t.app.Errors.InternalServer(rw, "Unable to get topics", err)
 	}
 
 	data := make(map[string]any)
 	data["topics"] = topics
 
-	err = t.templates.Render(rw, r, "topics.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "topics.page", &models.ViewData{
 		Data: data,
 	})
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to render template", err)
+		t.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -41,19 +36,19 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
+		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
-	topic, err := t.topicService.GetTopicByID(id)
+	topic, err := t.app.TopicService.GetTopicByID(id)
 	if err != nil {
-		t.logger.NotFoundError(rw, "Topic Not Found", err)
+		t.app.Errors.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
-	posts, err := t.postService.GetPostsByTopicID(id)
+	posts, err := t.app.PostService.GetPostsByTopicID(id)
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to get posts", err)
+		t.app.Errors.InternalServer(rw, "Unable to get posts", err)
 		return
 	}
 
@@ -61,18 +56,18 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	data["posts"] = posts
 	data["topic"] = topic
 
-	err = t.templates.Render(rw, r, "topic.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "topic.page", &models.ViewData{
 		Data: data,
 	})
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to render template", err)
+		t.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.templates.Render(rw, r, "create-topic.page", &models.ViewData{})
+	err := t.app.Templates.Render(rw, r, "create-topic.page", &models.ViewData{})
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to render template", err)
+		t.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -84,9 +79,9 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
 
-	err := t.topicService.CreateTopic(name, description, userID)
+	err := t.app.TopicService.CreateTopic(name, description, userID)
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to create topic", err)
+		t.app.Errors.InternalServer(rw, "Unable to create topic", err)
 		return
 	}
 
@@ -97,24 +92,24 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
+		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
 	}
 
-	topic, err := t.topicService.GetTopicByID(id)
+	topic, err := t.app.TopicService.GetTopicByID(id)
 
 	if err != nil {
-		t.logger.NotFoundError(rw, "Topic Not Found", err)
+		t.app.Errors.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = t.templates.Render(rw, r, "edit-topic.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "edit-topic.page", &models.ViewData{
 		Data: data,
 	})
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to render template", err)
+		t.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -122,16 +117,16 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
+		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 
-	err = t.topicService.EditTopic(id, name, description)
+	err = t.app.TopicService.EditTopic(id, name, description)
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to edit topic", err)
+		t.app.Errors.InternalServer(rw, "Unable to edit topic", err)
 		return
 	}
 
@@ -142,13 +137,13 @@ func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.logger.BadRequestError(rw, "Invalid Topic ID", err)
+		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
-	err = t.topicService.DeleteTopic(id)
+	err = t.app.TopicService.DeleteTopic(id)
 	if err != nil {
-		t.logger.ServerInternalError(rw, "Unable to delete topic", err)
+		t.app.Errors.InternalServer(rw, "Unable to delete topic", err)
 		return
 	}
 

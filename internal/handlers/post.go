@@ -3,37 +3,33 @@ package handlers
 import (
 	"fmt"
 	"forum-project/internal/auth"
+	"forum-project/internal/config"
 	"forum-project/internal/models"
-	"forum-project/internal/mylogger"
-	"forum-project/internal/service"
-	"forum-project/internal/template"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strconv"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type PostHandler struct {
-	logger       *mylogger.WrappedLogger
-	templates    *template.Manager
-	postService  *service.PostService
-	topicService *service.TopicService
+	app *config.AppConfig
 }
 
-func NewPostHandler(logger *mylogger.WrappedLogger, renderer *template.Manager, postService *service.PostService, topicService *service.TopicService) *PostHandler {
-	return &PostHandler{logger, renderer, postService, topicService}
+func NewPostHandler(app *config.AppConfig) *PostHandler {
+	return &PostHandler{app: app}
 }
 
 func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Post ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
-	post, err := p.postService.GetPostByID(id)
+	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Post Not Found", err)
+		p.app.Errors.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
@@ -48,7 +44,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		userIDClaim := userClaim["id"].(float64)
 		userIDInt := int(userIDClaim)
 
-		isAuthor := p.postService.VerifyPostAuthor(post, userIDInt)
+		isAuthor := p.app.PostService.VerifyPostAuthor(post, userIDInt)
 		if isAuthor {
 			viedData.IsAuthor = true
 		}
@@ -59,9 +55,9 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 
 	viedData.Data = data
 
-	err = p.templates.Render(rw, r, "post.page", viedData)
+	err = p.app.Templates.Render(rw, r, "post.page", viedData)
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to render template", err)
+		p.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -69,24 +65,24 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Post ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
-	topic, err := p.topicService.GetTopicByID(id)
+	topic, err := p.app.TopicService.GetTopicByID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Topic Not Found", err)
+		p.app.Errors.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = p.templates.Render(rw, r, "create-post.page", &models.ViewData{
+	err = p.app.Templates.Render(rw, r, "create-post.page", &models.ViewData{
 		Data: data,
 	})
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to render template", err)
+		p.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -96,7 +92,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	topicID := r.PostFormValue("topic_id")
 	topicIDInt, err := strconv.Atoi(topicID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Topic ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
@@ -105,9 +101,9 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	userID := int(userIDfloat)
 	userName := user.(map[string]interface{})["username"].(string)
 
-	err = p.postService.CreatePost(title, content, topicIDInt, userID, userName)
+	err = p.app.PostService.CreatePost(title, content, topicIDInt, userID, userName)
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to create post", err)
+		p.app.Errors.InternalServer(rw, "Unable to create post", err)
 		return
 	}
 
@@ -120,7 +116,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Post ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
@@ -128,13 +124,13 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
 
-	post, err := p.postService.GetPostByID(id)
+	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Post Not Found", err)
+		p.app.Errors.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
-	isAuthor := p.postService.VerifyPostAuthor(post, userID)
+	isAuthor := p.app.PostService.VerifyPostAuthor(post, userID)
 	if !isAuthor {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
@@ -143,11 +139,11 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["post"] = post
 
-	err = p.templates.Render(rw, r, "edit-post.page", &models.ViewData{
+	err = p.app.Templates.Render(rw, r, "edit-post.page", &models.ViewData{
 		Data: data,
 	})
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to render template", err)
+		p.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -155,7 +151,7 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Post ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
@@ -166,30 +162,30 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	userIDfloat := user.(map[string]interface{})["id"].(float64)
 	userID := int(userIDfloat)
 
-	post, err := p.postService.GetPostByID(id)
+	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Post Not Found", err)
+		p.app.Errors.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
-	isAuthor := p.postService.VerifyPostAuthor(post, userID)
+	isAuthor := p.app.PostService.VerifyPostAuthor(post, userID)
 	if !isAuthor {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	topic, err := p.topicService.GetTopicByPostID(id)
+	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Topic Not Found", err)
+		p.app.Errors.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
 	post.Title = title
 	post.Content = content
 
-	err = p.postService.EditPost(post)
+	err = p.app.PostService.EditPost(post)
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to edit post", err)
+		p.app.Errors.InternalServer(rw, "Unable to edit post", err)
 		return
 	}
 
@@ -202,13 +198,13 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.logger.BadRequestError(rw, "Invalid Post ID", err)
+		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
-	topic, err := p.topicService.GetTopicByPostID(id)
+	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Topic Not Found", err)
+		p.app.Errors.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
@@ -217,21 +213,21 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 	userID := int(userIDfloat)
 	userRole := user.(map[string]interface{})["role"].(string)
 
-	post, err := p.postService.GetPostByID(id)
+	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.logger.NotFoundError(rw, "Post Not Found", err)
+		p.app.Errors.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
-	isAuthorOrAdmin := p.postService.VerifyPostAuthorOrAdmin(post, userID, userRole)
+	isAuthorOrAdmin := p.app.PostService.VerifyPostAuthorOrAdmin(post, userID, userRole)
 	if !isAuthorOrAdmin {
 		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	err = p.postService.DeletePost(id)
+	err = p.app.PostService.DeletePost(id)
 	if err != nil {
-		p.logger.ServerInternalError(rw, "Unable to delete post", err)
+		p.app.Errors.InternalServer(rw, "Unable to delete post", err)
 		return
 	}
 
