@@ -4,10 +4,11 @@ import (
 	"errors"
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
-	"github.com/golang-jwt/jwt/v5"
 	"html/template"
 	"net/http"
 	"path/filepath"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Manager struct {

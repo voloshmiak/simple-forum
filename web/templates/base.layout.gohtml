@@ -32,14 +32,27 @@
       </div>
 
       <script type="text/javascript">
-        document.getElementById("login").onclick = function () {
+      {{if eq .IsAuthenticated false}}
+      const loginButton = document.getElementById("login")
+      if (loginButton) {
+        loginButton.onclick = function () {
             location.href = "/login";
         };
-        </script>
-        <script type="text/javascript">
-        document.getElementById("logout").onclick = function () {
+      }
+      const signupButton = document.getElementById("signup")
+      if (signupButton) {
+        signupButton.onclick = function () {
+            location.href = "/signup";
+        };
+      }
+      {{else}}
+        const logoutButton = document.getElementById("logout")
+      if (logoutButton) {
+        logoutButton.onclick = function () {
             location.href = "/logout";
         };
+      }
+      {{end}}
         </script>
     </header>
 

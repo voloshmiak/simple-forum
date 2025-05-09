@@ -26,8 +26,8 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	mux.HandleFunc("GET /login", uh.GetLogin)
 	mux.HandleFunc("POST /login", uh.PostLogin)
 	mux.HandleFunc("GET /logout", uh.GetLogout)
-	mux.HandleFunc("GET /register", uh.GetRegister)
-	mux.HandleFunc("POST /register", uh.PostRegister)
+	mux.HandleFunc("GET /signup", uh.GetRegister)
+	mux.HandleFunc("POST /signup", uh.PostRegister)
 
 	// authorized users routing
 	authorizedMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)

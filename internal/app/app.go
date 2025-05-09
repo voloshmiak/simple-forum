@@ -2,10 +2,10 @@ package app
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"forum-project/internal/config"
-	"forum-project/internal/database"
 	"forum-project/internal/handlers"
 	"forum-project/internal/helpers"
 	"forum-project/internal/middleware"
@@ -55,9 +55,17 @@ func New() *App {
 	config.Templates = templateManager
 
 	// init database
-	conn, err := database.New()
+	var (
+		host     = os.Getenv("DB_HOST")
+		port     = os.Getenv("DB_PORT")
+		name     = os.Getenv("DB_NAME")
+		user     = os.Getenv("DB_USER")
+		password = os.Getenv("DB_PASSWORD")
+		url      = fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", host, port, name, user, password)
+	)
+	conn, err := sql.Open("pgx", url)
 	if err != nil {
-		logger.Error("Failed to init database", "error", err)
+		logger.Error("Failed to connect to database", "error", err)
 		os.Exit(1)
 	}
 
