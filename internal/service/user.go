@@ -50,6 +50,9 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	user.Email = email
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
 
 	user.PasswordHash = string(hashedPassword)
 	user.Role = "user"
