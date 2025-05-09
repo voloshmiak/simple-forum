@@ -5,6 +5,7 @@ import (
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
 	"forum-project/internal/repository"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -51,7 +52,6 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
 
 	user.PasswordHash = string(hashedPassword)
-	user.CreatedAt = "Now"
 	user.Role = "user"
 
 	_, err = u.repository.InsertUser(user)

@@ -41,7 +41,6 @@ func (t *TopicService) CreateTopic(name, description string, authorID int) error
 	topic := models.NewTopic()
 	topic.Name = name
 	topic.Description = description
-	topic.CreatedAt = "Now"
 	topic.AuthorId = authorID
 
 	_, err := t.repository.InsertTopic(topic)
