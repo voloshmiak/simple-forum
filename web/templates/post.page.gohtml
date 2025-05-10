@@ -1,20 +1,45 @@
 {{template "base" .}}
 {{define "content"}}
 {{$post := index .Data "post"}}
-<h1>{{$post.Title}}</h1>
-<div>
-    <p>{{$post.Content}}</p>
-    Author: {{$post.AuthorId}}<br>
-    Was posted: <small>{{$post.CreatedAt}}</small>
-</div>
-{{if eq .IsAuthor true}}
-<br><a href="/user/posts/{{$post.ID}}/edit">Edit post</a><br>
-<br>
-{{end}}
-
-    {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
-        <a href="/user/posts/{{$post.ID}}/delete" onclick="return confirm('Are you sure?')">Delete post</a><br>
+<main class="ms-3 me-3">
+    <header class="mb-4">
+        <h1 class="fw-bolder mb-1">{{$post.Title}}</h1>
+        <div class="text-muted fst-italic mb-2">Posted on {{$post.CreatedAt}} by <u>{{$post.AuthorName}}</u></div>
+    </header>
+    <section class="mb-3">
+        <p class="fs-5 mb-4">{{$post.Content}}</p>
+    </section>
+    {{if eq .IsAuthor true}}
+        <button id="edit_post" type="button" class="btn btn-dark">Edit</button>
     {{end}}
+    {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
+        <button id="delete_post" type="button" class="btn btn-dark">Delete</button>
+    {{end}}
+
+    <script type="text/javascript">
+    {{if eq .IsAuthor true}}
+            const editButton = document.getElementById("edit_post")
+            if ( editButton) {
+                editButton.onclick = function () {
+                    location.href = "/user/posts/{{$post.ID}}/edit";
+                };
+            }
+    {{end}}
+    {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
+        const deleteButton = document.getElementById("delete_post")
+        if (deleteButton) {
+            deleteButton.onclick = function () {
+                if (confirm('Are you sure?')) {
+                    location.href = "/user/posts/{{$post.ID}}/delete";
+                }
+            };
+        }
+    {{end}}
+    </script>
+</main>
+
+
+
 
     <br>
 {{end}}
