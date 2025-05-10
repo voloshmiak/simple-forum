@@ -75,9 +75,8 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
+	user := r.Context().Value("user").(*models.AuthorizedUser)
+	userID := user.ID
 
 	err := t.app.TopicService.CreateTopic(name, description, userID)
 	if err != nil {

@@ -16,7 +16,7 @@ func NewUserRepository(conn *sql.DB) *UserRepository {
 func (u *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	query := `SELECT * FROM users WHERE email = $1`
 
-	user := models.NewUser()
+	user := new(models.User)
 
 	err := u.conn.QueryRow(query, email).Scan(
 		&user.ID,
@@ -53,7 +53,7 @@ func (u *UserRepository) InsertUser(user *models.User) (int, error) {
 func (u *UserRepository) GetUserByID(id int) (*models.User, error) {
 	query := `SELECT * FROM users WHERE id = $1`
 
-	user := models.NewUser()
+	user := new(models.User)
 
 	err := u.conn.QueryRow(query, id).Scan(
 		&user.ID,

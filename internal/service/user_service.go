@@ -45,9 +45,7 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 		return ErrMissmatchPassword
 	}
 
-	user := models.NewUser()
-	user.Username = username
-	user.Email = email
+	user := &models.User{Username: username, Email: email, Role: "user"}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
 	if err != nil {
@@ -55,7 +53,6 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	}
 
 	user.PasswordHash = string(hashedPassword)
-	user.Role = "user"
 
 	_, err = u.repository.InsertUser(user)
 	if err != nil {

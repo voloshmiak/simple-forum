@@ -26,7 +26,7 @@ func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
 	var topics []*models.Topic
 
 	for rows.Next() {
-		topic := models.NewTopic()
+		topic := new(models.Topic)
 		err = rows.Scan(
 			&topic.ID,
 			&topic.Name,
@@ -45,7 +45,7 @@ func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
 func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 	query := `SELECT * FROM topics WHERE id = $1`
 
-	topic := models.NewTopic()
+	topic := new(models.Topic)
 
 	err := t.conn.QueryRow(query, topicID).Scan(
 		&topic.ID,
@@ -63,7 +63,7 @@ func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 func (t *TopicRepository) GetTopicByPostID(postID int) (*models.Topic, error) {
 	query := `SELECT t.* FROM topics t JOIN posts p ON t.id = p.topic_id WHERE p.id = $1`
 
-	topic := models.NewTopic()
+	topic := new(models.Topic)
 
 	err := t.conn.QueryRow(query, postID).Scan(
 		&topic.ID,

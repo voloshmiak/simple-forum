@@ -9,7 +9,3 @@ type Topic struct {
 	CreatedAt   time.Time `json:"created_at"`
 	AuthorId    int       `json:"author_id"`
 }
-
-func NewTopic() *Topic {
-	return &Topic{}
-}

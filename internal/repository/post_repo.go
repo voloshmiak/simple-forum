@@ -24,7 +24,7 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 
 	var posts []*models.Post
 	for rows.Next() {
-		post := models.NewPost()
+		post := new(models.Post)
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
@@ -46,7 +46,7 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
 	query := `SELECT * FROM posts WHERE id = $1`
 
-	post := models.NewPost()
+	post := new(models.Post)
 
 	err := p.conn.QueryRow(query, postID).Scan(
 		&post.ID,
@@ -86,7 +86,7 @@ func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
 }
 
 func (u *PostRepository) UpdatePost(post *models.Post) error {
-	query := `UPDATE posts SET title = $1, content = $2, topic_id = $3, author_id = $4, updated_at = $5 WHERE id = $6`
+	query := `UPDATE posts SET title = $1, content = $2, topic_id = $3, author_id = $4, author_name = $5, updated_at = $6 WHERE id = $7`
 
 	_, err := u.conn.Exec(query,
 		post.Title,

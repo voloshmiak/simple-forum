@@ -30,12 +30,13 @@ func (p *PostService) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
 }
 
 func (p *PostService) CreatePost(title, content string, topicID, authorID int, authorName string) error {
-	post := models.NewPost()
-	post.Title = title
-	post.Content = content
-	post.TopicId = topicID
-	post.AuthorId = authorID
-	post.AuthorName = authorName
+	post := &models.Post{
+		Title:      title,
+		Content:    content,
+		TopicId:    topicID,
+		AuthorId:   authorID,
+		AuthorName: authorName,
+	}
 
 	postID, err := p.repository.InsertPost(post)
 	if err != nil {
@@ -63,9 +64,9 @@ func (p *PostService) DeletePost(postID int) error {
 }
 
 func (p *PostService) VerifyPostAuthor(post *models.Post, userID int) bool {
-	return post.AuthorId != userID
+	return post.AuthorId == userID
 }
 
 func (p *PostService) VerifyPostAuthorOrAdmin(post *models.Post, userID int, userRole string) bool {
-	return post.AuthorId != userID && userRole != "admin"
+	return post.AuthorId == userID || userRole == "admin"
 }

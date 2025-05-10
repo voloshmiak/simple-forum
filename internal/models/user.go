@@ -11,6 +11,9 @@ type User struct {
 	Role         string    `json:"role"`
 }
 
-func NewUser() *User {
-	return &User{}
+type AuthorizedUser struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
 }

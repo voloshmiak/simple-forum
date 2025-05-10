@@ -38,10 +38,11 @@ func (t *TopicService) GetTopicByPostID(id int) (*models.Topic, error) {
 }
 
 func (t *TopicService) CreateTopic(name, description string, authorID int) error {
-	topic := models.NewTopic()
-	topic.Name = name
-	topic.Description = description
-	topic.AuthorId = authorID
+	topic := &models.Topic{
+		Name:        name,
+		Description: description,
+		AuthorId:    authorID,
+	}
 
 	_, err := t.repository.InsertTopic(topic)
 	if err != nil {
@@ -52,10 +53,11 @@ func (t *TopicService) CreateTopic(name, description string, authorID int) error
 }
 
 func (t *TopicService) EditTopic(id int, name, description string) error {
-	topic := models.NewTopic()
-	topic.ID = id
-	topic.Name = name
-	topic.Description = description
+	topic := &models.Topic{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	}
 
 	err := t.repository.UpdateTopic(topic)
 	if err != nil {
