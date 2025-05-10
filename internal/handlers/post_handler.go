@@ -7,8 +7,6 @@ import (
 	"forum-project/internal/models"
 	"net/http"
 	"strconv"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type PostHandler struct {
@@ -33,29 +31,28 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	viedData := &models.ViewData{}
-	viedData.IsAuthor = false
+	viewData := &models.ViewData{}
+	viewData.IsAuthor = false
 
-	token, err := auth.ValidateTokenFromRequest(r)
+	claims, err := auth.GetClaimsFromRequest(r)
+
 	if err == nil {
-		claims := token.Claims.(jwt.MapClaims)
-
-		userClaim := claims["user"].(map[string]interface{})
-		userIDClaim := userClaim["id"].(float64)
-		userIDInt := int(userIDClaim)
+		user := claims["user"].(map[string]interface{})
+		userIDFloat := user["id"].(float64)
+		userIDInt := int(userIDFloat)
 
 		isAuthor := p.app.PostService.VerifyPostAuthor(post, userIDInt)
 		if isAuthor {
-			viedData.IsAuthor = true
+			viewData.IsAuthor = true
 		}
 	}
 
 	data := make(map[string]any)
 	data["post"] = post
 
-	viedData.Data = data
+	viewData.Data = data
 
-	err = p.app.Templates.Render(rw, r, "post.page", viedData)
+	err = p.app.Templates.Render(rw, r, "post.page", viewData)
 	if err != nil {
 		p.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
@@ -96,10 +93,9 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
-	userName := user.(map[string]interface{})["username"].(string)
+	user := r.Context().Value("user").(*models.AuthorizedUser)
+	userID := user.ID
+	userName := user.Username
 
 	err = p.app.PostService.CreatePost(title, content, topicIDInt, userID, userName)
 	if err != nil {
@@ -120,9 +116,8 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
+	user := r.Context().Value("user").(*models.AuthorizedUser)
+	userID := user.ID
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
@@ -158,9 +153,8 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
+	user := r.Context().Value("user").(*models.AuthorizedUser)
+	userID := user.ID
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
@@ -208,10 +202,9 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user")
-	userIDfloat := user.(map[string]interface{})["id"].(float64)
-	userID := int(userIDfloat)
-	userRole := user.(map[string]interface{})["role"].(string)
+	user := r.Context().Value("user").(*models.AuthorizedUser)
+	userID := user.ID
+	userRole := user.Role
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {

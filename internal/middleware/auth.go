@@ -3,22 +3,34 @@ package middleware
 import (
 	"context"
 	"forum-project/internal/auth"
+	"forum-project/internal/models"
 	"net/http"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		token, err := auth.ValidateTokenFromRequest(r)
+		claims, err := auth.GetClaimsFromRequest(r)
 		if err != nil {
 			http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
 		user := claims["user"].(map[string]interface{})
-		ctx := context.WithValue(r.Context(), "user", user)
+
+		userIDFloat := user["id"].(float64)
+		userIDInt := int(userIDFloat)
+		username := user["username"].(string)
+		email := user["email"].(string)
+		role := user["role"].(string)
+
+		authorizedUser := &models.AuthorizedUser{
+			ID:       userIDInt,
+			Username: username,
+			Email:    email,
+			Role:     role,
+		}
+
+		ctx := context.WithValue(r.Context(), "user", authorizedUser)
 
 		next.ServeHTTP(rw, r.WithContext(ctx))
 	})
@@ -27,7 +39,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 func IsAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("user")
-		role := user.(map[string]interface{})["role"].(string)
+		role := user.(*models.AuthorizedUser).Role
 
 		if role != "admin" {
 			http.Error(rw, "Forbidden", http.StatusForbidden)

@@ -7,8 +7,6 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type Manager struct {
@@ -24,7 +22,7 @@ func NewManager() (*Manager, error) {
 }
 
 func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
-	token, err := auth.ValidateTokenFromRequest(r)
+	claims, err := auth.GetClaimsFromRequest(r)
 	if err != nil {
 		td.IsAuthenticated = false
 		td.IsAdmin = false
@@ -34,30 +32,20 @@ func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
 	td.IsAuthenticated = true
 	td.IsAdmin = false
 
-	claims := token.Claims.(jwt.MapClaims)
-
 	user := claims["user"].(map[string]interface{})
 
 	role := user["role"].(string)
 
-	userIDstring := user["id"].(float64)
-	userID := int(userIDstring)
+	if role == "admin" {
+		td.IsAdmin = true
+	}
+
 	userName := user["username"].(string)
 
 	stringMap := make(map[string]string)
-	stringMap["role"] = role
 	stringMap["username"] = userName
 
-	intMap := make(map[string]int)
-	intMap["id"] = userID
-
 	td.StringMap = stringMap
-	td.IntMap = intMap
-
-	if role == "admin" {
-		td.IsAdmin = true
-		return td
-	}
 
 	return td
 }

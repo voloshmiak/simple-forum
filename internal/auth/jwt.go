@@ -38,7 +38,7 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ValidateTokenFromRequest(r *http.Request) (*jwt.Token, error) {
+func GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		return nil, errors.New("unauthorized")
@@ -49,5 +49,7 @@ func ValidateTokenFromRequest(r *http.Request) (*jwt.Token, error) {
 		return nil, err
 	}
 
-	return token, nil
+	claims := token.Claims.(jwt.MapClaims)
+
+	return claims, nil
 }
