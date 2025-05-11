@@ -16,7 +16,6 @@ import (
 type AppConfig struct {
 	Logger       *slog.Logger
 	Database     *sql.DB
-	Mux          *http.ServeMux
 	Server       *http.Server
 	Templates    *template.Templates
 	TopicService *service.TopicService
@@ -45,11 +44,12 @@ func NewAppConfig() *AppConfig {
 		log.Fatal("Failed to create templates", "error", err)
 	}
 
+	responder := httperror.NewErrorResponder(logger)
+
 	return &AppConfig{
 		Logger:    logger,
 		Database:  conn,
-		Mux:       http.NewServeMux(),
 		Templates: templates,
-		Errors:    httperror.NewErrorResponder(logger),
+		Errors:    responder,
 	}
 }

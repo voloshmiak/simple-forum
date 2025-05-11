@@ -20,44 +20,44 @@ import (
 func main() {
 	config.LoadEnv()
 
-	// create a new app config instance
+	// create app config instance
 	appConfig := config.NewAppConfig()
 
-	// Static
-	appConfig.Mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web/static"))))
+	// init mux
+	mux := http.NewServeMux()
+
+	// serve static
+	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web/static"))))
 
 	// Home
 	hh := handlers.NewHomeHandler(appConfig)
-	routes.RegisterHomeRoutes(appConfig, hh)
+	routes.RegisterHomeRoutes(mux, hh)
 
 	// Post
 	postRepository := repository.NewPostRepository(appConfig.Database)
 	postService := service.NewPostService(postRepository)
 	appConfig.PostService = postService
 	ph := handlers.NewPostHandler(appConfig)
-	routes.RegisterPostRoutes(appConfig, ph)
+	routes.RegisterPostRoutes(mux, ph, appConfig)
 
 	// Topic
 	topicRepository := repository.NewTopicRepository(appConfig.Database)
 	topicService := service.NewTopicService(topicRepository)
 	appConfig.TopicService = topicService
 	th := handlers.NewTopicHandler(appConfig)
-	routes.RegisterTopicRoutes(appConfig, th)
+	routes.RegisterTopicRoutes(mux, th)
 
 	// User
 	userRepository := repository.NewUserRepository(appConfig.Database)
 	userService := service.NewUserService(userRepository)
 	appConfig.UserService = userService
 	uh := handlers.NewUserHandler(appConfig)
-	routes.RegisterUserRoutes(appConfig, uh)
+	routes.RegisterUserRoutes(mux, uh)
 
-	// wrap into logging middleware
-	mux := middleware.Logging(appConfig.Mux, appConfig.Logger)
-
-	// init server
+	// Server
 	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
-		Handler:      mux,
+		Handler:      middleware.Logging(mux, appConfig.Logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,

@@ -1,10 +1,10 @@
 package routes
 
 import (
-	"forum-project/internal/config"
 	"forum-project/internal/handlers"
+	"net/http"
 )
 
-func RegisterHomeRoutes(appConfig *config.AppConfig, hh *handlers.HomeHandler) {
-	appConfig.Mux.HandleFunc("GET /home", hh.GetHome)
+func RegisterHomeRoutes(mux *http.ServeMux, hh *handlers.HomeHandler) {
+	mux.HandleFunc("GET /home", hh.GetHome)
 }

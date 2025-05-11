@@ -7,13 +7,13 @@ import (
 	"net/http"
 )
 
-func RegisterPostRoutes(appConfig *config.AppConfig, ph *handlers.PostHandler) {
+func RegisterPostRoutes(mux *http.ServeMux, ph *handlers.PostHandler, appConfig *config.AppConfig) {
 	authorizedMux := http.NewServeMux()
 
 	canEditPost := middleware.IsPostAuthor(appConfig)
 	canDeletePost := middleware.IsPostAuthorOrAdmin(appConfig)
 
-	appConfig.Mux.HandleFunc("GET /topics/{topicID}/posts/{postID}", ph.GetPost)
+	mux.HandleFunc("GET /topics/{topicID}/posts/{postID}", ph.GetPost)
 
 	// authorized users routing
 	authorizedMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)
@@ -22,5 +22,5 @@ func RegisterPostRoutes(appConfig *config.AppConfig, ph *handlers.PostHandler) {
 	authorizedMux.Handle("POST /posts/{postID}/edit", canEditPost(http.HandlerFunc(ph.PostEditPost)))
 	authorizedMux.Handle("GET /posts/{postID}/delete", canDeletePost(http.HandlerFunc(ph.GetDeletePost)))
 
-	appConfig.Mux.Handle("/user/", http.StripPrefix("/user", middleware.AuthMiddleware(authorizedMux)))
+	mux.Handle("/user/", http.StripPrefix("/user", middleware.AuthMiddleware(authorizedMux)))
 }
