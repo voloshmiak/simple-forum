@@ -9,16 +9,16 @@ import (
 	"path/filepath"
 )
 
-type Manager struct {
-	templates map[string]*template.Template
+type Templates struct {
+	cache map[string]*template.Template
 }
 
-func NewManager() (*Manager, error) {
+func NewTemplates() (*Templates, error) {
 	templates, err := parseTemplates()
 	if err != nil {
 		return nil, err
 	}
-	return &Manager{templates: templates}, nil
+	return &Templates{cache: templates}, nil
 }
 
 func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
@@ -85,7 +85,7 @@ func parseTemplates() (map[string]*template.Template, error) {
 	return templates, nil
 }
 
-func (m *Manager) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.ViewData) error {
+func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.ViewData) error {
 	// if in development mode
 	isDevelopment := true
 	if isDevelopment {
@@ -93,11 +93,11 @@ func (m *Manager) Render(rw http.ResponseWriter, r *http.Request, tmpl string, t
 		if err != nil {
 			return err
 		}
-		m.templates = templates
+		m.cache = templates
 	}
 
 	// get requested template
-	rt, ok := m.templates[tmpl+".gohtml"]
+	rt, ok := m.cache[tmpl+".gohtml"]
 	if !ok {
 		return errors.New(tmpl + ".gohtml not found")
 	}

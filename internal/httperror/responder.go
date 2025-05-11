@@ -1,4 +1,4 @@
-package helpers
+package httperror
 
 import (
 	"fmt"
@@ -6,33 +6,33 @@ import (
 	"net/http"
 )
 
-type ErrorHandler struct {
+type ErrorResponder struct {
 	logger *slog.Logger
 }
 
-func NewErrorHandler(logger *slog.Logger) *ErrorHandler {
-	return &ErrorHandler{logger: logger}
+func NewErrorResponder(logger *slog.Logger) *ErrorResponder {
+	return &ErrorResponder{logger: logger}
 }
 
-func (e *ErrorHandler) BadRequest(rw http.ResponseWriter, msg string, err error) {
+func (e *ErrorResponder) BadRequest(rw http.ResponseWriter, msg string, err error) {
 	e.logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusBadRequest)
 }
 
-func (e *ErrorHandler) InternalServer(rw http.ResponseWriter, msg string, err error) {
+func (e *ErrorResponder) InternalServer(rw http.ResponseWriter, msg string, err error) {
 	e.logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusInternalServerError)
 }
 
-func (e *ErrorHandler) NotFound(rw http.ResponseWriter, msg string, err error) {
+func (e *ErrorResponder) NotFound(rw http.ResponseWriter, msg string, err error) {
 	e.logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusNotFound)
 }
 
-func (e *ErrorHandler) Unauthorized(rw http.ResponseWriter, msg string, err error) {
+func (e *ErrorResponder) Unauthorized(rw http.ResponseWriter, msg string, err error) {
 	e.logger.Error(msg, "error", err)
 	msg = fmt.Sprintf("%s: %s", msg, err)
 	http.Error(rw, msg, http.StatusUnauthorized)
