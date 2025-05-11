@@ -4,6 +4,7 @@ import (
 	"errors"
 	"forum-project/internal/models"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -16,7 +17,8 @@ func GenerateToken(user *models.User) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte("secret-key"))
+
+	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if err != nil {
 		return "", err

@@ -116,18 +116,9 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user").(*models.AuthorizedUser)
-	userID := user.ID
-
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
 		p.app.Errors.NotFound(rw, "Post Not Found", err)
-		return
-	}
-
-	isAuthor := p.app.PostService.VerifyPostAuthor(post, userID)
-	if !isAuthor {
-		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -153,18 +144,9 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 
-	user := r.Context().Value("user").(*models.AuthorizedUser)
-	userID := user.ID
-
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
 		p.app.Errors.NotFound(rw, "Post Not Found", err)
-		return
-	}
-
-	isAuthor := p.app.PostService.VerifyPostAuthor(post, userID)
-	if !isAuthor {
-		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 
@@ -199,22 +181,6 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
 		p.app.Errors.NotFound(rw, "Topic Not Found", err)
-		return
-	}
-
-	user := r.Context().Value("user").(*models.AuthorizedUser)
-	userID := user.ID
-	userRole := user.Role
-
-	post, err := p.app.PostService.GetPostByID(id)
-	if err != nil {
-		p.app.Errors.NotFound(rw, "Post Not Found", err)
-		return
-	}
-
-	isAuthorOrAdmin := p.app.PostService.VerifyPostAuthorOrAdmin(post, userID, userRole)
-	if !isAuthorOrAdmin {
-		http.Error(rw, "Forbidden", http.StatusForbidden)
 		return
 	}
 

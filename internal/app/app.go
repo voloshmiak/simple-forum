@@ -99,7 +99,7 @@ func New() *App {
 	// init server
 	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
-		Handler:      middleware.Logging(registerRoutes(hh, th, ph, uh), logger),
+		Handler:      middleware.Logging(registerRoutes(hh, th, ph, uh, config), logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,

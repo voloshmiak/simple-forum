@@ -1,12 +1,13 @@
 package app
 
 import (
+	"forum-project/internal/config"
 	"forum-project/internal/handlers"
 	"forum-project/internal/middleware"
 	"net/http"
 )
 
-func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *handlers.PostHandler, uh *handlers.UserHandler) *http.ServeMux {
+func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *handlers.PostHandler, uh *handlers.UserHandler, config *config.AppConfig) *http.ServeMux {
 	// initialize mux
 	mux := http.NewServeMux()
 	authorizedMux := http.NewServeMux()
@@ -29,16 +30,19 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	mux.HandleFunc("GET /signup", uh.GetRegister)
 	mux.HandleFunc("POST /signup", uh.PostRegister)
 
+	authRequired := middleware.AuthMiddleware
+	isAdmin := middleware.IsAdmin
+	canEditPost := middleware.IsPostAuthor(config)
+	canDeletePost := middleware.IsPostAuthorOrAdmin(config)
+
 	// authorized users routing
 	authorizedMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)
 	authorizedMux.HandleFunc("POST /posts", ph.PostCreatePost)
-	authorizedMux.HandleFunc("GET /posts/{postID}/edit", ph.GetEditPost)
-	authorizedMux.HandleFunc("POST /posts/{postID}/edit", ph.PostEditPost)
-	authorizedMux.HandleFunc("GET /posts/{postID}/delete", ph.GetDeletePost)
+	authorizedMux.Handle("GET /posts/{postID}/edit", canEditPost(http.HandlerFunc(ph.GetEditPost)))
+	authorizedMux.Handle("POST /posts/{postID}/edit", canEditPost(http.HandlerFunc(ph.PostEditPost)))
+	authorizedMux.Handle("GET /posts/{postID}/delete", canDeletePost(http.HandlerFunc(ph.GetDeletePost)))
 
-	authware := middleware.AuthMiddleware
-
-	mux.Handle("/user/", http.StripPrefix("/user", authware(authorizedMux)))
+	mux.Handle("/user/", http.StripPrefix("/user", authRequired(authorizedMux)))
 
 	// admin routing
 	adminMux.HandleFunc("GET /topics/new", th.GetCreateTopic)
@@ -48,8 +52,8 @@ func registerRoutes(hh *handlers.HomeHandler, th *handlers.TopicHandler, ph *han
 	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
 	adminware := middleware.CreateStack(
-		middleware.AuthMiddleware,
-		middleware.IsAdmin,
+		authRequired,
+		isAdmin,
 	)
 
 	mux.Handle("/admin/", http.StripPrefix("/admin", adminware(adminMux)))
