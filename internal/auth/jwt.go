@@ -28,7 +28,7 @@ func GenerateToken(user *models.User) (string, error) {
 }
 
 func ValidateToken(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) { return []byte("secret-key"), nil })
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) { return []byte(os.Getenv("JWT_SECRET")), nil })
 	if err != nil {
 		return nil, err
 	}
