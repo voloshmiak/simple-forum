@@ -6,6 +6,7 @@ import (
 	"forum-project/internal/models"
 	"html/template"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -21,7 +22,7 @@ func NewTemplates() (*Templates, error) {
 	return &Templates{cache: templates}, nil
 }
 
-func addDefaultData(td *models.ViewData, r *http.Request) *models.ViewData {
+func addDefaultData(td *models.Page, r *http.Request) *models.Page {
 	claims, err := auth.GetClaimsFromRequest(r)
 	if err != nil {
 		td.IsAuthenticated = false
@@ -85,9 +86,9 @@ func parseTemplates() (map[string]*template.Template, error) {
 	return templates, nil
 }
 
-func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.ViewData) error {
+func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.Page) error {
 	// if in development mode
-	isDevelopment := true
+	isDevelopment := os.Getenv("APP_ENV") == "development"
 	if isDevelopment {
 		templates, err := parseTemplates()
 		if err != nil {
