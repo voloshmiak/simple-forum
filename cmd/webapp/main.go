@@ -21,7 +21,7 @@ func main() {
 	config.LoadEnv()
 
 	// create a new app config instance
-	appConfig := new(config.AppConfig)
+	appConfig := config.NewAppConfig()
 
 	// Static
 	appConfig.Mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web/static"))))
