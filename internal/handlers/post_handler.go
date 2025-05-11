@@ -31,7 +31,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	viewData := &models.ViewData{}
+	viewData := new(models.ViewData)
 	viewData.IsAuthor = false
 
 	claims, err := auth.GetClaimsFromRequest(r)
