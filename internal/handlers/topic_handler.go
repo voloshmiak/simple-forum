@@ -24,7 +24,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topics"] = topics
 
-	err = t.app.Templates.Render(rw, r, "topics.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "topics.page", &models.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -56,7 +56,7 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	data["posts"] = posts
 	data["topic"] = topic
 
-	err = t.app.Templates.Render(rw, r, "topic.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "topic.page", &models.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -65,7 +65,7 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.app.Templates.Render(rw, r, "create-topic.page", &models.ViewData{})
+	err := t.app.Templates.Render(rw, r, "create-topic.page", new(models.Page))
 	if err != nil {
 		t.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
@@ -104,7 +104,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = t.app.Templates.Render(rw, r, "edit-topic.page", &models.ViewData{
+	err = t.app.Templates.Render(rw, r, "edit-topic.page", &models.Page{
 		Data: data,
 	})
 	if err != nil {

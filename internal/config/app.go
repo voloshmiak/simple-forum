@@ -34,6 +34,8 @@ func LoadEnv() {
 func NewAppConfig() *AppConfig {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
+	responder := httperror.NewErrorResponder(logger)
+
 	conn, err := database.Connect()
 	if err != nil {
 		log.Fatal("Failed to connect to database", "error", err)
@@ -43,8 +45,6 @@ func NewAppConfig() *AppConfig {
 	if err != nil {
 		log.Fatal("Failed to create templates", "error", err)
 	}
-
-	responder := httperror.NewErrorResponder(logger)
 
 	return &AppConfig{
 		Logger:    logger,

@@ -31,7 +31,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	viewData := new(models.ViewData)
+	viewData := new(models.Page)
 	viewData.IsAuthor = false
 
 	claims, err := auth.GetClaimsFromRequest(r)
@@ -75,7 +75,7 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = p.app.Templates.Render(rw, r, "create-post.page", &models.ViewData{
+	err = p.app.Templates.Render(rw, r, "create-post.page", &models.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -125,7 +125,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["post"] = post
 
-	err = p.app.Templates.Render(rw, r, "edit-post.page", &models.ViewData{
+	err = p.app.Templates.Render(rw, r, "edit-post.page", &models.Page{
 		Data: data,
 	})
 	if err != nil {

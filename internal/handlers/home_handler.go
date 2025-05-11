@@ -17,7 +17,7 @@ func NewHomeHandler(app *config.AppConfig) *HomeHandler {
 }
 
 func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
-	err := h.app.Templates.Render(rw, r, "home.page", &models.ViewData{})
+	err := h.app.Templates.Render(rw, r, "home.page", new(models.Page))
 	if err != nil {
 		h.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}

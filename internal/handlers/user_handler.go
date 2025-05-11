@@ -18,7 +18,7 @@ func NewUserHandler(app *config.AppConfig) *UserHandler {
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "register.page", &models.ViewData{})
+	err := u.app.Templates.Render(rw, r, "register.page", &models.Page{})
 	if err != nil {
 		u.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
@@ -46,7 +46,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "login.page", &models.ViewData{})
+	err := u.app.Templates.Render(rw, r, "login.page", new(models.Page))
 	if err != nil {
 		u.app.Errors.InternalServer(rw, "Unable to render template", err)
 	}
