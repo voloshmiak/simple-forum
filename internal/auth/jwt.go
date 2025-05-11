@@ -11,8 +11,14 @@ import (
 )
 
 func GenerateToken(user *models.User) (string, error) {
+	authorizedUser := models.AuthorizedUser{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Role:     user.Role,
+	}
 	claims := jwt.MapClaims{
-		"user": user,
+		"user": authorizedUser,
 		"exp":  time.Now().Add(time.Hour * 24).Unix(),
 	}
 
