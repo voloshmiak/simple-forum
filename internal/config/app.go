@@ -7,7 +7,6 @@ import (
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"github.com/joho/godotenv"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -24,26 +23,27 @@ type AppConfig struct {
 	Errors       *httperror.ErrorResponder
 }
 
-func LoadEnv() {
+func LoadEnv() error {
 	// load environment variables
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("Failed to load .env file", "error", err)
+		return err
 	}
+	return nil
 }
 
-func NewAppConfig() *AppConfig {
+func NewAppConfig() (*AppConfig, error) {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	responder := httperror.NewErrorResponder(logger)
 
 	conn, err := database.Connect()
 	if err != nil {
-		log.Fatal("Failed to connect to database", "error", err)
+		return nil, err
 	}
 
 	templates, err := template.NewTemplates()
 	if err != nil {
-		log.Fatal("Failed to create templates", "error", err)
+		return nil, err
 	}
 
 	return &AppConfig{
@@ -51,5 +51,5 @@ func NewAppConfig() *AppConfig {
 		Database:  conn,
 		Templates: templates,
 		Errors:    responder,
-	}
+	}, nil
 }

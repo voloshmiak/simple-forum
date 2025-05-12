@@ -18,10 +18,16 @@ import (
 )
 
 func main() {
-	config.LoadEnv()
+	// load environment variables
+	if err := config.LoadEnv(); err != nil {
+		panic(err)
+	}
 
 	// create app config instance
-	appConfig := config.NewAppConfig()
+	appConfig, err := config.NewAppConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	// init mux
 	mux := http.NewServeMux()
