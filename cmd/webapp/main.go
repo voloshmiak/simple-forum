@@ -32,8 +32,8 @@ func main() {
 	// init mux
 	mux := http.NewServeMux()
 
-	// serve static
-	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("./web/static"))))
+	// serve files
+	routes.RegisterFileRoutes(mux)
 
 	// Home
 	hh := handlers.NewHomeHandler(appConfig)
