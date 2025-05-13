@@ -32,7 +32,7 @@ func main() {
 	// init mux
 	mux := http.NewServeMux()
 
-	// serve files
+	// Files
 	routes.RegisterFileRoutes(mux)
 
 	// Home

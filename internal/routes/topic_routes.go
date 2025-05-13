@@ -7,20 +7,25 @@ import (
 )
 
 func RegisterTopicRoutes(mux *http.ServeMux, th *handlers.TopicHandler) {
+	// init mux for admin routes
 	adminMux := http.NewServeMux()
-	adminware := middleware.CreateStack(
+
+	// initialize middleware
+	isAdmin := middleware.CreateStack(
 		middleware.AuthMiddleware,
 		middleware.IsAdmin,
 	)
 
+	// public routing
 	mux.HandleFunc("GET /topics", th.GetTopics)
 	mux.HandleFunc("GET /topics/{topicID}", th.GetTopic)
 
+	// admin routing
 	adminMux.HandleFunc("GET /topics/new", th.GetCreateTopic)
 	adminMux.HandleFunc("POST /topics", th.PostCreateTopic)
 	adminMux.HandleFunc("GET /topics/{topicID}/edit", th.GetEditTopic)
 	adminMux.HandleFunc("POST /topics/{topicID}/edit", th.PostEditTopic)
 	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
-	mux.Handle("/admin/", http.StripPrefix("/admin", adminware(adminMux)))
+	mux.Handle("/admin/", http.StripPrefix("/admin", isAdmin(adminMux)))
 }

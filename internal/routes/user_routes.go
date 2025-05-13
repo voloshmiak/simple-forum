@@ -6,6 +6,7 @@ import (
 )
 
 func RegisterUserRoutes(mux *http.ServeMux, uh *handlers.UserHandler) {
+	// public routing
 	mux.HandleFunc("GET /login", uh.GetLogin)
 	mux.HandleFunc("POST /login", uh.PostLogin)
 	mux.HandleFunc("GET /logout", uh.GetLogout)
