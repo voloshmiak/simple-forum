@@ -21,13 +21,13 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Post Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
@@ -54,7 +54,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 
 	err = p.app.Templates.Render(rw, r, "post.page", viewData)
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to render template", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -62,13 +62,13 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
 	topic, err := p.app.TopicService.GetTopicByID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Topic Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to render template", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -89,7 +89,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	topicID := r.PostFormValue("topic_id")
 	topicIDInt, err := strconv.Atoi(topicID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 
 	err = p.app.PostService.CreatePost(title, content, topicIDInt, userID, userName)
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to create post", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to create post", err)
 		return
 	}
 
@@ -112,13 +112,13 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Post Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to render template", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -137,7 +137,7 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
@@ -146,13 +146,13 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 
 	post, err := p.app.PostService.GetPostByID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Post Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Post Not Found", err)
 		return
 	}
 
 	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Topic Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
@@ -161,7 +161,7 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 
 	err = p.app.PostService.EditPost(post)
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to edit post", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to edit post", err)
 		return
 	}
 
@@ -174,19 +174,19 @@ func (p *PostHandler) GetDeletePost(rw http.ResponseWriter, r *http.Request) {
 	stringPostID := r.PathValue("postID")
 	id, err := strconv.Atoi(stringPostID)
 	if err != nil {
-		p.app.Errors.BadRequest(rw, "Invalid Post ID", err)
+		p.app.ErrorResponder.BadRequest(rw, "Invalid Post ID", err)
 		return
 	}
 
 	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
-		p.app.Errors.NotFound(rw, "Topic Not Found", err)
+		p.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
 	err = p.app.PostService.DeletePost(id)
 	if err != nil {
-		p.app.Errors.InternalServer(rw, "Unable to delete post", err)
+		p.app.ErrorResponder.InternalServer(rw, "Unable to delete post", err)
 		return
 	}
 

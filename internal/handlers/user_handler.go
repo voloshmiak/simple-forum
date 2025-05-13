@@ -20,7 +20,7 @@ func NewUserHandler(app *config.AppConfig) *UserHandler {
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "register.page", &models.Page{})
 	if err != nil {
-		u.app.Errors.InternalServer(rw, "Unable to render template", err)
+		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -34,10 +34,10 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrMissmatchPassword):
-			u.app.Errors.BadRequest(rw, "Passwords do not match", err)
+			u.app.ErrorResponder.BadRequest(rw, "Passwords do not match", err)
 			return
 		default:
-			u.app.Errors.InternalServer(rw, "Failed to register user", err)
+			u.app.ErrorResponder.InternalServer(rw, "Failed to register user", err)
 			return
 		}
 	}
@@ -48,7 +48,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "login.page", new(models.Page))
 	if err != nil {
-		u.app.Errors.InternalServer(rw, "Unable to render template", err)
+		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -60,13 +60,13 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			u.app.Errors.NotFound(rw, "User not found", err)
+			u.app.ErrorResponder.NotFound(rw, "User not found", err)
 			return
 		case errors.Is(err, service.ErrWrongPassword):
-			u.app.Errors.Unauthorized(rw, "Wrong password", err)
+			u.app.ErrorResponder.Unauthorized(rw, "Wrong password", err)
 			return
 		default:
-			u.app.Errors.InternalServer(rw, "Failed to login user", err)
+			u.app.ErrorResponder.InternalServer(rw, "Failed to login user", err)
 			return
 		}
 	}

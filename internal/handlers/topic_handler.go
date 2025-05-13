@@ -18,7 +18,7 @@ func NewTopicHandler(app *config.AppConfig) *TopicHandler {
 func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.app.TopicService.GetAllTopics()
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to get topics", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to get topics", err)
 	}
 
 	data := make(map[string]any)
@@ -28,7 +28,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to render template", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -36,19 +36,19 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
+		t.app.ErrorResponder.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
 	topic, err := t.app.TopicService.GetTopicByID(id)
 	if err != nil {
-		t.app.Errors.NotFound(rw, "Topic Not Found", err)
+		t.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
 	posts, err := t.app.PostService.GetPostsByTopicID(id)
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to get posts", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to get posts", err)
 		return
 	}
 
@@ -60,14 +60,14 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to render template", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
 	err := t.app.Templates.Render(rw, r, "create-topic.page", new(models.Page))
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to render template", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -80,7 +80,7 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 
 	err := t.app.TopicService.CreateTopic(name, description, userID)
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to create topic", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to create topic", err)
 		return
 	}
 
@@ -91,13 +91,13 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
+		t.app.ErrorResponder.BadRequest(rw, "Invalid Topic ID", err)
 	}
 
 	topic, err := t.app.TopicService.GetTopicByID(id)
 
 	if err != nil {
-		t.app.Errors.NotFound(rw, "Topic Not Found", err)
+		t.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to render template", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
@@ -116,7 +116,7 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
+		t.app.ErrorResponder.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (t *TopicHandler) PostEditTopic(rw http.ResponseWriter, r *http.Request) {
 
 	err = t.app.TopicService.EditTopic(id, name, description)
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to edit topic", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to edit topic", err)
 		return
 	}
 
@@ -136,13 +136,13 @@ func (t *TopicHandler) GetDeleteTopic(rw http.ResponseWriter, r *http.Request) {
 	stringTopicID := r.PathValue("topicID")
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
-		t.app.Errors.BadRequest(rw, "Invalid Topic ID", err)
+		t.app.ErrorResponder.BadRequest(rw, "Invalid Topic ID", err)
 		return
 	}
 
 	err = t.app.TopicService.DeleteTopic(id)
 	if err != nil {
-		t.app.Errors.InternalServer(rw, "Unable to delete topic", err)
+		t.app.ErrorResponder.InternalServer(rw, "Unable to delete topic", err)
 		return
 	}
 

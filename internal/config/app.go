@@ -6,29 +6,20 @@ import (
 	"forum-project/internal/httperror"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net/http"
 	"os"
 )
 
 type AppConfig struct {
-	Logger       *slog.Logger
-	Database     *sql.DB
-	Server       *http.Server
-	Templates    *template.Templates
-	TopicService *service.TopicService
-	PostService  *service.PostService
-	UserService  *service.UserService
-	Errors       *httperror.ErrorResponder
-}
-
-func LoadEnv() error {
-	// load environment variables
-	if err := godotenv.Load(".env"); err != nil {
-		return err
-	}
-	return nil
+	Logger         *slog.Logger
+	Database       *sql.DB
+	Server         *http.Server
+	Templates      *template.Templates
+	TopicService   *service.TopicService
+	PostService    *service.PostService
+	UserService    *service.UserService
+	ErrorResponder *httperror.ErrorResponder
 }
 
 func NewAppConfig() (*AppConfig, error) {
@@ -47,9 +38,9 @@ func NewAppConfig() (*AppConfig, error) {
 	}
 
 	return &AppConfig{
-		Logger:    logger,
-		Database:  conn,
-		Templates: templates,
-		Errors:    responder,
+		Logger:         logger,
+		Database:       conn,
+		Templates:      templates,
+		ErrorResponder: responder,
 	}, nil
 }
