@@ -89,7 +89,9 @@ func (u *UserRepository) GetUserByID(id int) (*models.User, error) {
 		&user.Role,
 	)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 	}
 
 	return user, nil
