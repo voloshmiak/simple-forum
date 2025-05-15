@@ -27,6 +27,10 @@ func NewUserService(repository *repository.UserRepository) *UserService {
 func (u *UserService) Authenticate(email, password string) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
+		return "", err
+	}
+
+	if user == nil {
 		return "", ErrUserNotFound
 	}
 
@@ -84,6 +88,10 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 func (u *UserService) GetUserByID(id int) (*models.User, error) {
 	user, err := u.repository.GetUserByID(id)
 	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
 		return nil, ErrUserNotFound
 	}
 	return user, nil
