@@ -1,41 +1,51 @@
 {{template "base" .}}
 {{define "content"}}
-{{$topic := index .Data "topic"}}
-{{$posts := index .Data "posts"}}
+<main>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        {{$topic := index .Data "topic"}}
+                        <h1 class="card-title">{{$topic.Name}}</h1>
+                        <p class="card-text">{{$topic.Description}}</p>
+                        <p class="text-muted">Was created at: <small>{{$topic.CreatedAt.Format "2006-01-02"}}</small></p>
 
-<h1>{{$topic.Name}}</h1>
-<div>
-    <p>{{$topic.Description}}</p>
-    Was created at: <small>{{$topic.CreatedAt}}</small>
-</div>
+                        {{if eq .IsAdmin true}}
+                            <a href="/admin/topics/{{$topic.ID}}/edit" class="btn btn-sm btn-outline-primary">Edit topic</a>
+                            <a href="/admin/topics/{{$topic.ID}}/delete" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')">Delete topic</a>
+                        {{end}}
+                    </div>
+                </div>
 
-{{if eq .IsAdmin true}}
-    <a href="/admin/topics/{{$topic.ID}}/edit">Edit topic</a><br>
-    <br>
-{{end}}
-
-{{if eq .IsAdmin true}}
-    <a href="/admin/topics/{{$topic.ID}}/delete"  onclick="return confirm('Are you sure?')">Delete topic</a><br>
-    <br>
-{{end}}
-
-<h2>Posts</h2>
-{{if not $posts}}
-    <p>No posts yet</p>
-{{else}}
-    {{range $posts}}
-        <div>
-            Author: {{.AuthorName}}<br>
-            <a href="/topics/{{$topic.ID}}/posts/{{.ID}}">{{.Title}}</a><br>
-            Was posted: <small>{{.CreatedAt}}</small>
+                <h2 class="mt-4">Posts</h2>
+                {{if eq .IsAuthenticated true}}
+                    <a href="/user/topics/{{$topic.ID}}/posts/new" class="btn btn-dark w-25">Create post</a>
+                {{end}}
+                {{$postRows := index .Data "posts"}}
+                {{if not $postRows}}
+                    <p>No posts yet</p>
+                {{else}}
+                    {{range $postRows}}
+                    <div class="row">
+                        {{range .}}
+                            <div class="col-md-6 mb-3 mt-3">
+                                <a href="/topics/{{$topic.ID}}/posts/{{.ID}}" class="text-decoration-none">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{.Title}}</h5>
+                                            <p class="card-text">Author: {{.AuthorName}}</p>
+                                            <p class="text-muted">Was posted: <small>{{.CreatedAt.Format "2006-01-02"}}</small></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {{end}}
+                    </div>
+                {{end}}
+                {{end}}
+            </div>
         </div>
-        <br>
-    {{end}}
-{{end}}
-
-{{if eq .IsAuthenticated true}}
-    <a href="/user/topics/{{$topic.ID}}/posts/new">Create post</a> <br>
-        {{end}}
-
-    <br>
+    </div>
+</main>
 {{end}}

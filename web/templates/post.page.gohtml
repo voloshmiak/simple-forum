@@ -1,19 +1,19 @@
 {{template "base" .}}
 {{define "content"}}
 {{$post := index .Data "post"}}
-<main class="ms-3 me-3">
+<main class="ms-3 me-3 ms-md-5">
     <header class="mb-4">
         <h1 class="fw-bolder mb-1">{{$post.Title}}</h1>
-        <div class="text-muted fst-italic mb-2">Posted on {{$post.CreatedAt}} by <u>{{$post.AuthorName}}</u></div>
+        <div class="text-muted fst-italic mb-2">Posted on {{$post.CreatedAt.Format "2006-01-02"}} by <u>{{$post.AuthorName}}</u></div>
     </header>
     <section class="mb-3">
         <p class="fs-5 mb-4">{{$post.Content}}</p>
     </section>
     {{if eq .IsAuthor true}}
-        <button id="edit_post" type="button" class="btn btn-dark">Edit</button>
+        <button id="edit_post" type="button" class="btn btn-sm btn-outline-primary">Edit Post</button>
     {{end}}
     {{if or (eq .IsAuthor true) (eq .IsAdmin true)}}
-        <button id="delete_post" type="button" class="btn btn-dark">Delete</button>
+        <button id="delete_post" type="button" class="btn btn-sm btn-outline-danger">Delete Post</button>
     {{end}}
 
     <script type="text/javascript">
@@ -37,9 +37,4 @@
     {{end}}
     </script>
 </main>
-
-
-
-
-    <br>
 {{end}}

@@ -1,21 +1,37 @@
- {{template "base" .}}
-    {{define "content"}}
-        {{$topics := index .Data "topics"}}
-<h1>Topics</h1>
-{{if not $topics}}
-    <p>No topics yet</p>
-{{else}}
-    {{range index .Data "topics"}}
-        <div>
-            <a href="/topics/{{.ID}}">{{.Name}}</a>
-            <p>{{.Description}}<br>
-                Was created at: <small>{{.CreatedAt}}</small>
+{{template "base" .}}
+{{define "content"}}
+<main>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <h1 class="mt-4 mb-4 text-center">Topics</h1>
+                <div class="d-flex justify-content-center">
+                    {{if eq .IsAdmin true}}
+                        <a href="/admin/topics/new" class="btn btn-dark mb-3 w-25">Create topic</a>
+                    {{end}}
+                </div>
+                {{$topics := index .Data "topics"}}
+                {{if not $topics}}
+                    <p>No topics yet</p>
+                {{else}}
+                    <div class="row">
+                        {{range $topics}}
+                            <div class="col-md-6 mb-4">
+                                <a href="/topics/{{.ID}}" class="text-decoration-none">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h2 class="card-title">{{.Name}}</h2>
+                                            <p class="card-text">{{.Description}}</p>
+                                            <p class="text-muted">Was created at: <small>{{.CreatedAt.Format "2006-01-02"}}</small></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
         </div>
-        <br>
-    {{end}}
-{{end}}
-
-{{if eq .IsAdmin true}}
-    <a href="/admin/topics/new">Create topic</a> <br>
-{{end}}
+    </div>
+</main>
 {{end}}

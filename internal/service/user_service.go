@@ -5,6 +5,7 @@ import (
 	"forum-project/internal/auth"
 	"forum-project/internal/models"
 	"forum-project/internal/repository"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -12,6 +13,8 @@ import (
 var ErrUserNotFound = errors.New("user not found")
 var ErrWrongPassword = errors.New("wrong password")
 var ErrMissmatchPassword = errors.New("passwords do not match")
+var ErrUserEmailAlreadyExists = errors.New("user email already exists")
+var ErrUserNameAlreadyExists = errors.New("username already exists")
 
 type UserService struct {
 	repository *repository.UserRepository
@@ -45,7 +48,23 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 		return ErrMissmatchPassword
 	}
 
-	user := &models.User{Username: username, Email: email, Role: "user"}
+	existingUserByUsername, err := u.repository.GetUserByUsername(username)
+	if err != nil {
+		return err
+	}
+	if existingUserByUsername != nil {
+		return ErrUserNameAlreadyExists
+	}
+
+	existingUserByEmail, err := u.repository.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	if existingUserByEmail != nil {
+		return ErrUserEmailAlreadyExists
+	}
+
+	user := &models.User{Username: username, Email: email, Role: "user", CreatedAt: time.Now()}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
 	if err != nil {

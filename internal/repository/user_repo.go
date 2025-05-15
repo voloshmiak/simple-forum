@@ -27,9 +27,34 @@ func (u *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		&user.Role,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 
+	return user, nil
+}
+
+func (u *UserRepository) GetUserByUsername(username string) (*models.User, error) {
+	query := `SELECT id, username, email, password_hash, created_at, role FROM users WHERE username = $1`
+
+	user := new(models.User)
+
+	err := u.conn.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.Role,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
 	return user, nil
 }
 

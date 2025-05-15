@@ -3,6 +3,7 @@ package service
 import (
 	"forum-project/internal/models"
 	"forum-project/internal/repository"
+	"time"
 )
 
 type TopicService struct {
@@ -42,6 +43,7 @@ func (t *TopicService) CreateTopic(name, description string, authorID int) error
 		Name:        name,
 		Description: description,
 		AuthorId:    authorID,
+		CreatedAt:   time.Now(),
 	}
 
 	_, err := t.repository.InsertTopic(topic)

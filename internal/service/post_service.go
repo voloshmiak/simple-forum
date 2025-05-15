@@ -3,6 +3,7 @@ package service
 import (
 	"forum-project/internal/models"
 	"forum-project/internal/repository"
+	"time"
 )
 
 type PostService struct {
@@ -36,6 +37,7 @@ func (p *PostService) CreatePost(title, content string, topicID, authorID int, a
 		TopicId:    topicID,
 		AuthorId:   authorID,
 		AuthorName: authorName,
+		CreatedAt:  time.Now(),
 	}
 
 	postID, err := p.repository.InsertPost(post)
