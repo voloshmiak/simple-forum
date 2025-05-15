@@ -33,11 +33,41 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.UserService.Register(username, email, password1, password2)
 	if err != nil {
 		switch {
+		case errors.Is(err, service.ErrUserEmailAlreadyExists):
+			page := &models.Page{
+				Error: "Email already exists",
+			}
+			err := u.app.Templates.Render(rw, r, "register.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
+			return
+		case errors.Is(err, service.ErrUserNameAlreadyExists):
+			page := &models.Page{
+				Error: "Username already exists",
+			}
+			err := u.app.Templates.Render(rw, r, "register.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
+			return
 		case errors.Is(err, service.ErrMissmatchPassword):
-			u.app.ErrorResponder.BadRequest(rw, "Passwords do not match", err)
+			page := &models.Page{
+				Error: "Passwords do not match",
+			}
+			err := u.app.Templates.Render(rw, r, "register.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
 			return
 		default:
-			u.app.ErrorResponder.InternalServer(rw, "Failed to register user", err)
+			page := &models.Page{
+				Error: "Failed to register",
+			}
+			err := u.app.Templates.Render(rw, r, "register.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
 			return
 		}
 	}
@@ -60,13 +90,31 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			u.app.ErrorResponder.NotFound(rw, "User not found", err)
+			page := &models.Page{
+				Error: "User not found",
+			}
+			err := u.app.Templates.Render(rw, r, "login.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
 			return
 		case errors.Is(err, service.ErrWrongPassword):
-			u.app.ErrorResponder.Unauthorized(rw, "Wrong password", err)
+			page := &models.Page{
+				Error: "Wrong password",
+			}
+			err := u.app.Templates.Render(rw, r, "login.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
 			return
 		default:
-			u.app.ErrorResponder.InternalServer(rw, "Failed to login user", err)
+			page := &models.Page{
+				Error: "Failed to login",
+			}
+			err := u.app.Templates.Render(rw, r, "login.page", page)
+			if err != nil {
+				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+			}
 			return
 		}
 	}
