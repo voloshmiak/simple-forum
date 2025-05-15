@@ -52,8 +52,17 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var postRows [][]models.Post
+	for i := 0; i < len(posts); i += 2 {
+		row := []models.Post{*posts[i]}
+		if i+1 < len(posts) {
+			row = append(row, *posts[i+1])
+		}
+		postRows = append(postRows, row)
+	}
+
 	data := make(map[string]any)
-	data["posts"] = posts
+	data["posts"] = postRows
 	data["topic"] = topic
 
 	err = t.app.Templates.Render(rw, r, "topic.page", &models.Page{
