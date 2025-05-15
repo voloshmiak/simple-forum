@@ -32,44 +32,23 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 
 	err := u.app.UserService.Register(username, email, password1, password2)
 	if err != nil {
+		var errorMsg string
 		switch {
 		case errors.Is(err, service.ErrUserEmailAlreadyExists):
-			page := &models.Page{
-				Error: "Email already exists",
-			}
-			err := u.app.Templates.Render(rw, r, "register.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "Email already exists"
 		case errors.Is(err, service.ErrUserNameAlreadyExists):
-			page := &models.Page{
-				Error: "Username already exists",
-			}
-			err := u.app.Templates.Render(rw, r, "register.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
-		case errors.Is(err, service.ErrMissmatchPassword):
-			page := &models.Page{
-				Error: "Passwords do not match",
-			}
-			err := u.app.Templates.Render(rw, r, "register.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "Username already exists"
 		default:
-			page := &models.Page{
-				Error: "Failed to register",
-			}
-			err := u.app.Templates.Render(rw, r, "register.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "Failed to register"
 		}
+		page := &models.Page{
+			Error: errorMsg,
+		}
+		err := u.app.Templates.Render(rw, r, "register.page", page)
+		if err != nil {
+			u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+		}
+		return
 	}
 
 	http.Redirect(rw, r, "/topics", http.StatusFound)
@@ -88,35 +67,23 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 
 	token, err := u.app.UserService.Authenticate(email, password)
 	if err != nil {
+		var errorMsg string
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			page := &models.Page{
-				Error: "User not found",
-			}
-			err := u.app.Templates.Render(rw, r, "login.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "User not found"
 		case errors.Is(err, service.ErrWrongPassword):
-			page := &models.Page{
-				Error: "Wrong password",
-			}
-			err := u.app.Templates.Render(rw, r, "login.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "Wrong password"
 		default:
-			page := &models.Page{
-				Error: "Failed to login",
-			}
-			err := u.app.Templates.Render(rw, r, "login.page", page)
-			if err != nil {
-				u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
-			}
-			return
+			errorMsg = "Failed to login"
 		}
+		page := &models.Page{
+			Error: errorMsg,
+		}
+		err := u.app.Templates.Render(rw, r, "login.page", page)
+		if err != nil {
+			u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+		}
+		return
 	}
 
 	cookie := &http.Cookie{
