@@ -8,15 +8,16 @@
         <div class="card bg-dark text-white" style="border-radius: 1rem;">
           <div class="card-body p-5 text-center">
 
-            <div class="mb-md-2 pb-3">
-
-              <h2 class="fw-bold text-uppercase mt-0">Sign up</h2>
-              <p class="text-white-50 mb-5">Please enter your login, email and password!</p>
-              {{if .Error}}
+          {{if .Error}}
                 <div class="alert alert-danger xsmall" role="alert">
                 {{.Error}}
               </div>
               {{end}}
+
+            <div class="mb-md-2 pb-3">
+
+              <h2 class="fw-bold text-uppercase mt-0">Sign up</h2>
+              <p class="text-white-50 mb-5">Please enter your login, email and password!</p>
             <form action="/signup" method="post">
             <div data-mdb-input-init class="form-outline form-white mb-2">
                 <input name="username" type="text" id="typeTextX" class="form-control form-control-lg" required/>
