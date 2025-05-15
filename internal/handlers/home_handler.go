@@ -22,3 +22,10 @@ func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
 		h.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
+
+func (h *HomeHandler) GetAbout(rw http.ResponseWriter, r *http.Request) {
+	err := h.app.Templates.Render(rw, r, "about.page", new(models.Page))
+	if err != nil {
+		h.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
+	}
+}
