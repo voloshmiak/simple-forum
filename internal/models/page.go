@@ -5,6 +5,9 @@ type Page struct {
 	IntMap          map[string]int
 	FloatMap        map[string]float64
 	Data            map[string]any
+	Flash           string
+	Warning         string
+	Error           string
 	IsAuthenticated bool
 	IsAuthor        bool
 	IsAdmin         bool
