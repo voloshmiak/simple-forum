@@ -1,0 +1,94 @@
+@startuml
+title Компоненти рівня авторизації та аутентифікації
+
+skinparam packageStyle rect
+skinparam componentStyle uml2
+
+package "Middleware" <<HTTP Middleware>> {
+  component "internal/middleware/auth.go\n(AuthMiddleware)" as AuthMiddleware
+  component "internal/middleware/access.go\n(IsAdmin, IsPostAuthor, IsPostAuthorOrAdmin)" as AccessMiddleware
+
+  note right of AuthMiddleware
+    Перевіряє наявність та валідність
+    JWT токена.
+    Додає дані авторизованого
+    користувача до контексту запиту.
+  end note
+
+  note right of AccessMiddleware
+    Перевіряє права доступу
+    користувача до певних ресурсів
+    на основі його ролі або авторства.
+    (e.g., IsAdmin, IsPostAuthor)
+  end note
+}
+
+package "Authentication Utilities" <<Auth>> {
+  component "internal/auth/jwt.go" as JWTManager
+  note right of JWTManager
+    Відповідає за генерацію,
+    валідацію JWT токенів та
+    отримання claims з токена.
+  end note
+}
+
+package "Application Configuration" <<Config>> {
+  component "internal/config/app.go\n(AppConfig)" as AppConfig
+  note right of AppConfig
+    Надає доступ до сервісів
+    (наприклад, PostService) для
+    перевірки прав доступу в middleware.
+  end note
+}
+
+package "Services" <<Service>> {
+  component "internal/service/post_service.go\n(PostService)" as PostService
+  note right of PostService
+    Містить логіку для перевірки
+    авторства поста (VerifyPostAuthor,
+    VerifyPostAuthorOrAdmin).
+  end note
+   component "internal/service/user_service.go\n(UserService)" as UserService
+    note right of UserService
+    Використовується для аутентифікації
+    користувача (перевірка email/паролю)
+    та генерації токена через JWTManager.
+    end note
+}
+
+package "Data Models" <<Models>> {
+  component "internal/models/user.go\n(User, AuthorizedUser)" as UserModels
+  component "internal/models/post.go\n(Post)" as PostModel
+
+  note right of UserModels
+    Структури для представлення
+    користувача та авторизованого
+    користувача (з роллю).
+  end note
+  note right of PostModel
+    Структура для представлення
+    поста, містить ID автора.
+  end note
+}
+
+' Relationships
+AuthMiddleware ..> JWTManager : Uses for token validation & claims extraction
+AuthMiddleware ..> UserModels : Uses AuthorizedUser for context
+
+AccessMiddleware ..> UserModels : Uses AuthorizedUser from context
+AccessMiddleware ..> AppConfig : Uses to access services
+AccessMiddleware ..> PostService : Uses for post-specific checks
+AccessMiddleware ..> PostModel : (Implicitly) PostService uses PostModel
+
+JWTManager ..> UserModels : Uses User/AuthorizedUser for claims
+
+PostService ..> PostModel : Operates on
+
+UserService ..> JWTManager : Uses for token generation
+UserService ..> UserModels : Operates on
+
+' Implied: Routes use Middleware
+' [internal/routes/*_routes.go] --> AuthMiddleware
+' [internal/routes/*_routes.go] --> AccessMiddleware
+
+@enduml
