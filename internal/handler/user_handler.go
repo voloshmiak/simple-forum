@@ -1,24 +1,24 @@
-package handlers
+package handler
 
 import (
 	"errors"
-	"forum-project/internal/config"
-	"forum-project/internal/models"
+	"forum-project/internal/application"
+	"forum-project/internal/model"
 	"forum-project/internal/service"
 	"net/http"
 	"time"
 )
 
 type UserHandler struct {
-	app *config.AppConfig
+	app *application.App
 }
 
-func NewUserHandler(app *config.AppConfig) *UserHandler {
+func NewUserHandler(app *application.App) *UserHandler {
 	return &UserHandler{app: app}
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "register.page", &models.Page{})
+	err := u.app.Templates.Render(rw, r, "register.page", &model.Page{})
 	if err != nil {
 		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -41,7 +41,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 		default:
 			errorMsg = "Failed to register"
 		}
-		page := &models.Page{
+		page := &model.Page{
 			Error: errorMsg,
 		}
 		err := u.app.Templates.Render(rw, r, "register.page", page)
@@ -55,7 +55,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "login.page", new(models.Page))
+	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page))
 	if err != nil {
 		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -76,7 +76,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		default:
 			errorMsg = "Failed to login"
 		}
-		page := &models.Page{
+		page := &model.Page{
 			Error: errorMsg,
 		}
 		err := u.app.Templates.Render(rw, r, "login.page", page)

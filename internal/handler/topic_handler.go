@@ -1,17 +1,17 @@
-package handlers
+package handler
 
 import (
-	"forum-project/internal/config"
-	"forum-project/internal/models"
+	"forum-project/internal/application"
+	"forum-project/internal/model"
 	"net/http"
 	"strconv"
 )
 
 type TopicHandler struct {
-	app *config.AppConfig
+	app *application.App
 }
 
-func NewTopicHandler(app *config.AppConfig) *TopicHandler {
+func NewTopicHandler(app *application.App) *TopicHandler {
 	return &TopicHandler{app: app}
 }
 
@@ -24,7 +24,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topics"] = topics
 
-	err = t.app.Templates.Render(rw, r, "topics.page", &models.Page{
+	err = t.app.Templates.Render(rw, r, "topics.page", &model.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -52,9 +52,9 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var postRows [][]models.Post
+	var postRows [][]model.Post
 	for i := 0; i < len(posts); i += 2 {
-		row := []models.Post{*posts[i]}
+		row := []model.Post{*posts[i]}
 		if i+1 < len(posts) {
 			row = append(row, *posts[i+1])
 		}
@@ -65,7 +65,7 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	data["posts"] = postRows
 	data["topic"] = topic
 
-	err = t.app.Templates.Render(rw, r, "topic.page", &models.Page{
+	err = t.app.Templates.Render(rw, r, "topic.page", &model.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -74,7 +74,7 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.app.Templates.Render(rw, r, "create-topic.page", new(models.Page))
+	err := t.app.Templates.Render(rw, r, "create-topic.page", new(model.Page))
 	if err != nil {
 		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -84,7 +84,7 @@ func (t *TopicHandler) PostCreateTopic(rw http.ResponseWriter, r *http.Request) 
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 
-	user := r.Context().Value("user").(*models.AuthorizedUser)
+	user := r.Context().Value("user").(*model.AuthorizedUser)
 	userID := user.ID
 
 	err := t.app.TopicService.CreateTopic(name, description, userID)
@@ -113,7 +113,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = t.app.Templates.Render(rw, r, "edit-topic.page", &models.Page{
+	err = t.app.Templates.Render(rw, r, "edit-topic.page", &model.Page{
 		Data: data,
 	})
 	if err != nil {

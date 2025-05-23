@@ -1,19 +1,19 @@
-package handlers
+package handler
 
 import (
 	"fmt"
+	"forum-project/internal/application"
 	"forum-project/internal/auth"
-	"forum-project/internal/config"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"net/http"
 	"strconv"
 )
 
 type PostHandler struct {
-	app *config.AppConfig
+	app *application.App
 }
 
-func NewPostHandler(app *config.AppConfig) *PostHandler {
+func NewPostHandler(app *application.App) *PostHandler {
 	return &PostHandler{app: app}
 }
 
@@ -31,7 +31,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	viewData := new(models.Page)
+	viewData := new(model.Page)
 	viewData.IsAuthor = false
 
 	claims, err := auth.GetClaimsFromRequest(r)
@@ -75,7 +75,7 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["topic"] = topic
 
-	err = p.app.Templates.Render(rw, r, "create-post.page", &models.Page{
+	err = p.app.Templates.Render(rw, r, "create-post.page", &model.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user").(*models.AuthorizedUser)
+	user := r.Context().Value("user").(*model.AuthorizedUser)
 	userID := user.ID
 	userName := user.Username
 
@@ -125,7 +125,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	data["post"] = post
 
-	err = p.app.Templates.Render(rw, r, "edit-post.page", &models.Page{
+	err = p.app.Templates.Render(rw, r, "edit-post.page", &model.Page{
 		Data: data,
 	})
 	if err != nil {
@@ -144,22 +144,13 @@ func (p *PostHandler) PostEditPost(rw http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	content := r.PostFormValue("content")
 
-	post, err := p.app.PostService.GetPostByID(id)
-	if err != nil {
-		p.app.ErrorResponder.NotFound(rw, "Post Not Found", err)
-		return
-	}
-
 	topic, err := p.app.TopicService.GetTopicByPostID(id)
 	if err != nil {
 		p.app.ErrorResponder.NotFound(rw, "Topic Not Found", err)
 		return
 	}
 
-	post.Title = title
-	post.Content = content
-
-	err = p.app.PostService.EditPost(post)
+	err = p.app.PostService.EditPost(title, content, id)
 	if err != nil {
 		p.app.ErrorResponder.InternalServer(rw, "Unable to edit post", err)
 		return
