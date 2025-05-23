@@ -1,4 +1,4 @@
-package models
+package model
 
 type Page struct {
 	StringMap       map[string]string
