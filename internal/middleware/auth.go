@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"forum-project/internal/auth"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"net/http"
 )
 
@@ -23,7 +23,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		email := user["email"].(string)
 		role := user["role"].(string)
 
-		authorizedUser := &models.AuthorizedUser{
+		authorizedUser := &model.AuthorizedUser{
 			ID:       userIDInt,
 			Username: username,
 			Email:    email,

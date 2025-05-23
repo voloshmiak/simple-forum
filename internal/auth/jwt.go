@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"net/http"
 	"os"
 	"time"
@@ -10,8 +10,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(user *models.User) (string, error) {
-	authorizedUser := models.AuthorizedUser{
+func GenerateToken(user *model.User) (string, error) {
+	authorizedUser := model.AuthorizedUser{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,

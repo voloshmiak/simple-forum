@@ -1,15 +1,15 @@
 package middleware
 
 import (
-	"forum-project/internal/config"
-	"forum-project/internal/models"
+	"forum-project/internal/application"
+	"forum-project/internal/model"
 	"net/http"
 	"strconv"
 )
 
 func IsAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("user").(*models.AuthorizedUser)
+		user := r.Context().Value("user").(*model.AuthorizedUser)
 		role := user.Role
 
 		if role != "admin" {
@@ -21,7 +21,7 @@ func IsAdmin(next http.Handler) http.Handler {
 	})
 }
 
-func IsPostAuthor(app *config.AppConfig) func(http.Handler) http.Handler {
+func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			stringPostID := r.PathValue("postID")
@@ -31,7 +31,7 @@ func IsPostAuthor(app *config.AppConfig) func(http.Handler) http.Handler {
 				return
 			}
 
-			user := r.Context().Value("user").(*models.AuthorizedUser)
+			user := r.Context().Value("user").(*model.AuthorizedUser)
 
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
@@ -50,7 +50,7 @@ func IsPostAuthor(app *config.AppConfig) func(http.Handler) http.Handler {
 	}
 }
 
-func IsPostAuthorOrAdmin(app *config.AppConfig) func(http.Handler) http.Handler {
+func IsPostAuthorOrAdmin(app *application.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			stringPostID := r.PathValue("postID")
@@ -60,7 +60,7 @@ func IsPostAuthorOrAdmin(app *config.AppConfig) func(http.Handler) http.Handler 
 				return
 			}
 
-			user := r.Context().Value("user").(*models.AuthorizedUser)
+			user := r.Context().Value("user").(*model.AuthorizedUser)
 
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
