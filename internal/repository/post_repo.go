@@ -2,8 +2,16 @@ package repository
 
 import (
 	"database/sql"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 )
+
+type PostStorage interface {
+	GetPostsByTopicID(topicID int) ([]*model.Post, error)
+	GetPostByID(postID int) (*model.Post, error)
+	InsertPost(post *model.Post) (int, error)
+	UpdatePost(post *model.Post) error
+	DeletePost(post *model.Post) error
+}
 
 type PostRepository struct {
 	conn *sql.DB
@@ -13,7 +21,7 @@ func NewPostRepository(conn *sql.DB) *PostRepository {
 	return &PostRepository{conn: conn}
 }
 
-func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
+func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*model.Post, error) {
 	query := `SELECT * FROM posts WHERE topic_id = $1`
 
 	rows, err := p.conn.Query(query, topicID)
@@ -22,9 +30,9 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 	}
 	defer rows.Close()
 
-	var posts []*models.Post
+	var posts []*model.Post
 	for rows.Next() {
-		post := new(models.Post)
+		post := new(model.Post)
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
@@ -43,10 +51,10 @@ func (p *PostRepository) GetPostsByTopicID(topicID int) ([]*models.Post, error) 
 	return posts, nil
 }
 
-func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
+func (p *PostRepository) GetPostByID(postID int) (*model.Post, error) {
 	query := `SELECT * FROM posts WHERE id = $1`
 
-	post := new(models.Post)
+	post := new(model.Post)
 
 	err := p.conn.QueryRow(query, postID).Scan(
 		&post.ID,
@@ -65,10 +73,10 @@ func (p *PostRepository) GetPostByID(postID int) (*models.Post, error) {
 	return post, nil
 }
 
-func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
+func (p *PostRepository) InsertPost(post *model.Post) (int, error) {
 	query := `INSERT INTO posts (title, content, topic_id, author_id, author_name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
-	err := u.conn.QueryRow(query,
+	err := p.conn.QueryRow(query,
 		post.Title,
 		post.Content,
 		post.TopicId,
@@ -85,10 +93,10 @@ func (u *PostRepository) InsertPost(post *models.Post) (int, error) {
 	return post.ID, nil
 }
 
-func (u *PostRepository) UpdatePost(post *models.Post) error {
+func (p *PostRepository) UpdatePost(post *model.Post) error {
 	query := `UPDATE posts SET title = $1, content = $2, topic_id = $3, author_id = $4, author_name = $5, updated_at = $6 WHERE id = $7`
 
-	_, err := u.conn.Exec(query,
+	_, err := p.conn.Exec(query,
 		post.Title,
 		post.Content,
 		post.TopicId,
@@ -104,10 +112,10 @@ func (u *PostRepository) UpdatePost(post *models.Post) error {
 	return nil
 }
 
-func (u *PostRepository) DeletePost(postID int) error {
+func (p *PostRepository) DeletePost(post *model.Post) error {
 	query := `DELETE FROM posts WHERE id = $1`
 
-	_, err := u.conn.Exec(query, postID)
+	_, err := p.conn.Exec(query, post.ID)
 	if err != nil {
 		return err
 	}

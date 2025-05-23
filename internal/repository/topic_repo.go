@@ -2,8 +2,17 @@ package repository
 
 import (
 	"database/sql"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 )
+
+type TopicStorage interface {
+	GetAllTopics() ([]*model.Topic, error)
+	GetTopicByID(topicID int) (*model.Topic, error)
+	GetTopicByPostID(postID int) (*model.Topic, error)
+	InsertTopic(topic *model.Topic) (int, error)
+	UpdateTopic(topic *model.Topic) error
+	DeleteTopic(topic *model.Topic) error
+}
 
 type TopicRepository struct {
 	conn *sql.DB
@@ -13,7 +22,7 @@ func NewTopicRepository(conn *sql.DB) *TopicRepository {
 	return &TopicRepository{conn: conn}
 }
 
-func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
+func (t *TopicRepository) GetAllTopics() ([]*model.Topic, error) {
 	query := `SELECT * FROM topics`
 
 	rows, err := t.conn.Query(query)
@@ -23,10 +32,10 @@ func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
 
 	defer rows.Close()
 
-	var topics []*models.Topic
+	var topics []*model.Topic
 
 	for rows.Next() {
-		topic := new(models.Topic)
+		topic := new(model.Topic)
 		err = rows.Scan(
 			&topic.ID,
 			&topic.Name,
@@ -42,10 +51,10 @@ func (t *TopicRepository) GetAllTopics() ([]*models.Topic, error) {
 	return topics, nil
 }
 
-func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
+func (t *TopicRepository) GetTopicByID(topicID int) (*model.Topic, error) {
 	query := `SELECT * FROM topics WHERE id = $1`
 
-	topic := new(models.Topic)
+	topic := new(model.Topic)
 
 	err := t.conn.QueryRow(query, topicID).Scan(
 		&topic.ID,
@@ -60,10 +69,10 @@ func (t *TopicRepository) GetTopicByID(topicID int) (*models.Topic, error) {
 	return topic, nil
 }
 
-func (t *TopicRepository) GetTopicByPostID(postID int) (*models.Topic, error) {
+func (t *TopicRepository) GetTopicByPostID(postID int) (*model.Topic, error) {
 	query := `SELECT t.* FROM topics t JOIN posts p ON t.id = p.topic_id WHERE p.id = $1`
 
-	topic := new(models.Topic)
+	topic := new(model.Topic)
 
 	err := t.conn.QueryRow(query, postID).Scan(
 		&topic.ID,
@@ -80,7 +89,7 @@ func (t *TopicRepository) GetTopicByPostID(postID int) (*models.Topic, error) {
 	return topic, nil
 }
 
-func (t *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
+func (t *TopicRepository) InsertTopic(topic *model.Topic) (int, error) {
 	query := `INSERT INTO topics (name, description, created_at, author_id) VALUES ($1, $2, $3, $4) RETURNING id`
 
 	err := t.conn.QueryRow(query,
@@ -96,7 +105,7 @@ func (t *TopicRepository) InsertTopic(topic *models.Topic) (int, error) {
 	return topic.ID, nil
 }
 
-func (t *TopicRepository) UpdateTopic(topic *models.Topic) error {
+func (t *TopicRepository) UpdateTopic(topic *model.Topic) error {
 	query := `UPDATE topics SET name = $1, description = $2 WHERE id = $3`
 
 	_, err := t.conn.Exec(query,
@@ -110,10 +119,10 @@ func (t *TopicRepository) UpdateTopic(topic *models.Topic) error {
 	return nil
 }
 
-func (t *TopicRepository) DeleteTopic(topicID int) error {
+func (t *TopicRepository) DeleteTopic(topic *model.Topic) error {
 	query := `DELETE FROM topics WHERE id = $1`
 
-	_, err := t.conn.Exec(query, topicID)
+	_, err := t.conn.Exec(query, topic.ID)
 	if err != nil {
 		return err
 	}

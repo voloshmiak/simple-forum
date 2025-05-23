@@ -1,20 +1,30 @@
 package service
 
 import (
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"forum-project/internal/repository"
 	"time"
 )
 
-type PostService struct {
-	repository *repository.PostRepository
+type PostServicer interface {
+	GetPostByID(userID int) (*model.Post, error)
+	GetPostsByTopicID(topicID int) ([]*model.Post, error)
+	CreatePost(title, content string, topicID, authorID int, authorName string) error
+	EditPost(title, content string, postID int) error
+	DeletePost(postID int) error
+	VerifyPostAuthor(post *model.Post, userID int) bool
+	VerifyPostAuthorOrAdmin(post *model.Post, userID int, userRole string) bool
 }
 
-func NewPostService(repository *repository.PostRepository) *PostService {
+type PostService struct {
+	repository repository.PostStorage
+}
+
+func NewPostService(repository repository.PostStorage) *PostService {
 	return &PostService{repository: repository}
 }
 
-func (p *PostService) GetPostByID(userID int) (*models.Post, error) {
+func (p *PostService) GetPostByID(userID int) (*model.Post, error) {
 	post, err := p.repository.GetPostByID(userID)
 	if err != nil {
 		return nil, err
@@ -22,7 +32,7 @@ func (p *PostService) GetPostByID(userID int) (*models.Post, error) {
 	return post, nil
 }
 
-func (p *PostService) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
+func (p *PostService) GetPostsByTopicID(topicID int) ([]*model.Post, error) {
 	posts, err := p.repository.GetPostsByTopicID(topicID)
 	if err != nil {
 		return nil, err
@@ -31,7 +41,7 @@ func (p *PostService) GetPostsByTopicID(topicID int) ([]*models.Post, error) {
 }
 
 func (p *PostService) CreatePost(title, content string, topicID, authorID int, authorName string) error {
-	post := &models.Post{
+	post := &model.Post{
 		Title:      title,
 		Content:    content,
 		TopicId:    topicID,
@@ -49,8 +59,16 @@ func (p *PostService) CreatePost(title, content string, topicID, authorID int, a
 	return nil
 }
 
-func (p *PostService) EditPost(post *models.Post) error {
-	err := p.repository.UpdatePost(post)
+func (p *PostService) EditPost(title, content string, postID int) error {
+	post, err := p.repository.GetPostByID(postID)
+	if err != nil {
+		return err
+	}
+
+	post.Title = title
+	post.Content = content
+
+	err = p.repository.UpdatePost(post)
 	if err != nil {
 		return err
 	}
@@ -58,17 +76,21 @@ func (p *PostService) EditPost(post *models.Post) error {
 }
 
 func (p *PostService) DeletePost(postID int) error {
-	err := p.repository.DeletePost(postID)
+	post, err := p.repository.GetPostByID(postID)
+	if err != nil {
+		return err
+	}
+	err = p.repository.DeletePost(post)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *PostService) VerifyPostAuthor(post *models.Post, userID int) bool {
+func (p *PostService) VerifyPostAuthor(post *model.Post, userID int) bool {
 	return post.AuthorId == userID
 }
 
-func (p *PostService) VerifyPostAuthorOrAdmin(post *models.Post, userID int, userRole string) bool {
+func (p *PostService) VerifyPostAuthorOrAdmin(post *model.Post, userID int, userRole string) bool {
 	return post.AuthorId == userID || userRole == "admin"
 }

@@ -3,7 +3,7 @@ package service
 import (
 	"errors"
 	"forum-project/internal/auth"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"forum-project/internal/repository"
 	"time"
 
@@ -16,11 +16,17 @@ var ErrMissmatchPassword = errors.New("passwords do not match")
 var ErrUserEmailAlreadyExists = errors.New("user email already exists")
 var ErrUserNameAlreadyExists = errors.New("username already exists")
 
-type UserService struct {
-	repository *repository.UserRepository
+type UserServicer interface {
+	Authenticate(email, password string) (string, error)
+	Register(username, email, password1, password2 string) error
+	GetUserByID(id int) (*model.User, error)
 }
 
-func NewUserService(repository *repository.UserRepository) *UserService {
+type UserService struct {
+	repository repository.UserStorage
+}
+
+func NewUserService(repository repository.UserStorage) *UserService {
 	return &UserService{repository: repository}
 }
 
@@ -68,7 +74,7 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 		return ErrUserEmailAlreadyExists
 	}
 
-	user := &models.User{Username: username, Email: email, Role: "user", CreatedAt: time.Now()}
+	user := &model.User{Username: username, Email: email, Role: "user", CreatedAt: time.Now()}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
 	if err != nil {
@@ -85,7 +91,7 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	return nil
 }
 
-func (u *UserService) GetUserByID(id int) (*models.User, error) {
+func (u *UserService) GetUserByID(id int) (*model.User, error) {
 	user, err := u.repository.GetUserByID(id)
 	if err != nil {
 		return nil, err
