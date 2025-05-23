@@ -19,7 +19,7 @@ func (w *wrappedWriter) WriteHeader(statusCode int) {
 func Logging(next http.Handler, logger *slog.Logger) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 
-		wrappedWriter := &wrappedWriter{
+		ww := &wrappedWriter{
 			ResponseWriter: rw,
 			statusCode:     http.StatusOK,
 		}
@@ -29,7 +29,7 @@ func Logging(next http.Handler, logger *slog.Logger) http.Handler {
 		logger.Info(
 			"HTTP request",
 			"method", r.Method,
-			"status", strconv.Itoa(wrappedWriter.statusCode),
+			"status", strconv.Itoa(ww.statusCode),
 			"path", r.URL.Path,
 		)
 	})
