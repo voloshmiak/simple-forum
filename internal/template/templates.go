@@ -3,26 +3,28 @@ package template
 import (
 	"errors"
 	"forum-project/internal/auth"
-	"forum-project/internal/models"
+	"forum-project/internal/model"
 	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
+type Renderer interface {
+	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
+}
+
 type Templates struct {
 	cache map[string]*template.Template
 }
 
-func NewTemplates() (*Templates, error) {
-	templates, err := parseTemplates()
-	if err != nil {
-		return nil, err
+func NewTemplates() *Templates {
+	return &Templates{
+		cache: parseTemplates(),
 	}
-	return &Templates{cache: templates}, nil
 }
 
-func addDefaultData(td *models.Page, r *http.Request) *models.Page {
+func addDefaultData(td *model.Page, r *http.Request) *model.Page {
 	claims, err := auth.GetClaimsFromRequest(r)
 	if err != nil {
 		td.IsAuthenticated = false
@@ -51,21 +53,18 @@ func addDefaultData(td *models.Page, r *http.Request) *models.Page {
 	return td
 }
 
-func parseTemplates() (map[string]*template.Template, error) {
+func parseTemplates() map[string]*template.Template {
 	templates := map[string]*template.Template{}
 
 	// getting path to templates
-	templatesPath := filepath.Join("web", "templates")
+	path := os.Getenv("TEMPLATES_PATH")
+	templatesSlashPath := filepath.ToSlash(path)
+	templatesPath := filepath.ToSlash(templatesSlashPath)
 
-	layouts, err := filepath.Glob(templatesPath + "\\*.layout.gohtml")
-	if err != nil {
-		return templates, err
-	}
+	// parsing templates
+	layouts, _ := filepath.Glob(templatesPath + "\\*.layout.gohtml")
 
-	pages, err := filepath.Glob(templatesPath + "\\*.page.gohtml")
-	if err != nil {
-		return templates, err
-	}
+	pages, _ := filepath.Glob(templatesPath + "\\*.page.gohtml")
 
 	for _, page := range pages {
 		name := filepath.Base(page)
@@ -75,25 +74,19 @@ func parseTemplates() (map[string]*template.Template, error) {
 		filenames = append(filenames, page)
 		filenames = append(filenames, layouts...)
 
-		tmpl, err := template.New(name).ParseFiles(filenames...)
-		if err != nil {
-			return templates, err
-		}
+		tmpl, _ := template.New(name).ParseFiles(filenames...)
 
 		templates[name] = tmpl
 	}
 
-	return templates, nil
+	return templates
 }
 
-func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *models.Page) error {
+func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
 	// if in development mode
 	isDevelopment := os.Getenv("APP_ENV") == "development"
 	if isDevelopment {
-		templates, err := parseTemplates()
-		if err != nil {
-			return err
-		}
+		templates := parseTemplates()
 		m.cache = templates
 	}
 
