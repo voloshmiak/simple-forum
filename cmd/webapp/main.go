@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
-	"forum-project/internal/config"
-	"forum-project/internal/handlers"
+	"forum-project/internal/application"
+	"forum-project/internal/database"
 	"forum-project/internal/middleware"
-	"forum-project/internal/repository"
 	"forum-project/internal/routes"
-	"forum-project/internal/service"
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,92 +19,75 @@ import (
 )
 
 func main() {
-	// load environment variables
-	if err := config.LoadEnv(); err != nil {
-		panic(err)
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	// load env variables
+	if err := godotenv.Load(".env"); err != nil {
+		return err
 	}
 
-	// create app config instance
-	appConfig, err := config.NewAppConfig()
+	// connect to database
+	conn, err := database.Connect()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	// init mux
-	mux := http.NewServeMux()
+	// Application
+	app := application.NewApp(conn)
 
-	// Files
-	routes.RegisterFileRoutes(mux)
-
-	// Home
-	hh := handlers.NewHomeHandler(appConfig)
-	routes.RegisterHomeRoutes(mux, hh)
-
-	// Post
-	postRepository := repository.NewPostRepository(appConfig.Database)
-	postService := service.NewPostService(postRepository)
-	appConfig.PostService = postService
-	ph := handlers.NewPostHandler(appConfig)
-	routes.RegisterPostRoutes(mux, ph, appConfig)
-
-	// Topic
-	topicRepository := repository.NewTopicRepository(appConfig.Database)
-	topicService := service.NewTopicService(topicRepository)
-	appConfig.TopicService = topicService
-	th := handlers.NewTopicHandler(appConfig)
-	routes.RegisterTopicRoutes(mux, th)
-
-	// User
-	userRepository := repository.NewUserRepository(appConfig.Database)
-	userService := service.NewUserService(userRepository)
-	appConfig.UserService = userService
-	uh := handlers.NewUserHandler(appConfig)
-	routes.RegisterUserRoutes(mux, uh)
+	// Register routes
+	mux := routes.Register(app)
 
 	// Server
 	server := &http.Server{
 		Addr:         ":" + os.Getenv("PORT"),
-		Handler:      middleware.Logging(mux, appConfig.Logger),
+		Handler:      middleware.Logging(mux, app.Logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
-	appConfig.Server = server
 
+	// Graceful shutdown
 	done := make(chan bool, 1)
 
-	go gracefulShutdown(done, appConfig)
+	go gracefulShutdown(done, server, conn)
 
-	appConfig.Logger.Info(fmt.Sprintf("Starting server on port %s", server.Addr))
+	log.Printf("Starting server on port %s", server.Addr)
 
+	// Run server
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		appConfig.Logger.Error(fmt.Sprintf("Error listening and serving: %s", err))
-		os.Exit(1)
+		return fmt.Errorf("server failed to start: %w", err)
 	}
 
-	// wait for graceful shutdown to complete
+	// Wait for graceful shutdown to complete
 	<-done
-	appConfig.Logger.Info("Server shutdown complete")
+	log.Println("Server shutdown complete")
+
+	return nil
 }
 
-func gracefulShutdown(done chan bool, appConfig *config.AppConfig) {
-	// wait for interruption
+func gracefulShutdown(done chan bool, server *http.Server, conn *sql.DB) {
+	// Wait for interruption
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	<-ctx.Done()
 
-	appConfig.Logger.Info("Shutting down server gracefully")
+	log.Println("Shutting down server gracefully")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	if err := appConfig.Server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		appConfig.Logger.Error(fmt.Sprintf("Server forced to shutdown: %s", err))
+	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Println(fmt.Sprintf("Server forced to shutdown: %s", err))
 	}
 
-	err := appConfig.Database.Close()
+	err := conn.Close()
 	if err != nil {
-		appConfig.Logger.Error(fmt.Sprintf("Failed to close database: %s", err))
+		log.Println(fmt.Sprintf("Failed to close database: %s", err))
 	}
 
 	done <- true
