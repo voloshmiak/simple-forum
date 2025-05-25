@@ -3,10 +3,10 @@ package template
 import (
 	"errors"
 	"forum-project/internal/auth"
+	"forum-project/internal/env"
 	"forum-project/internal/model"
 	"html/template"
 	"net/http"
-	"os"
 	"path/filepath"
 )
 
@@ -57,9 +57,7 @@ func parseTemplates() map[string]*template.Template {
 	templates := map[string]*template.Template{}
 
 	// getting path to templates
-	path := os.Getenv("TEMPLATES_PATH")
-	templatesSlashPath := filepath.ToSlash(path)
-	templatesPath := filepath.ToSlash(templatesSlashPath)
+	templatesPath := env.GetTemplatePath()
 
 	// parsing templates
 	layouts, _ := filepath.Glob(templatesPath + "\\*.layout.gohtml")
@@ -84,7 +82,7 @@ func parseTemplates() map[string]*template.Template {
 
 func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
 	// if in development mode
-	isDevelopment := os.Getenv("APP_ENV") == "development"
+	isDevelopment := env.GetEnv("APP_ENV", "development") == "development"
 	if isDevelopment {
 		templates := parseTemplates()
 		m.cache = templates
