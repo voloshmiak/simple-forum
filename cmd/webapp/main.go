@@ -6,13 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/application"
-	"forum-project/internal/database"
+	"forum-project/internal/env"
 	"forum-project/internal/middleware"
 	"forum-project/internal/routes"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -25,15 +28,40 @@ func main() {
 }
 
 func run() error {
-	// load env variables
+	// Environment variables
 	if err := godotenv.Load(".env"); err != nil {
 		return err
 	}
 
-	// connect to database
-	conn, err := database.Connect()
+	// Database connection
+	dataSource := env.GetDataSource()
+	conn, err := sql.Open("pgx", dataSource)
 	if err != nil {
 		return err
+	}
+
+	// Ensuring connection is established
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	err = conn.PingContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Migrate
+	m, err := migrate.New(env.GetMigrationPath(), dataSource)
+	if err != nil {
+		return err
+	}
+
+	// Apply migrations
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	} else if errors.Is(err, migrate.ErrNoChange) {
+		log.Println("No new migrations to apply.")
+	} else {
+		log.Println("Migrations applied successfully!")
 	}
 
 	// Application
@@ -44,7 +72,7 @@ func run() error {
 
 	// Server
 	server := &http.Server{
-		Addr:         ":" + os.Getenv("PORT"),
+		Addr:         ":" + env.GetEnv("PORT", "8070"),
 		Handler:      middleware.Logging(mux, app.Logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
