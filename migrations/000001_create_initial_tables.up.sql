@@ -27,4 +27,7 @@ CREATE TABLE users
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'admin')) DEFAULT 'user'
-)
+);
+
+INSERT INTO users (id, username, email, password_hash, role)
+VALUES (1, 'admin', 'admin@email.com', '$2a$10$sMn.IWt9q3EiisAecQoOLOsvnA0wsl2oMRDGcHIrAR6XNOBVpxILK', 'admin');
