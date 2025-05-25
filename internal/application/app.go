@@ -2,8 +2,8 @@ package application
 
 import (
 	"database/sql"
-	"forum-project/internal/httperror"
 	"forum-project/internal/repository"
+	"forum-project/internal/responder"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
@@ -12,7 +12,7 @@ import (
 
 type App struct {
 	Logger         *slog.Logger
-	ErrorResponder httperror.ErrorHandler
+	ErrorResponder responder.ErrorHandler
 	Templates      template.Renderer
 	TopicService   service.TopicServicer
 	PostService    service.PostServicer
@@ -24,7 +24,7 @@ func NewApp(conn *sql.DB) *App {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	// error responder
-	responder := httperror.NewErrorResponder(logger)
+	errorResponder := responder.NewErrorResponder(logger)
 
 	// templates renderer
 	templates := template.NewTemplates()
@@ -41,7 +41,7 @@ func NewApp(conn *sql.DB) *App {
 
 	return &App{
 		Logger:         logger,
-		ErrorResponder: responder,
+		ErrorResponder: errorResponder,
 		Templates:      templates,
 		TopicService:   topicService,
 		PostService:    postService,
