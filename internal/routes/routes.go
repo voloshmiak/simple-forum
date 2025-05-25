@@ -2,6 +2,7 @@ package routes
 
 import (
 	"forum-project/internal/application"
+	"forum-project/internal/env"
 	"forum-project/internal/handler"
 	"forum-project/internal/middleware"
 	"net/http"
@@ -21,12 +22,13 @@ func Register(app *application.App) *http.ServeMux {
 
 	// Middleware
 	auth := middleware.AuthMiddleware
+	isAdmin := middleware.IsAdmin
 	isPostAuthor := middleware.IsPostAuthor(app)
-	isAdmin := middleware.CreateStack(middleware.AuthMiddleware, middleware.IsAdmin)
 	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
 
 	// Static
-	fileserver := http.FileServer(http.Dir("./web/static"))
+	staticPath := env.GetStaticPath()
+	fileserver := http.FileServer(http.Dir(staticPath))
 	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	// Home
@@ -59,7 +61,7 @@ func Register(app *application.App) *http.ServeMux {
 	adminMux.HandleFunc("POST /topics/{topicID}/edit", th.PostEditTopic)
 	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
-	mux.Handle("/admin/", http.StripPrefix("/admin", isAdmin(adminMux))) // grouping
+	mux.Handle("/admin/", http.StripPrefix("/admin", auth(isAdmin(adminMux)))) // grouping
 
 	return mux
 }
