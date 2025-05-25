@@ -39,8 +39,8 @@ func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 				return
 			}
 
-			isAuthorOrAdmin := app.PostService.VerifyPostAuthor(post, user.ID)
-			if !isAuthorOrAdmin {
+			isAuthor := app.PostService.VerifyPostAuthor(post, user.ID)
+			if !isAuthor {
 				http.Error(rw, "Forbidden", http.StatusForbidden)
 				return
 			}
