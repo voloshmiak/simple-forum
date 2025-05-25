@@ -1,16 +1,84 @@
-Web App in Golang, using mostly std packages like net/http, log/slog, html/templates, database/sql, etc
+# Forum Project
 
-How to run:
-- go run cmd/forum/main.go
+A web application built with Golang, primarily utilizing standard library packages such as `net/http`, `log/slog`, `html/template`, `database/sql`, and others.
 
-admin:
-admin@gmail.com
-12345
+## Technologies Used
 
-user1:
-user1@gmail.com
-12345
+-   **Language:** Go
+-   **Database:** PostgreSQL
+-   **Routing:** `net/http`
+-   **Templates:** `html/template`
+-   **Database Interaction:** `database/sql` with `github.com/jackc/pgx/v5` driver
+-   **Migrations:** `github.com/golang-migrate/migrate/v4`
+-   **Authentication:** JWT (`github.com/golang-jwt/jwt/v5`)
+-   **Environment Variables:** `github.com/joho/godotenv`
+-   **Password Hashing:** `golang.org/x/crypto/bcrypt`
 
-user2:
-user2@gmail.com
-12345
+## How to Run
+
+1.  Ensure you have Go installed and a PostgreSQL database set up.
+2.  Create a `.env` file in the project root (or use the existing one) and configure the environment variables (see the "Environment Variables" section).
+3.  Execute the command:
+    ```bash
+    go run cmd/webapp/main.go
+    ```
+    The application will start at `http://localhost:8070` (or the port specified in `PORT`).
+
+## Migrations
+
+Database migrations are applied automatically when the application starts. Migration files are located in the `migrations/` directory.
+
+## Project Structure
+
+```
+forum-project
+├── .env                  # Environment variables
+├── go.mod                # Go dependencies
+├── go.sum
+├── README.md
+├── cmd/
+│   └── webapp/           # Application entry point
+│       └── main.go
+├── internal/             # Internal application logic
+│   ├── application/      # Application configuration and assembly
+│   ├── auth/             # Authentication logic (JWT)
+│   ├── env/              # Environment variable handling
+│   ├── handler/          # HTTP handlers
+│   ├── middleware/       # HTTP middleware
+│   ├── model/            # Data models
+│   ├── repository/       # Database interaction logic
+│   ├── responder/        # Utilities for HTTP responses (errors)
+│   ├── routes/           # Route definitions
+│   ├── service/          # Business logic
+│   └── template/         # HTML template handling
+├── migrations/           # Database migration files
+│   ├── 000001_create_initial_tables.down.sql
+│   └── 000001_create_initial_tables.up.sql
+└── web/
+    ├── static/           # Static files (CSS, JS, images)
+    └── templates/        # HTML templates
+```
+
+## Environment Variables
+
+The application uses the following environment variables (from the `.env` file):
+
+-   `PORT`: Port on which the application will run (default `8070`)
+-   `DB_HOST`: Database host (default `localhost`)
+-   `DB_PORT`: Database port (default `5432`)
+-   `DB_NAME`: Database name (default `forum_database`)
+-   `DB_USER`: Database user (default `postgres`)
+-   `DB_PASSWORD`: Database user password (default empty)
+-   `JWT_SECRET`: Secret key for signing JWT tokens (default `some_secret_key`)
+-   `APP_ENV`: Application environment, affects template caching (e.g., `development` or `production`, default `development`)
+-   `TEMPLATES_PATH`: Path to the HTML templates directory (default `web/templates`)
+-   `STATIC_PATH`: Path to the static files directory (default `web/static`)
+-   `MIGRATIONS_PATH`: Path to the migrations directory (default `migrations`)
+
+## Login Credentials (Examples)
+
+**Administrator:**
+-   Email: `admin@email.com`
+-   Password: `12345`
+
+You can register other users via the registration form in the application.
