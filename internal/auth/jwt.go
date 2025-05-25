@@ -2,9 +2,9 @@ package auth
 
 import (
 	"errors"
+	"forum-project/internal/env"
 	"forum-project/internal/model"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -24,7 +24,7 @@ func GenerateToken(user *model.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	signedToken, err := token.SignedString([]byte(env.GetEnv("JWT_SECRET", "some_secret_key")))
 
 	if err != nil {
 		return "", err
@@ -34,7 +34,9 @@ func GenerateToken(user *model.User) (string, error) {
 }
 
 func ValidateToken(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) { return []byte(os.Getenv("JWT_SECRET")), nil })
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(env.GetEnv("JWT_SECRET", "some_secret_key")), nil
+	})
 	if err != nil {
 		return nil, err
 	}
