@@ -1,4 +1,4 @@
-package httperror
+package responder
 
 import (
 	"fmt"
