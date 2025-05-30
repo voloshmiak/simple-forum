@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"forum-project/internal/application"
+	"forum-project/internal/config"
 	"forum-project/internal/env"
 	"forum-project/internal/middleware"
 	"forum-project/internal/route"
@@ -13,7 +14,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os/signal"
@@ -28,8 +28,9 @@ func main() {
 }
 
 func run() error {
-	// Environment variables
-	if err := godotenv.Load(".env"); err != nil {
+	// Load environment variables
+	cfg, err := config.Load()
+	if err != nil {
 		return err
 	}
 
@@ -65,14 +66,14 @@ func run() error {
 	}
 
 	// Application
-	app := application.NewApp(conn)
+	app := application.NewApp(conn, cfg)
 
 	// Register routes
 	mux := route.RegisterRoutes(app)
 
 	// Server
 	server := &http.Server{
-		Addr:         ":" + env.GetEnv("PORT", "8070"),
+		Addr:         ":" + cfg.Server.Port,
 		Handler:      middleware.Logging(mux, app.Logger),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,

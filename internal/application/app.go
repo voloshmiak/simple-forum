@@ -2,6 +2,7 @@ package application
 
 import (
 	"database/sql"
+	"forum-project/internal/config"
 	"forum-project/internal/model"
 	"forum-project/internal/repository"
 	"forum-project/internal/responder"
@@ -49,6 +50,7 @@ type UserServicer interface {
 }
 
 type App struct {
+	Config         *config.Config
 	Logger         *slog.Logger
 	ErrorResponder ErrorHandler
 	Templates      Renderer
@@ -57,7 +59,7 @@ type App struct {
 	UserService    UserServicer
 }
 
-func NewApp(conn *sql.DB) *App {
+func NewApp(conn *sql.DB, config *config.Config) *App {
 	// logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
@@ -78,6 +80,7 @@ func NewApp(conn *sql.DB) *App {
 	userService := service.NewUserService(userRepository)
 
 	return &App{
+		Config:         config,
 		Logger:         logger,
 		ErrorResponder: errorResponder,
 		Templates:      templates,
