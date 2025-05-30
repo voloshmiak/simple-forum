@@ -2,24 +2,23 @@ package service
 
 import (
 	"forum-project/internal/model"
-	"forum-project/internal/repository"
 	"time"
 )
 
-type TopicServicer interface {
+type TopicStorage interface {
 	GetAllTopics() ([]*model.Topic, error)
-	GetTopicByID(id int) (*model.Topic, error)
-	GetTopicByPostID(id int) (*model.Topic, error)
-	CreateTopic(name, description string, authorID int) error
-	EditTopic(id int, name, description string) error
-	DeleteTopic(id int) error
+	GetTopicByID(topicID int) (*model.Topic, error)
+	GetTopicByPostID(postID int) (*model.Topic, error)
+	InsertTopic(topic *model.Topic) (int, error)
+	UpdateTopic(topic *model.Topic) error
+	DeleteTopic(topic *model.Topic) error
 }
 
 type TopicService struct {
-	repository repository.TopicStorage
+	repository TopicStorage
 }
 
-func NewTopicService(repository repository.TopicStorage) *TopicService {
+func NewTopicService(repository TopicStorage) *TopicService {
 	return &TopicService{repository: repository}
 }
 

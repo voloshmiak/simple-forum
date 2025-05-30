@@ -10,10 +10,6 @@ import (
 	"path/filepath"
 )
 
-type Renderer interface {
-	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
-}
-
 type Templates struct {
 	cache map[string]*template.Template
 }

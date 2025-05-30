@@ -6,13 +6,6 @@ import (
 	"net/http"
 )
 
-type ErrorHandler interface {
-	BadRequest(rw http.ResponseWriter, msg string, err error)
-	InternalServer(rw http.ResponseWriter, msg string, err error)
-	NotFound(rw http.ResponseWriter, msg string, err error)
-	Unauthorized(rw http.ResponseWriter, msg string, err error)
-}
-
 type ErrorResponder struct {
 	logger *slog.Logger
 }

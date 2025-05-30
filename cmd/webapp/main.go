@@ -8,7 +8,7 @@ import (
 	"forum-project/internal/application"
 	"forum-project/internal/env"
 	"forum-project/internal/middleware"
-	"forum-project/internal/routes"
+	"forum-project/internal/route"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -68,7 +68,7 @@ func run() error {
 	app := application.NewApp(conn)
 
 	// Register routes
-	mux := routes.Register(app)
+	mux := route.RegisterRoutes(app)
 
 	// Server
 	server := &http.Server{

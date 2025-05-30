@@ -5,14 +5,6 @@ import (
 	"forum-project/internal/model"
 )
 
-type PostStorage interface {
-	GetPostsByTopicID(topicID int) ([]*model.Post, error)
-	GetPostByID(postID int) (*model.Post, error)
-	InsertPost(post *model.Post) (int, error)
-	UpdatePost(post *model.Post) error
-	DeletePost(post *model.Post) error
-}
-
 type PostRepository struct {
 	conn *sql.DB
 }

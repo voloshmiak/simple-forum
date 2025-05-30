@@ -6,13 +6,6 @@ import (
 	"forum-project/internal/model"
 )
 
-type UserStorage interface {
-	GetUserByEmail(email string) (*model.User, error)
-	GetUserByUsername(username string) (*model.User, error)
-	GetUserByID(id int) (*model.User, error)
-	InsertUser(user *model.User) (int, error)
-}
-
 type UserRepository struct {
 	conn *sql.DB
 }

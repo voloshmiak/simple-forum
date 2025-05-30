@@ -4,7 +4,6 @@ import (
 	"errors"
 	"forum-project/internal/auth"
 	"forum-project/internal/model"
-	"forum-project/internal/repository"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -16,17 +15,18 @@ var ErrMissmatchPassword = errors.New("passwords do not match")
 var ErrUserEmailAlreadyExists = errors.New("user email already exists")
 var ErrUserNameAlreadyExists = errors.New("username already exists")
 
-type UserServicer interface {
-	Authenticate(email, password string) (string, error)
-	Register(username, email, password1, password2 string) error
+type UserStorage interface {
+	GetUserByEmail(email string) (*model.User, error)
+	GetUserByUsername(username string) (*model.User, error)
 	GetUserByID(id int) (*model.User, error)
+	InsertUser(user *model.User) (int, error)
 }
 
 type UserService struct {
-	repository repository.UserStorage
+	repository UserStorage
 }
 
-func NewUserService(repository repository.UserStorage) *UserService {
+func NewUserService(repository UserStorage) *UserService {
 	return &UserService{repository: repository}
 }
 

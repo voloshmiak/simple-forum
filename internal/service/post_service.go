@@ -2,25 +2,22 @@ package service
 
 import (
 	"forum-project/internal/model"
-	"forum-project/internal/repository"
 	"time"
 )
 
-type PostServicer interface {
-	GetPostByID(userID int) (*model.Post, error)
+type PostStorage interface {
 	GetPostsByTopicID(topicID int) ([]*model.Post, error)
-	CreatePost(title, content string, topicID, authorID int, authorName string) error
-	EditPost(title, content string, postID int) error
-	DeletePost(postID int) error
-	VerifyPostAuthor(post *model.Post, userID int) bool
-	VerifyPostAuthorOrAdmin(post *model.Post, userID int, userRole string) bool
+	GetPostByID(postID int) (*model.Post, error)
+	InsertPost(post *model.Post) (int, error)
+	UpdatePost(post *model.Post) error
+	DeletePost(post *model.Post) error
 }
 
 type PostService struct {
-	repository repository.PostStorage
+	repository PostStorage
 }
 
-func NewPostService(repository repository.PostStorage) *PostService {
+func NewPostService(repository PostStorage) *PostService {
 	return &PostService{repository: repository}
 }
 

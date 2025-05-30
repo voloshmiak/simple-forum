@@ -5,15 +5,6 @@ import (
 	"forum-project/internal/model"
 )
 
-type TopicStorage interface {
-	GetAllTopics() ([]*model.Topic, error)
-	GetTopicByID(topicID int) (*model.Topic, error)
-	GetTopicByPostID(postID int) (*model.Topic, error)
-	InsertTopic(topic *model.Topic) (int, error)
-	UpdateTopic(topic *model.Topic) error
-	DeleteTopic(topic *model.Topic) error
-}
-
 type TopicRepository struct {
 	conn *sql.DB
 }

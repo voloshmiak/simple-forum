@@ -1,4 +1,4 @@
-package routes
+package route
 
 import (
 	"forum-project/internal/application"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func Register(app *application.App) *http.ServeMux {
+func RegisterRoutes(app *application.App) *http.ServeMux {
 	// Handlers
 	hh := handler.NewHomeHandler(app)
 	ph := handler.NewPostHandler(app)
