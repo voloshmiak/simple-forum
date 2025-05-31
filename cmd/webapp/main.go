@@ -44,12 +44,13 @@ func run() error {
 	mux := route.RegisterRoutes(app)
 
 	// Server
+	svr := cfg.Server
 	server := &http.Server{
-		Addr:         ":" + cfg.Server.Port,
+		Addr:         ":" + svr.Port,
 		Handler:      mux,
-		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
+		ReadTimeout:  time.Duration(svr.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(svr.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(svr.IdleTimeout) * time.Second,
 	}
 
 	// Graceful shutdown
