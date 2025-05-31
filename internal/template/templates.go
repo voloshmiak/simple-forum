@@ -52,6 +52,7 @@ func parseTemplates(basePath string) map[string]*template.Template {
 }
 
 func (m *Templates) AddDefaultData(td *model.Page, r *http.Request) *model.Page {
+	td.CSRFToken = nosurf.Token(r)
 	claims, err := auth.GetClaimsFromRequest(r, m.Config.JWT.Secret)
 	if err != nil {
 		td.IsAuthenticated = false
@@ -76,7 +77,6 @@ func (m *Templates) AddDefaultData(td *model.Page, r *http.Request) *model.Page 
 	stringMap["username"] = userName
 
 	td.StringMap = stringMap
-	td.CSRFToken = nosurf.Token(r)
 
 	return td
 }

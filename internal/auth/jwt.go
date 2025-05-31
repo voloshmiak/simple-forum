@@ -13,7 +13,6 @@ func GenerateToken(user *model.User, jwtSecret string, expiryHours int) (string,
 	authorizedUser := model.AuthorizedUser{
 		ID:       user.ID,
 		Username: user.Username,
-		Email:    user.Email,
 		Role:     user.Role,
 	}
 	claims := jwt.MapClaims{

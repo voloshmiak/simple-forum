@@ -22,13 +22,11 @@ func AuthMiddleware(app *application.App) func(http.Handler) http.Handler {
 			userIDFloat := user["id"].(float64)
 			userIDInt := int(userIDFloat)
 			username := user["username"].(string)
-			email := user["email"].(string)
 			role := user["role"].(string)
 
 			authorizedUser := &model.AuthorizedUser{
 				ID:       userIDInt,
 				Username: username,
-				Email:    email,
 				Role:     role,
 			}
 
