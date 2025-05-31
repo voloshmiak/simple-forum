@@ -30,9 +30,9 @@ func run() error {
 	}
 
 	// Database connection and migration
-	db := cfg.Database
-	conn, err := postgres.Connect(db.User, db.Password,
-		db.Host, db.Port, db.Name, cfg.Path.ToMigrations())
+	conn, err := postgres.Connect(cfg.Database.User, cfg.Database.Password,
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.Name,
+		cfg.Path.ToMigrations())
 	if err != nil {
 		return err
 	}
@@ -44,13 +44,12 @@ func run() error {
 	mux := route.RegisterRoutes(app)
 
 	// Server
-	svr := cfg.Server
 	server := &http.Server{
-		Addr:         ":" + svr.Port,
+		Addr:         ":" + cfg.Server.Port,
 		Handler:      mux,
-		ReadTimeout:  time.Duration(svr.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(svr.WriteTimeout) * time.Second,
-		IdleTimeout:  time.Duration(svr.IdleTimeout) * time.Second,
+		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
 	// Graceful shutdown
