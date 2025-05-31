@@ -21,9 +21,9 @@ func (d *Database) URL() string {
 }
 
 type Path struct {
-	Migrations string `env:"MIGRATIONS" env-default:"./migrations"`
-	Static     string `env:"STATIC" env-default:"./web/static"`
-	Templates  string `env:"TEMPLATES" env-default:"./web/templates"`
+	Migrations string `env:"MIGRATIONS_PATH" env-default:"./pkg/postgres/migrations"`
+	Static     string `env:"STATIC_PATH" env-default:"./web/static"`
+	Templates  string `env:"TEMPLATES_PATH" env-default:"./web/templates"`
 }
 
 func (p *Path) ToMigrations() string {
