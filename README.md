@@ -42,13 +42,13 @@ forum-project
 ├── internal/             # Internal application logic
 │   ├── application/      # Application configuration and assembly
 │   ├── auth/             # Authentication logic (JWT)
-│   ├── env/              # Environment variable handling
+│   ├── config/           # Application configuration
 │   ├── handler/          # HTTP handlers
 │   ├── middleware/       # HTTP middleware
 │   ├── model/            # Data models
 │   ├── repository/       # Database interaction logic
 │   ├── responder/        # Utilities for HTTP responses (errors)
-│   ├── routes/           # Route definitions
+│   ├── route/           # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
 ├── migrations/           # Database migration files
@@ -63,13 +63,17 @@ forum-project
 
 The application uses the following environment variables (from the `.env` file):
 
--   `PORT`: Port on which the application will run (default `8070`)
+-   `SERVER_PORT`: Port on which the application will run (default `8070`)
+-   `SERVER_READ_TIMEOUT`: Read timeout for HTTP server (default `5s`)
+-  `SERVER_WRITE_TIMEOUT`: Write timeout for HTTP server (default `10s`)
+-  `SERVER_IDLE_TIMEOUT`: Idle timeout for HTTP server (default `15s`)
 -   `DB_HOST`: Database host (default `localhost`)
 -   `DB_PORT`: Database port (default `5432`)
 -   `DB_NAME`: Database name (default `forum_database`)
 -   `DB_USER`: Database user (default `postgres`)
 -   `DB_PASSWORD`: Database user password (default empty)
 -   `JWT_SECRET`: Secret key for signing JWT tokens (default `some_secret_key`)
+-  `JWT_EXPIRATION_HOURS`: JWT token expiration time in hours (default `24`)
 -   `APP_ENV`: Application environment, affects template caching (e.g., `development` or `production`, default `development`)
 -   `TEMPLATES_PATH`: Path to the HTML templates directory (default `web/templates`)
 -   `STATIC_PATH`: Path to the static files directory (default `web/static`)
