@@ -7,12 +7,8 @@ import (
 	"fmt"
 	"forum-project/internal/application"
 	"forum-project/internal/config"
-	"forum-project/internal/middleware"
 	"forum-project/internal/route"
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"forum-project/pkg/postgres"
 	"log"
 	"net/http"
 	"os/signal"
@@ -33,35 +29,12 @@ func run() error {
 		return err
 	}
 
-	// Database connection
-	dbURL := cfg.Database.URL()
-	conn, err := sql.Open("pgx", dbURL)
+	// Database connection and migration
+	db := cfg.Database
+	conn, err := postgres.Connect(db.User, db.Password,
+		db.Host, db.Port, db.Name, cfg.Path.ToMigrations())
 	if err != nil {
 		return err
-	}
-
-	// Ensuring connection is established
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	err = conn.PingContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Migrate
-	m, err := migrate.New(cfg.Path.Migrations(), dbURL)
-	if err != nil {
-		return err
-	}
-
-	// Apply migrations
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
-	} else if errors.Is(err, migrate.ErrNoChange) {
-		log.Println("No new migrations to apply.")
-	} else {
-		log.Println("Migrations applied successfully!")
 	}
 
 	// Application
@@ -73,7 +46,7 @@ func run() error {
 	// Server
 	server := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
-		Handler:      middleware.Logging(mux, app.Logger),
+		Handler:      mux,
 		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
 		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
@@ -91,7 +64,7 @@ func run() error {
 		return fmt.Errorf("server failed to start: %w", err)
 	}
 
-	// Wait for graceful shutdown to complete
+	// Wait for a graceful shutdown to complete
 	<-done
 	log.Println("Server shutdown complete")
 
