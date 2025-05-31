@@ -29,10 +29,9 @@ func run() error {
 		return err
 	}
 
-	// Database connection and migration
-	conn, err := postgres.Connect(cfg.Database.User, cfg.Database.Password,
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.Name,
-		cfg.Path.ToMigrations())
+	// DB connection and migration
+	conn, err := postgres.Connect(cfg.DB.User, cfg.DB.Password, cfg.DB.Host,
+		cfg.DB.Port, cfg.DB.Name, cfg.Path.ToMigrations())
 	if err != nil {
 		return err
 	}

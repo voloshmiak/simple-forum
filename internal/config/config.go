@@ -32,8 +32,8 @@ func (p *Path) ToTemplates() string {
 }
 
 type Config struct {
-	Env      string `env:"APP_ENV" env-default:"development"`
-	Database struct {
+	Env string `env:"APP_ENV" env-default:"development"`
+	DB  struct {
 		User     string `env:"DB_USER" env-default:"postgres"`
 		Password string `env:"DB_PASSWORD" env-default:"your_password_here"`
 		Host     string `env:"DB_HOST" env-default:"localhost"`

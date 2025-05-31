@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
+	_ "github.com/golang-migrate/migrate/v4/database/postgres" // DB driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func Connect(user, password, host, port, name, migrationsPath string) (*sql.DB, error) {
+func Connect(user, password, host, port, name, sourceURL string) (*sql.DB, error) {
 	// Connecting to a database
-	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, name)
-	conn, err := sql.Open("pgx", url)
+	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, name)
+	conn, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func Connect(user, password, host, port, name, migrationsPath string) (*sql.DB, 
 	}
 
 	// Migrate
-	m, err := migrate.New(migrationsPath, url)
+	m, err := migrate.New(sourceURL, databaseURL)
 	if err != nil {
 		return nil, err
 	}
