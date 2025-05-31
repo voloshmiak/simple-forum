@@ -5,6 +5,7 @@ import (
 	"forum-project/internal/auth"
 	"forum-project/internal/config"
 	"forum-project/internal/model"
+	"github.com/justinas/nosurf"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -75,6 +76,7 @@ func (m *Templates) AddDefaultData(td *model.Page, r *http.Request) *model.Page 
 	stringMap["username"] = userName
 
 	td.StringMap = stringMap
+	td.CSRFToken = nosurf.Token(r)
 
 	return td
 }

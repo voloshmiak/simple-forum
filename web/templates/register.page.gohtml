@@ -19,6 +19,7 @@
               <h2 class="fw-bold text-uppercase mt-0">Sign up</h2>
               <p class="text-white-50 mb-5">Please enter your login, email and password!</p>
             <form action="/signup" method="post">
+              <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <div data-mdb-input-init class="form-outline form-white mb-2">
                 <input name="username" type="text" id="typeTextX" class="form-control form-control-lg" required/>
                 <label class="form-label" for="typeEmailX">Username</label>
@@ -40,9 +41,8 @@
               </div>
 
               <input type="submit" value="Sign up" data-mdb-button-init data-mdb-ripple-init class="btn btn-outline-light btn-lg px-5" />
-            </div>
             </form>
-
+            </div>
             <div>
               <p class="mb-0">Already have an account? <a href="/login" class="text-white-50 fw-bold">Login</a>
               </p>

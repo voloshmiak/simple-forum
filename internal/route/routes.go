@@ -4,6 +4,7 @@ import (
 	"forum-project/internal/application"
 	"forum-project/internal/handler"
 	"forum-project/internal/middleware"
+	"github.com/justinas/nosurf"
 	"net/http"
 )
 
@@ -62,5 +63,5 @@ func RegisterRoutes(app *application.App) http.Handler {
 
 	mux.Handle("/admin/", http.StripPrefix("/admin", auth(isAdmin(adminMux)))) // grouping
 
-	return logging(mux)
+	return nosurf.New(logging(mux))
 }
