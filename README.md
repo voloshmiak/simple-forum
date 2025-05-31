@@ -13,7 +13,7 @@ A web application built with Golang, primarily utilizing standard library packag
 -   **Authentication:** JWT (`github.com/golang-jwt/jwt/v5`)
 -   **Environment Variables:** `github.com/ilyakaznacheev/cleanenv`
 -   **Password Hashing:** `golang.org/x/crypto/bcrypt`
--   **CSRF Protection:** `github.com/justinas/nosurf
+-   **CSRF Protection:** `github.com/justinas/nosurf`
 
 ## How to Run
 

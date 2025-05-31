@@ -19,6 +19,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	topics, err := t.app.TopicService.GetAllTopics()
 	if err != nil {
 		t.app.Responder.InternalServer(rw, "Unable to get topics", err)
+		return
 	}
 
 	data := make(map[string]any)
@@ -29,6 +30,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		t.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
@@ -70,6 +72,7 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		t.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
@@ -77,6 +80,7 @@ func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
 	err := t.app.Templates.Render(rw, r, "create-topic.page", new(model.Page))
 	if err != nil {
 		t.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
@@ -101,6 +105,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(stringTopicID)
 	if err != nil {
 		t.app.Responder.BadRequest(rw, "Invalid Topic ID", err)
+		return
 	}
 
 	topic, err := t.app.TopicService.GetTopicByID(id)
@@ -118,6 +123,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		t.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 

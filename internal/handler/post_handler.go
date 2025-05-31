@@ -55,6 +55,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	err = p.app.Templates.Render(rw, r, "post.page", viewData)
 	if err != nil {
 		p.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
@@ -80,6 +81,7 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		p.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
@@ -130,6 +132,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		p.app.Responder.InternalServer(rw, "Unable to render template", err)
+		return
 	}
 }
 
