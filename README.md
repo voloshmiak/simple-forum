@@ -11,7 +11,7 @@ A web application built with Golang, primarily utilizing standard library packag
 -   **Database Interaction:** `database/sql` with `github.com/jackc/pgx/v5` driver
 -   **Migrations:** `github.com/golang-migrate/migrate/v4`
 -   **Authentication:** JWT (`github.com/golang-jwt/jwt/v5`)
--   **Environment Variables:** `github.com/joho/godotenv` and `github.com/ilyakaznacheev/cleanenv`
+-   **Environment Variables:** `github.com/ilyakaznacheev/cleanenv`
 -   **Password Hashing:** `golang.org/x/crypto/bcrypt`
 
 ## How to Run
@@ -54,8 +54,6 @@ forum-project
 ├── pkg/
 │   └── postgres/         # PostgreSQL utilities
 │       ├── migrations/   # Database migration files
-│       │   ├── 000001_create_initial_tables.down.sql
-│       │   └── 000001_create_initial_tables.up.sql
 │       └── postgres.go   # PostgreSQL connection logic
 └── web/
     ├── static/           # Static files (CSS, JS, images)

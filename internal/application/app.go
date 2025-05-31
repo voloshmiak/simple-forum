@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-type ErrorHandler interface {
+type ErrorResponder interface {
 	BadRequest(rw http.ResponseWriter, msg string, err error)
 	InternalServer(rw http.ResponseWriter, msg string, err error)
 	NotFound(rw http.ResponseWriter, msg string, err error)
@@ -51,13 +51,13 @@ type UserServicer interface {
 }
 
 type App struct {
-	Config         *config.Config
-	Logger         *slog.Logger
-	ErrorResponder ErrorHandler
-	Templates      Renderer
-	TopicService   TopicServicer
-	PostService    PostServicer
-	UserService    UserServicer
+	Config       *config.Config
+	Logger       *slog.Logger
+	Responder    ErrorResponder
+	Templates    Renderer
+	TopicService TopicServicer
+	PostService  PostServicer
+	UserService  UserServicer
 }
 
 func NewApp(conn *sql.DB, config *config.Config) *App {
@@ -81,12 +81,12 @@ func NewApp(conn *sql.DB, config *config.Config) *App {
 	userService := service.NewUserService(userRepository)
 
 	return &App{
-		Config:         config,
-		Logger:         logger,
-		ErrorResponder: errorResponder,
-		Templates:      templates,
-		TopicService:   topicService,
-		PostService:    postService,
-		UserService:    userService,
+		Config:       config,
+		Logger:       logger,
+		Responder:    errorResponder,
+		Templates:    templates,
+		TopicService: topicService,
+		PostService:  postService,
+		UserService:  userService,
 	}
 }

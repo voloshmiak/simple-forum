@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres" // Database driver
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"log"
-	"time"
 )
 
 func Connect(user, password, host, port, name, migrationsPath string) (*sql.DB, error) {
@@ -42,7 +43,7 @@ func Connect(user, password, host, port, name, migrationsPath string) (*sql.DB, 
 	} else if errors.Is(err, migrate.ErrNoChange) {
 		log.Println("No new migrations to apply.")
 	} else {
-		log.Println("ToMigrations applied successfully!")
+		log.Println("Migrations applied successfully!")
 	}
 
 	return conn, nil
