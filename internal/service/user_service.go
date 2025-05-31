@@ -30,7 +30,7 @@ func NewUserService(repository UserStorage) *UserService {
 	return &UserService{repository: repository}
 }
 
-func (u *UserService) Authenticate(email, password string) (string, error) {
+func (u *UserService) Authenticate(email, password, jwtSecret string, expiryHours int) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
 		return "", err
@@ -45,7 +45,7 @@ func (u *UserService) Authenticate(email, password string) (string, error) {
 		return "", ErrWrongPassword
 	}
 
-	token, err := auth.GenerateToken(user)
+	token, err := auth.GenerateToken(user, jwtSecret, expiryHours)
 	if err != nil {
 		return "", err
 	}

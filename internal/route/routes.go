@@ -2,7 +2,6 @@ package route
 
 import (
 	"forum-project/internal/application"
-	"forum-project/internal/env"
 	"forum-project/internal/handler"
 	"forum-project/internal/middleware"
 	"net/http"
@@ -21,14 +20,13 @@ func RegisterRoutes(app *application.App) *http.ServeMux {
 	adminMux := http.NewServeMux()
 
 	// Middleware
-	auth := middleware.AuthMiddleware
+	auth := middleware.AuthMiddleware(app)
 	isAdmin := middleware.IsAdmin
 	isPostAuthor := middleware.IsPostAuthor(app)
 	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
 
 	// Static
-	staticPath := env.GetStaticPath()
-	fileserver := http.FileServer(http.Dir(staticPath))
+	fileserver := http.FileServer(http.Dir(app.Config.Path.Static()))
 	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	// Home

@@ -3,7 +3,6 @@ package template
 import (
 	"errors"
 	"forum-project/internal/auth"
-	"forum-project/internal/env"
 	"forum-project/internal/model"
 	"html/template"
 	"net/http"
@@ -12,16 +11,20 @@ import (
 
 type Templates struct {
 	cache map[string]*template.Template
+	env   string
+	path  string
 }
 
-func NewTemplates() *Templates {
+func NewTemplates(env string, templatesPath string) *Templates {
 	return &Templates{
-		cache: parseTemplates(),
+		cache: parseTemplates(templatesPath),
+		env:   env,
+		path:  templatesPath,
 	}
 }
 
-func addDefaultData(td *model.Page, r *http.Request) *model.Page {
-	claims, err := auth.GetClaimsFromRequest(r)
+func addDefaultData(td *model.Page, r *http.Request, jwtSecret string) *model.Page {
+	claims, err := auth.GetClaimsFromRequest(r, jwtSecret)
 	if err != nil {
 		td.IsAuthenticated = false
 		td.IsAdmin = false
@@ -49,11 +52,11 @@ func addDefaultData(td *model.Page, r *http.Request) *model.Page {
 	return td
 }
 
-func parseTemplates() map[string]*template.Template {
+func parseTemplates(basePath string) map[string]*template.Template {
 	templates := map[string]*template.Template{}
 
 	// getting path to templates
-	templatesPath := env.GetTemplatePath()
+	templatesPath := basePath
 
 	// parsing templates
 	layouts, _ := filepath.Glob(templatesPath + "\\*.layout.gohtml")
@@ -76,11 +79,10 @@ func parseTemplates() map[string]*template.Template {
 	return templates
 }
 
-func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
-	// if in development mode
-	isDevelopment := env.GetEnv("APP_ENV", "development") == "development"
-	if isDevelopment {
-		templates := parseTemplates()
+func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page, jwtSecret string) error {
+	// cache if in development mode
+	if m.env == "development" {
+		templates := parseTemplates(m.path)
 		m.cache = templates
 	}
 
@@ -90,7 +92,7 @@ func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string,
 		return errors.New(tmpl + ".gohtml not found")
 	}
 
-	td = addDefaultData(td, r)
+	td = addDefaultData(td, r, jwtSecret)
 
 	// rendering template
 	return rt.Execute(rw, td)

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"forum-project/internal/env"
 	"forum-project/internal/model"
 	"net/http"
 	"time"
@@ -10,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(user *model.User) (string, error) {
+func GenerateToken(user *model.User, jwtSecret string, expiryHours int) (string, error) {
 	authorizedUser := model.AuthorizedUser{
 		ID:       user.ID,
 		Username: user.Username,
@@ -19,12 +18,12 @@ func GenerateToken(user *model.User) (string, error) {
 	}
 	claims := jwt.MapClaims{
 		"user": authorizedUser,
-		"exp":  time.Now().Add(time.Hour * 24).Unix(),
+		"exp":  time.Now().Add(time.Hour * time.Duration(expiryHours)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString([]byte(env.GetEnv("JWT_SECRET", "some_secret_key")))
+	signedToken, err := token.SignedString([]byte(jwtSecret))
 
 	if err != nil {
 		return "", err
@@ -33,9 +32,9 @@ func GenerateToken(user *model.User) (string, error) {
 	return signedToken, nil
 }
 
-func ValidateToken(tokenString string) (*jwt.Token, error) {
+func ValidateToken(tokenString string, jwtSecret string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(env.GetEnv("JWT_SECRET", "some_secret_key")), nil
+		return []byte(jwtSecret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -48,13 +47,13 @@ func ValidateToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
+func GetClaimsFromRequest(r *http.Request, jwtSecret string) (jwt.MapClaims, error) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		return nil, errors.New("unauthorized")
 	}
 
-	token, err := ValidateToken(cookie.Value)
+	token, err := ValidateToken(cookie.Value, jwtSecret)
 	if err != nil {
 		return nil, err
 	}

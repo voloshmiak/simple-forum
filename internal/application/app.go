@@ -21,7 +21,7 @@ type ErrorHandler interface {
 }
 
 type Renderer interface {
-	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
+	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page, jwtSecret string) error
 }
 
 type TopicServicer interface {
@@ -44,7 +44,7 @@ type PostServicer interface {
 }
 
 type UserServicer interface {
-	Authenticate(email, password string) (string, error)
+	Authenticate(email, password string, jwtSecret string, expiryHours int) (string, error)
 	Register(username, email, password1, password2 string) error
 	GetUserByID(id int) (*model.User, error)
 }
@@ -67,7 +67,7 @@ func NewApp(conn *sql.DB, config *config.Config) *App {
 	errorResponder := responder.NewErrorResponder(logger)
 
 	// templates renderer
-	templates := template.NewTemplates()
+	templates := template.NewTemplates(config.Env, config.Path.Templates())
 
 	// repositories and services
 	postRepository := repository.NewPostRepository(conn)

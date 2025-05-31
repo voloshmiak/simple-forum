@@ -18,7 +18,7 @@ func NewUserHandler(app *application.App) *UserHandler {
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "register.page", &model.Page{})
+	err := u.app.Templates.Render(rw, r, "register.page", new(model.Page), u.app.Config.JWT.Secret)
 	if err != nil {
 		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -44,7 +44,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 		page := &model.Page{
 			Error: errorMsg,
 		}
-		err := u.app.Templates.Render(rw, r, "register.page", page)
+		err := u.app.Templates.Render(rw, r, "register.page", page, u.app.Config.JWT.Secret)
 		if err != nil {
 			u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 		}
@@ -55,7 +55,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page))
+	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page), u.app.Config.JWT.Secret)
 	if err != nil {
 		u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -65,7 +65,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 
-	token, err := u.app.UserService.Authenticate(email, password)
+	token, err := u.app.UserService.Authenticate(email, password, u.app.Config.JWT.Secret, u.app.Config.JWT.Expiration)
 	if err != nil {
 		var errorMsg string
 		switch {
@@ -79,7 +79,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		page := &model.Page{
 			Error: errorMsg,
 		}
-		err := u.app.Templates.Render(rw, r, "login.page", page)
+		err := u.app.Templates.Render(rw, r, "login.page", page, u.app.Config.JWT.Secret)
 		if err != nil {
 			u.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 		}

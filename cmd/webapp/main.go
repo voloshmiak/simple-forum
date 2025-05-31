@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"forum-project/internal/application"
 	"forum-project/internal/config"
-	"forum-project/internal/env"
 	"forum-project/internal/middleware"
 	"forum-project/internal/route"
 	"github.com/golang-migrate/migrate/v4"
@@ -35,8 +34,8 @@ func run() error {
 	}
 
 	// Database connection
-	dataSource := env.GetDataSource()
-	conn, err := sql.Open("pgx", dataSource)
+	dbURL := cfg.Database.URL()
+	conn, err := sql.Open("pgx", dbURL)
 	if err != nil {
 		return err
 	}
@@ -51,7 +50,7 @@ func run() error {
 	}
 
 	// Migrate
-	m, err := migrate.New(env.GetMigrationPath(), dataSource)
+	m, err := migrate.New(cfg.Path.Migrations(), dbURL)
 	if err != nil {
 		return err
 	}
@@ -75,9 +74,9 @@ func run() error {
 	server := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
 		Handler:      middleware.Logging(mux, app.Logger),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
 	// Graceful shutdown

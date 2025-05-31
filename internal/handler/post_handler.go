@@ -34,7 +34,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	viewData := new(model.Page)
 	viewData.IsAuthor = false
 
-	claims, err := auth.GetClaimsFromRequest(r)
+	claims, err := auth.GetClaimsFromRequest(r, p.app.Config.JWT.Secret)
 
 	if err == nil {
 		user := claims["user"].(map[string]interface{})
@@ -52,7 +52,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 
 	viewData.Data = data
 
-	err = p.app.Templates.Render(rw, r, "post.page", viewData)
+	err = p.app.Templates.Render(rw, r, "post.page", viewData, p.app.Config.JWT.Secret)
 	if err != nil {
 		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -77,7 +77,7 @@ func (p *PostHandler) GetCreatePost(rw http.ResponseWriter, r *http.Request) {
 
 	err = p.app.Templates.Render(rw, r, "create-post.page", &model.Page{
 		Data: data,
-	})
+	}, p.app.Config.JWT.Secret)
 	if err != nil {
 		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -127,7 +127,7 @@ func (p *PostHandler) GetEditPost(rw http.ResponseWriter, r *http.Request) {
 
 	err = p.app.Templates.Render(rw, r, "edit-post.page", &model.Page{
 		Data: data,
-	})
+	}, p.app.Config.JWT.Secret)
 	if err != nil {
 		p.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}

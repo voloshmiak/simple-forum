@@ -17,14 +17,14 @@ func NewHomeHandler(app *application.App) *HomeHandler {
 }
 
 func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
-	err := h.app.Templates.Render(rw, r, "home.page", new(model.Page))
+	err := h.app.Templates.Render(rw, r, "home.page", new(model.Page), h.app.Config.JWT.Secret)
 	if err != nil {
 		h.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
 func (h *HomeHandler) GetAbout(rw http.ResponseWriter, r *http.Request) {
-	err := h.app.Templates.Render(rw, r, "about.page", new(model.Page))
+	err := h.app.Templates.Render(rw, r, "about.page", new(model.Page), h.app.Config.JWT.Secret)
 	if err != nil {
 		h.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
