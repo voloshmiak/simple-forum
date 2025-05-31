@@ -26,7 +26,7 @@ func (t *TopicHandler) GetTopics(rw http.ResponseWriter, r *http.Request) {
 
 	err = t.app.Templates.Render(rw, r, "topics.page", &model.Page{
 		Data: data,
-	}, t.app.Config.JWT.Secret)
+	})
 	if err != nil {
 		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -67,14 +67,14 @@ func (t *TopicHandler) GetTopic(rw http.ResponseWriter, r *http.Request) {
 
 	err = t.app.Templates.Render(rw, r, "topic.page", &model.Page{
 		Data: data,
-	}, t.app.Config.JWT.Secret)
+	})
 	if err != nil {
 		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
 }
 
 func (t *TopicHandler) GetCreateTopic(rw http.ResponseWriter, r *http.Request) {
-	err := t.app.Templates.Render(rw, r, "create-topic.page", new(model.Page), t.app.Config.JWT.Secret)
+	err := t.app.Templates.Render(rw, r, "create-topic.page", new(model.Page))
 	if err != nil {
 		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}
@@ -115,7 +115,7 @@ func (t *TopicHandler) GetEditTopic(rw http.ResponseWriter, r *http.Request) {
 
 	err = t.app.Templates.Render(rw, r, "edit-topic.page", &model.Page{
 		Data: data,
-	}, t.app.Config.JWT.Secret)
+	})
 	if err != nil {
 		t.app.ErrorResponder.InternalServer(rw, "Unable to render template", err)
 	}

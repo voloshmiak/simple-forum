@@ -21,7 +21,8 @@ type ErrorHandler interface {
 }
 
 type Renderer interface {
-	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page, jwtSecret string) error
+	AddDefaultData(td *model.Page, r *http.Request) *model.Page
+	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
 }
 
 type TopicServicer interface {
@@ -67,7 +68,7 @@ func NewApp(conn *sql.DB, config *config.Config) *App {
 	errorResponder := responder.NewErrorResponder(logger)
 
 	// templates renderer
-	templates := template.NewTemplates(config.Env, config.Path.Templates())
+	templates := template.NewTemplates(config)
 
 	// repositories and services
 	postRepository := repository.NewPostRepository(conn)

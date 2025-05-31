@@ -1,18 +1,20 @@
 package middleware
 
 import (
-	"log/slog"
+	"forum-project/internal/application"
 	"net/http"
 )
 
-func Logging(next http.Handler, logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		logger.Info(
-			"HTTP request",
-			"method", r.Method,
-			"path", r.URL.Path,
-		)
+func Logging(app *application.App) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			app.Logger.Info(
+				"HTTP request",
+				"method", r.Method,
+				"path", r.URL.Path,
+			)
 
-		next.ServeHTTP(rw, r)
-	})
+			next.ServeHTTP(rw, r)
+		})
+	}
 }

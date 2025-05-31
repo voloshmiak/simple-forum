@@ -21,25 +21,25 @@ func (d *Database) URL() string {
 }
 
 type Path struct {
-	MigrationsPath string `env:"MIGRATIONS_PATH" env-default:"./migrations"`
-	StaticPath     string `env:"STATIC_PATH" env-default:"./web/static"`
-	TemplatesPath  string `env:"TEMPLATES_PATH" env-default:"./web/templates"`
+	Migrations string `env:"MIGRATIONS" env-default:"./migrations"`
+	Static     string `env:"STATIC" env-default:"./web/static"`
+	Templates  string `env:"TEMPLATES" env-default:"./web/templates"`
 }
 
-func (p *Path) Migrations() string {
-	migrationsAbsPath, _ := filepath.Abs(p.MigrationsPath)
+func (p *Path) ToMigrations() string {
+	migrationsAbsPath, _ := filepath.Abs(p.Migrations)
 	migrationsSlashPath := filepath.ToSlash(migrationsAbsPath)
 	return fmt.Sprintf("file://%s", migrationsSlashPath)
 }
 
-func (p *Path) Static() string {
-	staticAbsPath, _ := filepath.Abs(p.StaticPath)
+func (p *Path) ToStatic() string {
+	staticAbsPath, _ := filepath.Abs(p.Static)
 	staticSlashPath := filepath.ToSlash(staticAbsPath)
 	return staticSlashPath
 }
 
-func (p *Path) Templates() string {
-	templateAbsPath, _ := filepath.Abs(p.TemplatesPath)
+func (p *Path) ToTemplates() string {
+	templateAbsPath, _ := filepath.Abs(p.Templates)
 	templateSlashPath := filepath.ToSlash(templateAbsPath)
 	return templateSlashPath
 }

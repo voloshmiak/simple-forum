@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func RegisterRoutes(app *application.App) *http.ServeMux {
+func RegisterRoutes(app *application.App) http.Handler {
 	// Handlers
 	hh := handler.NewHomeHandler(app)
 	ph := handler.NewPostHandler(app)
@@ -24,9 +24,10 @@ func RegisterRoutes(app *application.App) *http.ServeMux {
 	isAdmin := middleware.IsAdmin
 	isPostAuthor := middleware.IsPostAuthor(app)
 	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
+	logging := middleware.Logging(app)
 
 	// Static
-	fileserver := http.FileServer(http.Dir(app.Config.Path.Static()))
+	fileserver := http.FileServer(http.Dir(app.Config.Path.ToStatic()))
 	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	// Home
@@ -61,5 +62,5 @@ func RegisterRoutes(app *application.App) *http.ServeMux {
 
 	mux.Handle("/admin/", http.StripPrefix("/admin", auth(isAdmin(adminMux)))) // grouping
 
-	return mux
+	return logging(mux)
 }
