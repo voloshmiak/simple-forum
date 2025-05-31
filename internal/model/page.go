@@ -11,4 +11,5 @@ type Page struct {
 	IsAuthenticated bool
 	IsAuthor        bool
 	IsAdmin         bool
+	CSRFToken       string
 }
