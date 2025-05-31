@@ -11,7 +11,7 @@ A web application built with Golang, primarily utilizing standard library packag
 -   **Database Interaction:** `database/sql` with `github.com/jackc/pgx/v5` driver
 -   **Migrations:** `github.com/golang-migrate/migrate/v4`
 -   **Authentication:** JWT (`github.com/golang-jwt/jwt/v5`)
--   **Environment Variables:** `github.com/joho/godotenv`
+-   **Environment Variables:** `github.com/joho/godotenv` and `github.com/ilyakaznacheev/cleanenv`
 -   **Password Hashing:** `golang.org/x/crypto/bcrypt`
 
 ## How to Run
@@ -26,7 +26,7 @@ A web application built with Golang, primarily utilizing standard library packag
 
 ## Migrations
 
-Database migrations are applied automatically when the application starts. Migration files are located in the `migrations/` directory.
+Database migrations are applied automatically when the application starts. Migration files are located in the `pkg/postgres/migrations/` directory.
 
 ## Project Structure
 
@@ -48,12 +48,15 @@ forum-project
 │   ├── model/            # Data models
 │   ├── repository/       # Database interaction logic
 │   ├── responder/        # Utilities for HTTP responses (errors)
-│   ├── route/           # Route definitions
+│   ├── route/            # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
-├── migrations/           # Database migration files
-│   ├── 000001_create_initial_tables.down.sql
-│   └── 000001_create_initial_tables.up.sql
+├── pkg/
+│   └── postgres/         # PostgreSQL utilities
+│       ├── migrations/   # Database migration files
+│       │   ├── 000001_create_initial_tables.down.sql
+│       │   └── 000001_create_initial_tables.up.sql
+│       └── postgres.go   # PostgreSQL connection logic
 └── web/
     ├── static/           # Static files (CSS, JS, images)
     └── templates/        # HTML templates
@@ -77,7 +80,7 @@ The application uses the following environment variables (from the `.env` file):
 -   `APP_ENV`: Application environment, affects template caching (e.g., `development` or `production`, default `development`)
 -   `TEMPLATES_PATH`: Path to the HTML templates directory (default `web/templates`)
 -   `STATIC_PATH`: Path to the static files directory (default `web/static`)
--   `MIGRATIONS_PATH`: Path to the migrations directory (default `migrations`)
+-   `MIGRATIONS_PATH`: Path to the migrations directory (default `pkg/postgres/migrations`)
 
 ## Login Credentials (Examples)
 
