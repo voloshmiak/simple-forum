@@ -1,35 +1,40 @@
 {{template "base" .}}
 {{define "content"}}
-<main class="mt-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <h1 class="mt-4 mb-4 text-center">About SimpleForum</h1>
-                <p>
-                    SimpleForum is a web application built using Go, designed to provide a basic forum functionality.
-                    It allows users to create topics, post messages, and interact with each other in a structured discussion environment.
-                </p>
-                <h2 class="mt-4 mb-3">Technologies Used</h2>
-                <ul>
-                    <li><strong>Language:</strong> Golang</li>
-                    <li><strong>Database:</strong> PostgreSQL</li>
-                    <li><strong>Styling:</strong> Bootstrap CSS</li>
-                    <li><strong>Auth:</strong> JWT</li>
-                </ul>
-                <h2 class="mt-4 mb-3">Libraries</h2>
-                <ul>
-                    <li><strong>github.com/golang-jwt/jwt/v5:</strong> For generating and validating JWTs</li>
-                    <li><strong>github.com/jackc/pgx/v5:</strong> PostgreSQL driver for Go</li>
-                    <li><strong>`github.com/golang-migrate/migrate/v4`</strong>: For database migrations.</li>
-                    <li><strong>`github.com/ilyakaznacheev/cleanenv`</strong>: For managing environment variables.</li>
-                    <li><strong>`github.com/justinas/nosurf`</strong>: For CSRF protection.</li>
-                </ul>
-                <p>
-                    This project was created as a learning exercise to explore web development in Go,
-                    focusing on simplicity and the use of standard library packages where possible.
-                </p>
+    <main class="mt-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-11">
+                    <h1 class="mt-4 mb-4 text-center">About SimpleForum</h1>
+                    <p>
+                        SimpleForum is a web application built using Go, designed to provide a basic forum
+                        functionality.
+                        It allows users to create topics, post messages, and interact with each other in a structured
+                        discussion environment.
+                    </p>
+                    <h2 class="mt-4 mb-3">Technologies Used</h2>
+                    <ul>
+                        <li><strong>Programming Language:</strong> Go</li>
+                        <li><strong>Database:</strong> PostgreSQL</li>
+                        <li><strong>Web Framework/Routing:</strong> Standard Go <strong>net/http</strong> package</li>
+                        <li><strong>Templating Engine:</strong> Standard Go <strong>html/template</strong> package</li>
+                        <li><strong>Frontend Styling:</strong> Bootstrap 5</li>
+                        <li><strong>Authentication:</strong> JSON Web Tokens (JWT)</li>
+                    </ul>
+                    <h2 class="mt-4 mb-3">Libraries</h2>
+                    <ul>
+                        <li><strong>github.com/golang-jwt/jwt/v5:</strong> For generating and validating JWTs</li>
+                        <li><strong>github.com/jackc/pgx/v5:</strong> PostgreSQL driver for Go</li>
+                        <li><strong>github.com/golang-migrate/migrate/v4</strong>: For database migrations.</li>
+                        <li><strong>github.com/ilyakaznacheev/cleanenv</strong>: For managing environment variables.
+                        </li>
+                        <li><strong>github.com/justinas/nosurf</strong>: For CSRF protection.</li>
+                    </ul>
+                    <p>
+                        This project was created as a learning exercise to explore web development in Go,
+                        focusing on simplicity and the use of standard library packages where possible.
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 {{end}}
