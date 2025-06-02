@@ -21,7 +21,6 @@ type ErrorResponder interface {
 }
 
 type Renderer interface {
-	AddDefaultData(td *model.Page, r *http.Request) *model.Page
 	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
 }
 

@@ -51,7 +51,7 @@ func parseTemplates(basePath string) map[string]*template.Template {
 	return templates
 }
 
-func (m *Templates) AddDefaultData(td *model.Page, r *http.Request) *model.Page {
+func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page {
 	td.CSRFToken = nosurf.Token(r)
 	claims, err := auth.GetClaimsFromRequest(r, m.Config.JWT.Secret)
 	if err != nil {
@@ -94,7 +94,7 @@ func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string,
 		return errors.New(tmpl + ".gohtml not found")
 	}
 
-	td = m.AddDefaultData(td, r)
+	td = m.addDefaultData(td, r)
 
 	// rendering template
 	return rt.Execute(rw, td)
