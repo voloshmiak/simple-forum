@@ -48,7 +48,6 @@ forum-project
 │   ├── middleware/       # HTTP middleware
 │   ├── model/            # Data models
 │   ├── repository/       # Database interaction logic
-│   ├── responder/        # Utilities for HTTP responses (errors)
 │   ├── route/            # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
