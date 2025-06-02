@@ -27,7 +27,7 @@ func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 			stringPostID := r.PathValue("postID")
 			id, err := strconv.Atoi(stringPostID)
 			if err != nil {
-				app.Responder.BadRequest(rw, "Invalid Post ID", err)
+				http.Error(rw, "Invalid Post ID", http.StatusBadRequest)
 				return
 			}
 
@@ -35,7 +35,7 @@ func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
-				app.Responder.NotFound(rw, "Post Not Found", err)
+				http.Error(rw, "Post Not Found", http.StatusNotFound)
 				return
 			}
 
@@ -56,7 +56,7 @@ func IsPostAuthorOrAdmin(app *application.App) func(http.Handler) http.Handler {
 			stringPostID := r.PathValue("postID")
 			id, err := strconv.Atoi(stringPostID)
 			if err != nil {
-				app.Responder.BadRequest(rw, "Invalid Post ID", err)
+				http.Error(rw, "Invalid Post ID", http.StatusBadRequest)
 				return
 			}
 
@@ -64,7 +64,7 @@ func IsPostAuthorOrAdmin(app *application.App) func(http.Handler) http.Handler {
 
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
-				app.Responder.NotFound(rw, "Post Not Found", err)
+				http.Error(rw, "Post Not Found", http.StatusNotFound)
 				return
 			}
 

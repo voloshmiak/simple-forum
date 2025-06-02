@@ -13,13 +13,6 @@ import (
 	"os"
 )
 
-type ErrorResponder interface {
-	BadRequest(rw http.ResponseWriter, msg string, err error)
-	InternalServer(rw http.ResponseWriter, msg string, err error)
-	NotFound(rw http.ResponseWriter, msg string, err error)
-	Unauthorized(rw http.ResponseWriter, msg string, err error)
-}
-
 type Renderer interface {
 	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
 }
@@ -52,7 +45,6 @@ type UserServicer interface {
 type App struct {
 	Config       *config.Config
 	Logger       *slog.Logger
-	Responder    ErrorResponder
 	Templates    Renderer
 	TopicService TopicServicer
 	PostService  PostServicer
@@ -62,9 +54,6 @@ type App struct {
 func NewApp(conn *sql.DB, config *config.Config) *App {
 	// logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
-	// error responder
-	errorResponder := responder.NewErrorResponder(logger)
 
 	// templates renderer
 	templates := template.NewTemplates(config)
@@ -82,7 +71,6 @@ func NewApp(conn *sql.DB, config *config.Config) *App {
 	return &App{
 		Config:       config,
 		Logger:       logger,
-		Responder:    errorResponder,
 		Templates:    templates,
 		TopicService: topicService,
 		PostService:  postService,

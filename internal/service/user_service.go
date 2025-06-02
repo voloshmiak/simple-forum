@@ -4,9 +4,8 @@ import (
 	"errors"
 	"forum-project/internal/auth"
 	"forum-project/internal/model"
-	"time"
-
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 var ErrUserNotFound = errors.New("user not found")

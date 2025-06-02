@@ -20,7 +20,7 @@ func NewUserHandler(app *application.App) *UserHandler {
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "register.page", new(model.Page))
 	if err != nil {
-		u.app.Responder.InternalServer(rw, "Unable to render template", err)
+		InternalServer(u.app.Logger, rw, "Unable to render template", err)
 		return
 	}
 }
@@ -47,7 +47,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 		}
 		err := u.app.Templates.Render(rw, r, "register.page", page)
 		if err != nil {
-			u.app.Responder.InternalServer(rw, "Unable to render template", err)
+			InternalServer(u.app.Logger, rw, "Unable to render template", err)
 			return
 		}
 		return
@@ -59,7 +59,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page))
 	if err != nil {
-		u.app.Responder.InternalServer(rw, "Unable to render template", err)
+		InternalServer(u.app.Logger, rw, "Unable to render template", err)
 		return
 	}
 }
@@ -84,7 +84,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		}
 		err := u.app.Templates.Render(rw, r, "login.page", page)
 		if err != nil {
-			u.app.Responder.InternalServer(rw, "Unable to render template", err)
+			InternalServer(u.app.Logger, rw, "Unable to render template", err)
 			return
 		}
 		return
