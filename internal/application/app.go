@@ -5,7 +5,6 @@ import (
 	"forum-project/internal/config"
 	"forum-project/internal/model"
 	"forum-project/internal/repository"
-	"forum-project/internal/responder"
 	"forum-project/internal/service"
 	"forum-project/internal/template"
 	"log/slog"
