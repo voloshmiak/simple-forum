@@ -41,14 +41,13 @@ forum-project
 │   └── webapp/           # Application entry point
 │       └── main.go
 ├── internal/             # Internal application logic
-│   ├── application/      # Application configuration and assembly
-│   ├── auth/             # Authentication logic (JWT)
+│   ├── app/              # Application running configuration and assembly
 │   ├── config/           # Application configuration
 │   ├── handler/          # HTTP handlers
 │   ├── middleware/       # HTTP middleware
 │   ├── model/            # Data models
 │   ├── repository/       # Database interaction logic
-│   ├── route/            # Route definitions
+│   ├── router/           # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
 ├── pkg/
