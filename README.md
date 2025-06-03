@@ -53,7 +53,7 @@ forum-project
 ├── pkg/
 │   └── postgres/         # PostgreSQL utilities
 │       ├── migrations/   # Database migration files
-│       └── postgres.go   # PostgreSQL connection logic
+│       └── postgres.go   # PostgreSQL connection and migration logic
 └── web/
     ├── static/           # Static files (CSS, JS, images)
     └── templates/        # HTML templates
