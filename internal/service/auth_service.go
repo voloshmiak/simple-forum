@@ -2,8 +2,8 @@ package service
 
 import (
 	"errors"
-	"forum-project/internal/auth"
 	"forum-project/internal/model"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -13,6 +13,7 @@ var ErrWrongPassword = errors.New("wrong password")
 var ErrMissmatchPassword = errors.New("passwords do not match")
 var ErrUserEmailAlreadyExists = errors.New("user email already exists")
 var ErrUserNameAlreadyExists = errors.New("username already exists")
+var ErrInvalidToken = errors.New("invalid token")
 
 type UserStorage interface {
 	GetUserByEmail(email string) (*model.User, error)
@@ -21,15 +22,21 @@ type UserStorage interface {
 	InsertUser(user *model.User) (int, error)
 }
 
-type UserService struct {
-	repository UserStorage
+type AuthService struct {
+	repository  UserStorage
+	jwtSecret   string
+	expiryHours int
 }
 
-func NewUserService(repository UserStorage) *UserService {
-	return &UserService{repository: repository}
+func NewAuthService(repository UserStorage, jwtSecret string, expiryHours int) *AuthService {
+	return &AuthService{
+		repository:  repository,
+		jwtSecret:   jwtSecret,
+		expiryHours: expiryHours,
+	}
 }
 
-func (u *UserService) Authenticate(email, password, jwtSecret string, expiryHours int) (string, error) {
+func (u *AuthService) Login(email, password string) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
 		return "", err
@@ -44,15 +51,28 @@ func (u *UserService) Authenticate(email, password, jwtSecret string, expiryHour
 		return "", ErrWrongPassword
 	}
 
-	token, err := auth.GenerateToken(user, jwtSecret, expiryHours)
+	authorizedUser := model.AuthorizedUser{
+		ID:       user.ID,
+		Username: user.Username,
+		Role:     user.Role,
+	}
+	claims := jwt.MapClaims{
+		"user": authorizedUser,
+		"exp":  time.Now().Add(time.Hour * time.Duration(u.expiryHours)).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signedToken, err := token.SignedString([]byte(u.jwtSecret))
+
 	if err != nil {
 		return "", err
 	}
 
-	return token, nil
+	return signedToken, nil
 }
 
-func (u *UserService) Register(username, email, password1, password2 string) error {
+func (u *AuthService) Register(username, email, password1, password2 string) error {
 	if password1 != password2 {
 		return ErrMissmatchPassword
 	}
@@ -73,7 +93,11 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 		return ErrUserEmailAlreadyExists
 	}
 
-	user := &model.User{Username: username, Email: email, Role: "user", CreatedAt: time.Now()}
+	user := &model.User{
+		Username: username,
+		Email:    email, Role: "user",
+		CreatedAt: time.Now(),
+	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password1), bcrypt.DefaultCost)
 	if err != nil {
@@ -90,14 +114,19 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	return nil
 }
 
-func (u *UserService) GetUserByID(id int) (*model.User, error) {
-	user, err := u.repository.GetUserByID(id)
+func ValidateToken(tokenString, jwtSecret string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if user == nil {
-		return nil, ErrUserNotFound
+	if !token.Valid {
+		return nil, ErrInvalidToken
 	}
-	return user, nil
+
+	claims := token.Claims.(jwt.MapClaims)
+
+	return claims, nil
 }

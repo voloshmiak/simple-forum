@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"forum-project/internal/application"
+	"forum-project/internal/app"
 	"forum-project/internal/model"
+	"forum-project/internal/service"
 	"net/http"
 	"strconv"
 )
@@ -21,13 +22,15 @@ func IsAdmin(next http.Handler) http.Handler {
 	})
 }
 
-func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
+func IsPostAuthor(app *app.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			stringPostID := r.PathValue("postID")
 			id, err := strconv.Atoi(stringPostID)
 			if err != nil {
 				http.Error(rw, "Invalid Post ID", http.StatusBadRequest)
+				app.Logger.Error(err.Error(), "method", r.Method, "status",
+					http.StatusBadRequest, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 				return
 			}
 
@@ -36,10 +39,12 @@ func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
 				http.Error(rw, "Post Not Found", http.StatusNotFound)
+				app.Logger.Error(err.Error(), "method", r.Method, "status",
+					http.StatusNotFound, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 				return
 			}
 
-			isAuthor := app.PostService.VerifyPostAuthor(post, user.ID)
+			isAuthor := service.VerifyPostAuthor(post, user.ID)
 			if !isAuthor {
 				http.Error(rw, "Forbidden", http.StatusForbidden)
 				return
@@ -50,13 +55,15 @@ func IsPostAuthor(app *application.App) func(http.Handler) http.Handler {
 	}
 }
 
-func IsPostAuthorOrAdmin(app *application.App) func(http.Handler) http.Handler {
+func IsPostAuthorOrAdmin(app *app.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			stringPostID := r.PathValue("postID")
 			id, err := strconv.Atoi(stringPostID)
 			if err != nil {
 				http.Error(rw, "Invalid Post ID", http.StatusBadRequest)
+				app.Logger.Error(err.Error(), "method", r.Method, "status",
+					http.StatusBadRequest, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 				return
 			}
 
@@ -65,10 +72,12 @@ func IsPostAuthorOrAdmin(app *application.App) func(http.Handler) http.Handler {
 			post, err := app.PostService.GetPostByID(id)
 			if err != nil {
 				http.Error(rw, "Post Not Found", http.StatusNotFound)
+				app.Logger.Error(err.Error(), "method", r.Method, "status",
+					http.StatusNotFound, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 				return
 			}
 
-			isAuthorOrAdmin := app.PostService.VerifyPostAuthorOrAdmin(post, user.ID, user.Role)
+			isAuthorOrAdmin := service.VerifyPostAuthorOrAdmin(post, user.ID, user.Role)
 			if !isAuthorOrAdmin {
 				http.Error(rw, "Forbidden", http.StatusForbidden)
 				return

@@ -1,4 +1,4 @@
-package application
+package app
 
 import (
 	"database/sql"
@@ -31,31 +31,28 @@ type PostServicer interface {
 	CreatePost(title, content string, topicID, authorID int, authorName string) error
 	EditPost(title, content string, postID int) error
 	DeletePost(postID int) error
-	VerifyPostAuthor(post *model.Post, userID int) bool
-	VerifyPostAuthorOrAdmin(post *model.Post, userID int, userRole string) bool
 }
 
-type UserServicer interface {
-	Authenticate(email, password string, jwtSecret string, expiryHours int) (string, error)
+type Authenticator interface {
+	Login(email, password string) (string, error)
 	Register(username, email, password1, password2 string) error
-	GetUserByID(id int) (*model.User, error)
 }
 
 type App struct {
-	Config       *config.Config
-	Logger       *slog.Logger
-	Templates    Renderer
-	TopicService TopicServicer
-	PostService  PostServicer
-	UserService  UserServicer
+	Config        *config.Config
+	Logger        *slog.Logger
+	Templates     Renderer
+	TopicService  TopicServicer
+	PostService   PostServicer
+	Authenticator Authenticator
 }
 
-func NewApp(conn *sql.DB, config *config.Config) *App {
+func New(conn *sql.DB, config *config.Config) *App {
 	// logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	// templates renderer
-	templates := template.NewTemplates(config)
+	// templates
+	templates := template.NewTemplates(config.JWT.Secret, config.Env, config.Path.ToTemplates())
 
 	// repositories and services
 	postRepository := repository.NewPostRepository(conn)
@@ -65,14 +62,14 @@ func NewApp(conn *sql.DB, config *config.Config) *App {
 	topicService := service.NewTopicService(topicRepository)
 
 	userRepository := repository.NewUserRepository(conn)
-	userService := service.NewUserService(userRepository)
+	authService := service.NewAuthService(userRepository, config.JWT.Secret, config.JWT.Expiration)
 
 	return &App{
-		Config:       config,
-		Logger:       logger,
-		Templates:    templates,
-		TopicService: topicService,
-		PostService:  postService,
-		UserService:  userService,
+		Config:        config,
+		Logger:        logger,
+		Templates:     templates,
+		TopicService:  topicService,
+		PostService:   postService,
+		Authenticator: authService,
 	}
 }

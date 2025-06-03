@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"forum-project/internal/application"
+	"forum-project/internal/app"
 	"forum-project/internal/config"
-	"forum-project/internal/route"
+	"forum-project/internal/router"
 	"forum-project/pkg/postgres"
 	"log"
 	"net/http"
@@ -23,8 +23,8 @@ func main() {
 }
 
 func run() error {
-	// Load environment variables
-	cfg, err := config.Load()
+	// Config
+	cfg, err := config.New()
 	if err != nil {
 		return err
 	}
@@ -36,16 +36,16 @@ func run() error {
 		return err
 	}
 
-	// Application
-	app := application.NewApp(conn, cfg)
+	// App
+	a := app.New(conn, cfg)
 
-	// Register routes
-	mux := route.RegisterRoutes(app)
+	// Router
+	r := router.New(a)
 
 	// Server
 	server := &http.Server{
 		Addr:         ":" + cfg.Server.Port,
-		Handler:      mux,
+		Handler:      r,
 		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
 		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
@@ -82,12 +82,12 @@ func gracefulShutdown(done chan bool, server *http.Server, conn *sql.DB) {
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Println(fmt.Sprintf("Server forced to shutdown: %s", err))
+		log.Println("Server forced to shutdown: " + err.Error())
 	}
 
 	err := conn.Close()
 	if err != nil {
-		log.Println(fmt.Sprintf("Failed to close database: %s", err))
+		log.Println("Failed to close database: " + err.Error())
 	}
 
 	done <- true

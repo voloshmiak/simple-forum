@@ -1,14 +1,14 @@
-package route
+package router
 
 import (
-	"forum-project/internal/application"
+	"forum-project/internal/app"
 	"forum-project/internal/handler"
 	"forum-project/internal/middleware"
 	"github.com/justinas/nosurf"
 	"net/http"
 )
 
-func RegisterRoutes(app *application.App) http.Handler {
+func New(app *app.App) http.Handler {
 	// Handlers
 	hh := handler.NewHomeHandler(app)
 	ph := handler.NewPostHandler(app)

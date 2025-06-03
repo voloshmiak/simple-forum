@@ -53,7 +53,7 @@ type Config struct {
 	Path Path
 }
 
-func Load() (*Config, error) {
+func New() (*Config, error) {
 	var config Config
 
 	if err := cleanenv.ReadConfig(".env", &config); err != nil {

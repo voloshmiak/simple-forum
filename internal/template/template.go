@@ -2,25 +2,29 @@ package template
 
 import (
 	"errors"
-	"forum-project/internal/auth"
-	"forum-project/internal/config"
 	"forum-project/internal/model"
-	"github.com/justinas/nosurf"
+	"forum-project/internal/service"
 	"html/template"
 	"net/http"
 	"path/filepath"
+
+	"github.com/justinas/nosurf"
 )
 
 type Templates struct {
-	Cache  map[string]*template.Template
-	Config *config.Config
+	Cache     map[string]*template.Template
+	JWTSecret string
+	Env       string
+	Path      string
 }
 
-func NewTemplates(config *config.Config) *Templates {
-	cache := parseTemplates(config.Path.ToTemplates())
+func NewTemplates(jwtSecret, env, path string) *Templates {
+	cache := parseTemplates(path)
 	return &Templates{
-		Cache:  cache,
-		Config: config,
+		Cache:     cache,
+		JWTSecret: jwtSecret,
+		Env:       env,
+		Path:      path,
 	}
 }
 
@@ -53,12 +57,14 @@ func parseTemplates(basePath string) map[string]*template.Template {
 
 func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page {
 	td.CSRFToken = nosurf.Token(r)
-	claims, err := auth.GetClaimsFromRequest(r, m.Config.JWT.Secret)
+	td.IsAuthenticated = false
+	td.IsAdmin = false
+	cookie, err := r.Cookie("token")
 	if err != nil {
-		td.IsAuthenticated = false
-		td.IsAdmin = false
 		return td
 	}
+
+	claims, err := service.ValidateToken(cookie.Value, m.JWTSecret)
 
 	td.IsAuthenticated = true
 	td.IsAdmin = false
@@ -83,8 +89,8 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 
 func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
 	// cache if in development mode
-	if m.Config.Env == "development" {
-		templates := parseTemplates(m.Config.Path.ToTemplates())
+	if m.Env == "development" {
+		templates := parseTemplates(m.Path)
 		m.Cache = templates
 	}
 

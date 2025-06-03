@@ -1,15 +1,15 @@
 package middleware
 
 import (
-	"forum-project/internal/application"
+	"forum-project/internal/app"
 	"net/http"
 )
 
-func Logging(app *application.App) func(http.Handler) http.Handler {
+func Logging(app *app.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			app.Logger.Info(
-				"HTTP request",
+				"http request",
 				"method", r.Method,
 				"path", r.URL.Path,
 			)

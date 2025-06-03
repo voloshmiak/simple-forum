@@ -22,13 +22,12 @@
                 {{if eq .IsAuthenticated true}}
                     <a href="/user/topics/{{$topic.ID}}/posts/new" class="btn btn-dark w-25">Create post</a>
                 {{end}}
-                {{$postRows := index .Data "posts"}}
-                {{if not $postRows}}
+                {{$posts:= index .Data "posts"}}
+                {{if not $posts}}
                     <p>No posts yet</p>
                 {{else}}
-                    {{range $postRows}}
                     <div class="row">
-                        {{range .}}
+                    {{range $posts}}
                             <div class="col-md-6 mb-3 mt-3">
                                 <a href="/topics/{{$topic.ID}}/posts/{{.ID}}" class="text-decoration-none">
                                     <div class="card">
@@ -40,9 +39,8 @@
                                     </div>
                                 </a>
                             </div>
-                        {{end}}
+                    {{end}}
                     </div>
-                {{end}}
                 {{end}}
             </div>
         </div>

@@ -2,18 +2,29 @@ package middleware
 
 import (
 	"context"
-	"forum-project/internal/application"
-	"forum-project/internal/auth"
+	"errors"
+	"forum-project/internal/app"
 	"forum-project/internal/model"
+	"forum-project/internal/service"
 	"net/http"
 )
 
-func AuthMiddleware(app *application.App) func(http.Handler) http.Handler {
+func AuthMiddleware(app *app.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			claims, err := auth.GetClaimsFromRequest(r, app.Config.JWT.Secret)
+			cookie, err := r.Cookie("token")
 			if err != nil {
 				http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			claims, err := service.ValidateToken(cookie.Value, app.Config.JWT.Secret)
+			if err != nil {
+				if errors.Is(err, service.ErrInvalidToken) {
+					http.Error(rw, "Invalid token", http.StatusUnauthorized)
+					return
+				}
+				http.Error(rw, "Failed to validate token", http.StatusInternalServerError)
+				app.Logger.Error("Failed to validate token", "error", err)
 				return
 			}
 
