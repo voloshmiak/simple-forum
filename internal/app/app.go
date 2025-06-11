@@ -33,7 +33,7 @@ type PostServicer interface {
 	DeletePost(postID int) error
 }
 
-type Authenticator interface {
+type UserServicer interface {
 	Login(email, password string) (string, error)
 	Register(username, email, password1, password2 string) error
 }
@@ -44,7 +44,7 @@ type App struct {
 	Templates     Renderer
 	TopicService  TopicServicer
 	PostService   PostServicer
-	Authenticator Authenticator
+	Authenticator UserServicer
 }
 
 func New(conn *sql.DB, config *config.Config) *App {
@@ -62,7 +62,7 @@ func New(conn *sql.DB, config *config.Config) *App {
 	topicService := service.NewTopicService(topicRepository)
 
 	userRepository := repository.NewUserRepository(conn)
-	authService := service.NewAuthService(userRepository, config.JWT.Secret, config.JWT.Expiration)
+	userService := service.NewUserService(userRepository, config.JWT.Secret, config.JWT.Expiration)
 
 	return &App{
 		Config:        config,
@@ -70,6 +70,6 @@ func New(conn *sql.DB, config *config.Config) *App {
 		Templates:     templates,
 		TopicService:  topicService,
 		PostService:   postService,
-		Authenticator: authService,
+		Authenticator: userService,
 	}
 }

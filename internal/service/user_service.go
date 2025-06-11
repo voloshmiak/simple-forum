@@ -24,21 +24,21 @@ type UserStorage interface {
 	InsertUser(user *model.User) (int, error)
 }
 
-type AuthService struct {
+type UserService struct {
 	repository  UserStorage
 	jwtSecret   string
 	expiryHours int
 }
 
-func NewAuthService(repository UserStorage, jwtSecret string, expiryHours int) *AuthService {
-	return &AuthService{
+func NewUserService(repository UserStorage, jwtSecret string, expiryHours int) *UserService {
+	return &UserService{
 		repository:  repository,
 		jwtSecret:   jwtSecret,
 		expiryHours: expiryHours,
 	}
 }
 
-func (u *AuthService) Login(email, password string) (string, error) {
+func (u *UserService) Login(email, password string) (string, error) {
 	user, err := u.repository.GetUserByEmail(email)
 	if err != nil {
 		return "", err
@@ -74,7 +74,7 @@ func (u *AuthService) Login(email, password string) (string, error) {
 	return signedToken, nil
 }
 
-func (u *AuthService) Register(username, email, password1, password2 string) error {
+func (u *UserService) Register(username, email, password1, password2 string) error {
 	if password1 != password2 {
 		return ErrMismatchPassword
 	}
