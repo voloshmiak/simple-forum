@@ -8,12 +8,14 @@ import (
 	"time"
 )
 
-var ErrUserNotFound = errors.New("user not found")
-var ErrWrongPassword = errors.New("wrong password")
-var ErrMissmatchPassword = errors.New("passwords do not match")
-var ErrUserEmailAlreadyExists = errors.New("user email already exists")
-var ErrUserNameAlreadyExists = errors.New("username already exists")
-var ErrInvalidToken = errors.New("invalid token")
+var (
+	ErrUserNotFound           = errors.New("user not found")
+	ErrWrongPassword          = errors.New("wrong password")
+	ErrMismatchPassword       = errors.New("passwords do not match")
+	ErrUserEmailAlreadyExists = errors.New("user email already exists")
+	ErrUserNameAlreadyExists  = errors.New("username already exists")
+	ErrInvalidToken           = errors.New("invalid token")
+)
 
 type UserStorage interface {
 	GetUserByEmail(email string) (*model.User, error)
@@ -74,7 +76,7 @@ func (u *AuthService) Login(email, password string) (string, error) {
 
 func (u *AuthService) Register(username, email, password1, password2 string) error {
 	if password1 != password2 {
-		return ErrMissmatchPassword
+		return ErrMismatchPassword
 	}
 
 	existingUserByUsername, err := u.repository.GetUserByUsername(username)
