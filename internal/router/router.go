@@ -25,7 +25,7 @@ func New(app *app.App) http.Handler {
 	isAdmin := middleware.IsAdmin
 	isPostAuthor := middleware.IsPostAuthor(app)
 	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
-	logging := middleware.Logging(app)
+	loggingMiddleware := middleware.NewLogging(app.Logger)
 
 	// Static
 	fileserver := http.FileServer(http.Dir(app.Config.Path.ToStatic()))
@@ -63,5 +63,5 @@ func New(app *app.App) http.Handler {
 
 	mux.Handle("/admin/", http.StripPrefix("/admin", auth(isAdmin(adminMux)))) // grouping
 
-	return nosurf.New(logging(mux))
+	return nosurf.New(loggingMiddleware(mux))
 }
