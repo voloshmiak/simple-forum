@@ -23,7 +23,7 @@ func AuthMiddleware(app *app.App) func(http.Handler) http.Handler {
 					http.Error(rw, "Invalid token", http.StatusUnauthorized)
 					return
 				}
-				http.Error(rw, "Failed to validate token", http.StatusInternalServerError)
+				http.Error(rw, "Invalid token", http.StatusInternalServerError)
 				app.Logger.Error("Failed to validate token", "error", err)
 				return
 			}
