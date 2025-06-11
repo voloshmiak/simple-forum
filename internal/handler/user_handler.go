@@ -20,9 +20,7 @@ func NewUserHandler(app *app.App) *UserHandler {
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "register.page", new(model.Page))
 	if err != nil {
-		http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-		u.app.Logger.Error(err.Error(), "method", r.Method, "status",
-			http.StatusInternalServerError, "path", r.URL.Path)
+		u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -49,9 +47,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 		}
 		err := u.app.Templates.Render(rw, r, "register.page", page)
 		if err != nil {
-			http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-			u.app.Logger.Error(err.Error(), "method", r.Method, "status",
-				http.StatusInternalServerError, "path", r.URL.Path)
+			u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 			return
 		}
 		return
@@ -63,9 +59,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
 	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page))
 	if err != nil {
-		http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-		u.app.Logger.Error(err.Error(), "method", r.Method, "status",
-			http.StatusInternalServerError, "path", r.URL.Path)
+		u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -90,9 +84,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		}
 		err := u.app.Templates.Render(rw, r, "login.page", page)
 		if err != nil {
-			http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-			u.app.Logger.Error(err.Error(), "method", r.Method, "status",
-				http.StatusInternalServerError, "path", r.URL.Path)
+			u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 			return
 		}
 		return
@@ -126,4 +118,9 @@ func (u *UserHandler) GetLogout(rw http.ResponseWriter, r *http.Request) {
 	http.SetCookie(rw, cookie)
 
 	http.Redirect(rw, r, "/home", http.StatusFound)
+}
+
+func (u *UserHandler) handleError(rw http.ResponseWriter, msg string, err error, code int) {
+	http.Error(rw, msg, code)
+	u.app.Logger.Error(msg, "error", err.Error())
 }

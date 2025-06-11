@@ -19,9 +19,7 @@ func NewHomeHandler(app *app.App) *HomeHandler {
 func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
 	err := h.app.Templates.Render(rw, r, "home.page", new(model.Page))
 	if err != nil {
-		http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-		h.app.Logger.Error(err.Error(), "method", r.Method, "status",
-			http.StatusInternalServerError, "path", r.URL.Path)
+		h.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 		return
 	}
 }
@@ -29,9 +27,12 @@ func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
 func (h *HomeHandler) GetAbout(rw http.ResponseWriter, r *http.Request) {
 	err := h.app.Templates.Render(rw, r, "about.page", new(model.Page))
 	if err != nil {
-		http.Error(rw, "Unable to render template", http.StatusInternalServerError)
-		h.app.Logger.Error(err.Error(), "method", r.Method, "status",
-			http.StatusInternalServerError, "path", r.URL.Path)
+		h.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 		return
 	}
+}
+
+func (h *HomeHandler) handleError(rw http.ResponseWriter, msg string, err error, code int) {
+	http.Error(rw, msg, code)
+	h.app.Logger.Error(msg, "error", err.Error())
 }
