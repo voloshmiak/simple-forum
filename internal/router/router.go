@@ -24,8 +24,8 @@ func RegisterRoutes(app *app.App) http.Handler {
 	adminMiddleware := middleware.PermissionMiddleware(app, "admin")
 	authorMiddleware := middleware.PermissionMiddleware(app, "author")
 	sharedMiddleware := middleware.PermissionMiddleware(app, "admin", "author")
-	authMiddleware := middleware.AuthMiddleware(app.Authenticator)
-	loggingMiddleware := middleware.LoggingMiddleware(app.Logger)
+	authMiddleware := middleware.AuthMiddleware(app)
+	loggingMiddleware := middleware.LoggingMiddleware(app)
 
 	// Static
 	fileserver := http.FileServer(http.Dir(app.Config.Path.ToStatic()))

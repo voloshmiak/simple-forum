@@ -3,14 +3,14 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"simple-forum/internal/auth"
+	"simple-forum/internal/app"
 	"simple-forum/internal/model"
 )
 
-func AuthMiddleware(authenticator *auth.JWTAuthenticator) func(http.Handler) http.HandlerFunc {
+func AuthMiddleware(app *app.App) func(http.Handler) http.HandlerFunc {
 	return func(next http.Handler) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			claims, err := authenticator.GetClaimsFromRequest(r)
+			claims, err := app.Authenticator.GetClaimsFromRequest(r)
 			if err != nil {
 				http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 				return

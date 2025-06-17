@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
+	"simple-forum/internal/app"
 	"time"
 )
 
@@ -21,7 +21,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.HandlerFunc {
+func LoggingMiddleware(app *app.App) func(http.Handler) http.HandlerFunc {
 	return func(next http.Handler) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -32,7 +32,7 @@ func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.HandlerFunc {
 
 			duration := fmt.Sprintf("%fs", time.Since(start).Seconds())
 
-			l.Info(
+			app.Logger.Info(
 				"HTTP request",
 				"status", wrappedRW.statusCode,
 				"method", r.Method,
