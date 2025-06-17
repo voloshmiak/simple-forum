@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"forum-project/internal/app"
 	"forum-project/internal/config"
+	"forum-project/internal/database"
 	"forum-project/internal/router"
-	"forum-project/pkg/postgres"
 	"log"
 	"net/http"
 	"os/signal"
@@ -30,7 +30,7 @@ func run() error {
 	}
 
 	// DB connection and migration
-	conn, err := postgres.Connect(cfg.DB.User, cfg.DB.Password, cfg.DB.Host,
+	conn, err := database.Connect(cfg.DB.User, cfg.DB.Password, cfg.DB.Host,
 		cfg.DB.Port, cfg.DB.Name, cfg.Path.ToMigrations())
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func run() error {
 	a := app.New(conn, cfg)
 
 	// Router
-	r := router.New(a)
+	r := router.RegisterRoutes(a)
 
 	// Server
 	server := &http.Server{
