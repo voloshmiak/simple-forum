@@ -42,7 +42,10 @@ forum-project
 │       └── main.go
 ├── internal/             # Internal application logic
 │   ├── app/              # Application running configuration and assembly
+│   ├── auth/             # Authentication logic (JWT)
 │   ├── config/           # Application configuration
+│   ├── database/         # Database connection and migration logic
+│   │   └── migrations/   # Database migration files
 │   ├── handler/          # HTTP handlers
 │   ├── middleware/       # HTTP middleware
 │   ├── model/            # Data models
@@ -50,11 +53,7 @@ forum-project
 │   ├── router/           # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
-├── pkg/
-│   └── postgres/         # PostgreSQL utilities
-│       ├── migrations/   # Database migration files
-│       └── postgres.go   # PostgreSQL connection and migration logic
-└── web/
+├── web/
     ├── static/           # Static files (CSS, JS, images)
     └── templates/        # HTML templates
 ```
@@ -77,7 +76,7 @@ The application uses the following environment variables (from the `.env` file):
 -   `APP_ENV`: Application environment, affects template caching (e.g., `development` or `production`, default `development`)
 -   `TEMPLATES_PATH`: Path to the HTML templates directory (default `web/templates`)
 -   `STATIC_PATH`: Path to the static files directory (default `web/static`)
--   `MIGRATIONS_PATH`: Path to the migrations directory (default `pkg/postgres/migrations`)
+-   `MIGRATIONS_PATH`: Path to the migrations directory (default `internal/database/migrations`)
 
 ## Login Credentials (Examples)
 
