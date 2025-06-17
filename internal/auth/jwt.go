@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"simple-forum/internal/model"
@@ -50,7 +51,7 @@ func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, err
 	}
 
 	if !token.Valid {
-		return nil, err
+		return nil, errors.New("invalid token")
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
