@@ -2,6 +2,7 @@ package app
 
 import (
 	"database/sql"
+	"forum-project/internal/auth"
 	"forum-project/internal/config"
 	"forum-project/internal/model"
 	"forum-project/internal/repository"
@@ -34,25 +35,29 @@ type PostServicer interface {
 }
 
 type UserServicer interface {
-	Login(email, password string) (string, error)
+	Login(email, password string) (*model.User, error)
 	Register(username, email, password1, password2 string) error
 }
 
 type App struct {
 	Config        *config.Config
 	Logger        *slog.Logger
+	Authenticator *auth.JwtAuthenticator
 	Templates     Renderer
 	TopicService  TopicServicer
 	PostService   PostServicer
-	Authenticator UserServicer
+	UserService   UserServicer
 }
 
 func New(conn *sql.DB, config *config.Config) *App {
 	// logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
+	// authenticator
+	authenticator := auth.NewJwtAuthenticator(config.JWT.Secret, config.JWT.Expiration)
+
 	// templates
-	templates := template.NewTemplates(config.JWT.Secret, config.Env, config.Path.ToTemplates())
+	templates := template.NewTemplates(config.Env, config.Path.ToTemplates(), authenticator)
 
 	// repositories and services
 	postRepository := repository.NewPostRepository(conn)
@@ -62,14 +67,15 @@ func New(conn *sql.DB, config *config.Config) *App {
 	topicService := service.NewTopicService(topicRepository)
 
 	userRepository := repository.NewUserRepository(conn)
-	userService := service.NewUserService(userRepository, config.JWT.Secret, config.JWT.Expiration)
+	userService := service.NewUserService(userRepository)
 
 	return &App{
 		Config:        config,
 		Logger:        logger,
+		Authenticator: authenticator,
 		Templates:     templates,
 		TopicService:  topicService,
 		PostService:   postService,
-		Authenticator: userService,
+		UserService:   userService,
 	}
 }
