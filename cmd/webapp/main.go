@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"simple-forum/internal/app"
 	"simple-forum/internal/config"
-	"simple-forum/internal/database"
+	"simple-forum/internal/db"
 	"simple-forum/internal/router"
 	"syscall"
 	"time"
@@ -28,9 +28,14 @@ func run() error {
 		return err
 	}
 
-	// DB connection and migration
-	conn, err := database.Connect(cfg.DB.User, cfg.DB.Password, cfg.DB.Host,
-		cfg.DB.Port, cfg.DB.Name, cfg.Path.ToMigrations())
+	// Connection
+	conn, err := db.NewConnection(cfg.DB.Addr)
+	if err != nil {
+		return err
+	}
+
+	// Migrate
+	err = db.Migrate(cfg.DB.Addr, cfg.Path.ToMigrations())
 	if err != nil {
 		return err
 	}
@@ -76,7 +81,7 @@ func run() error {
 
 	err = conn.Close()
 	if err != nil {
-		a.Logger.Error("Failed to close database", "error", err.Error())
+		a.Logger.Error("Failed to close db", "error", err.Error())
 	}
 
 	a.Logger.Info("Graceful shutdown complete")
