@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -51,45 +50,35 @@ func run() error {
 		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
-	// Graceful shutdown
-	done := make(chan bool, 1)
-
-	go gracefulShutdown(done, server, conn)
-
 	a.Logger.Info(fmt.Sprintf("Starting server on port %s", server.Addr))
 
 	// Run server
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("server failed to start: %w", err)
-	}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			a.Logger.Error("Server failed to start", "error", err)
+		}
+	}()
 
-	// Wait for a graceful shutdown to complete
-	<-done
-
-	return nil
-}
-
-func gracefulShutdown(done chan bool, server *http.Server, conn *sql.DB) {
 	// Wait for interruption
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	<-ctx.Done()
 
-	log.Println("Shutting down server gracefully")
+	a.Logger.Info("Shutting down server gracefully")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Println("Server forced to shutdown: " + err.Error())
+		a.Logger.Error("Server forced to shutdown", "error", err.Error())
 	}
 
-	err := conn.Close()
+	err = conn.Close()
 	if err != nil {
-		log.Println("Failed to close database: " + err.Error())
+		a.Logger.Error("Failed to close database", "error", err.Error())
 	}
 
-	log.Println("Server shutdown complete")
+	a.Logger.Info("Server shutdown complete")
 
-	done <- true
+	return nil
 }
