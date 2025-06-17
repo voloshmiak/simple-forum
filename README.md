@@ -32,7 +32,7 @@ Database migrations are applied automatically when the application starts. Migra
 ## Project Structure
 
 ```
-forum-project
+simple-forum
 ├── .env                  # Environment variables
 ├── go.mod                # Go dependencies
 ├── go.sum
