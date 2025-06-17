@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -51,7 +50,7 @@ func run() error {
 		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
-	a.Logger.Info(fmt.Sprintf("Starting server on port %s", server.Addr))
+	a.Logger.Info("Starting server on port: " + server.Addr)
 
 	signs := make(chan os.Signal)
 
