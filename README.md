@@ -1,4 +1,4 @@
-# Forum Project
+# Simple Forum
 
 A web application built with Golang, primarily utilizing standard library packages such as `net/http`, `log/slog`, `html/template`, `database/sql`, and others.
 
