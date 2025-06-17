@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func New(app *app.App) http.Handler {
+func RegisterRoutes(app *app.App) http.Handler {
 	// Handlers
 	hh := handler.NewHomeHandler(app)
 	ph := handler.NewPostHandler(app)
@@ -21,11 +21,12 @@ func New(app *app.App) http.Handler {
 	adminMux := http.NewServeMux()
 
 	// Middleware
-	auth := middleware.AuthMiddleware(app)
 	isAdmin := middleware.IsAdmin
 	isPostAuthor := middleware.IsPostAuthor(app)
 	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
-	loggingMiddleware := middleware.NewLogging(app.Logger)
+
+	authMiddleware := middleware.AuthMiddleware(app.Authenticator)
+	loggingMiddleware := middleware.LoggingMiddleware(app.Logger)
 
 	// Static
 	fileserver := http.FileServer(http.Dir(app.Config.Path.ToStatic()))
@@ -50,7 +51,7 @@ func New(app *app.App) http.Handler {
 	authorizedMux.Handle("POST /posts/{postID}/edit", isPostAuthor(http.HandlerFunc(ph.PostEditPost)))
 	authorizedMux.Handle("GET /posts/{postID}/delete", isPostAuthorOrAdmin(http.HandlerFunc(ph.GetDeletePost)))
 
-	mux.Handle("/user/", http.StripPrefix("/user", auth(authorizedMux))) // grouping
+	mux.Handle("/user/", http.StripPrefix("/user", authMiddleware(authorizedMux))) // grouping
 
 	// Topic
 	mux.HandleFunc("GET /topics", th.GetTopics)
@@ -61,7 +62,7 @@ func New(app *app.App) http.Handler {
 	adminMux.HandleFunc("POST /topics/{topicID}/edit", th.PostEditTopic)
 	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
-	mux.Handle("/admin/", http.StripPrefix("/admin", auth(isAdmin(adminMux)))) // grouping
+	mux.Handle("/admin/", http.StripPrefix("/admin", authMiddleware(isAdmin(adminMux)))) // grouping
 
 	return nosurf.New(loggingMiddleware(mux))
 }
