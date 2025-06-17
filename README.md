@@ -27,7 +27,7 @@ A web application built with Golang, primarily utilizing standard library packag
 
 ## Migrations
 
-Database migrations are applied automatically when the application starts. Migration files are located in the `pkg/postgres/migrations/` directory.
+Database migrations are applied automatically when the application starts. Migration files are located in the `internal/database/migrations/` directory.
 
 ## Project Structure
 
