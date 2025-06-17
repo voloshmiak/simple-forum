@@ -1,4 +1,4 @@
-package postgres
+package database
 
 import (
 	"context"
@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres" // DB driver
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func Connect(user, password, host, port, name, sourceURL string) (*sql.DB, error) {
-	// Connecting to a database
+
 	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, name)
 	conn, err := sql.Open("pgx", databaseURL)
 	if err != nil {
