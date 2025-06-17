@@ -51,7 +51,7 @@ func (u *UserRepository) GetUserByUsername(username string) (*model.User, error)
 		&user.Role,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
@@ -90,9 +90,10 @@ func (u *UserRepository) GetUserByID(id int) (*model.User, error) {
 		&user.Role,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
+		return nil, err
 	}
 
 	return user, nil
