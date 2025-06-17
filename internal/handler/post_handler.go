@@ -34,18 +34,16 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 	viewData := new(model.Page)
 	viewData.IsAuthor = false
 
-	cookie, err := r.Cookie("token")
-	if err == nil {
-		claims, err := service.ValidateToken(cookie.Value, p.app.Config.JWT.Secret)
-		if err == nil {
-			user := claims["user"].(map[string]interface{})
-			userIDFloat := user["id"].(float64)
-			userIDInt := int(userIDFloat)
+	claims, err := p.app.Authenticator.GetClaimsFromRequest(r)
 
-			isAuthor := service.VerifyPostAuthor(post, userIDInt)
-			if isAuthor {
-				viewData.IsAuthor = true
-			}
+	if err == nil {
+		user := claims["user"].(map[string]interface{})
+		userIDFloat := user["id"].(float64)
+		userIDInt := int(userIDFloat)
+
+		isAuthor := service.VerifyPostAuthor(post, userIDInt)
+		if isAuthor {
+			viewData.IsAuthor = true
 		}
 	}
 
