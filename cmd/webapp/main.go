@@ -56,7 +56,7 @@ func run() error {
 
 	go gracefulShutdown(done, server, conn)
 
-	log.Printf("Starting server on port %s", server.Addr)
+	a.Logger.Info(fmt.Sprintf("Starting server on port %s", server.Addr))
 
 	// Run server
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -65,7 +65,6 @@ func run() error {
 
 	// Wait for a graceful shutdown to complete
 	<-done
-	log.Println("Server shutdown complete")
 
 	return nil
 }
@@ -89,6 +88,8 @@ func gracefulShutdown(done chan bool, server *http.Server, conn *sql.DB) {
 	if err != nil {
 		log.Println("Failed to close database: " + err.Error())
 	}
+
+	log.Println("Server shutdown complete")
 
 	done <- true
 }

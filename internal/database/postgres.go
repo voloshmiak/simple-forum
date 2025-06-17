@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -40,10 +39,6 @@ func Connect(user, password, host, port, name, sourceURL string) (*sql.DB, error
 	// Apply migrations
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return nil, err
-	} else if errors.Is(err, migrate.ErrNoChange) {
-		log.Println("No new migrations to apply.")
-	} else {
-		log.Println("Migrations applied successfully!")
 	}
 
 	return conn, nil
