@@ -31,7 +31,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	password1 := r.PostFormValue("password1")
 	password2 := r.PostFormValue("password2")
 
-	err := u.app.Authenticator.Register(username, email, password1, password2)
+	err := u.app.UserService.Register(username, email, password1, password2)
 	if err != nil {
 		var errorMsg string
 		switch {
@@ -68,7 +68,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 
-	token, err := u.app.Authenticator.Login(email, password)
+	user, err := u.app.UserService.Login(email, password)
 	if err != nil {
 		var errorMsg string
 		switch {
@@ -87,6 +87,12 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 			u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 			return
 		}
+		return
+	}
+
+	token, err := u.app.Authenticator.GenerateToken(user)
+	if err != nil {
+		u.handleError(rw, "Failed to generate token", err, http.StatusInternalServerError)
 		return
 	}
 
