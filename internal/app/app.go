@@ -57,7 +57,7 @@ func New(conn *sql.DB, config *config.Config) *App {
 	authenticator := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Expiration)
 
 	// templates
-	templates := template.NewTemplates(config.Env, config.Path.ToTemplates(), authenticator)
+	templates := template.NewTemplates(config.Env, config.Path.ToTemplates, authenticator)
 
 	// repositories and services
 	postRepository := repository.NewPostRepository(conn)
