@@ -1,4 +1,4 @@
-# Forum Project
+# Simple Forum
 
 A web application built with Golang, primarily utilizing standard library packages such as `net/http`, `log/slog`, `html/template`, `database/sql`, and others.
 
@@ -32,7 +32,7 @@ Database migrations are applied automatically when the application starts. Migra
 ## Project Structure
 
 ```
-forum-project
+simple-forum
 ├── .env                  # Environment variables
 ├── go.mod                # Go dependencies
 ├── go.sum
