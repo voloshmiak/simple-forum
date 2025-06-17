@@ -2,9 +2,8 @@ package config
 
 import (
 	"fmt"
-	"path/filepath"
-
 	"github.com/ilyakaznacheev/cleanenv"
+	"path/filepath"
 )
 
 type Path struct {
