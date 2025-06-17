@@ -2,8 +2,8 @@ package template
 
 import (
 	"errors"
+	"forum-project/internal/auth"
 	"forum-project/internal/model"
-	"forum-project/internal/service"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -12,19 +12,19 @@ import (
 )
 
 type Templates struct {
-	Cache     map[string]*template.Template
-	JWTSecret string
-	Env       string
-	Path      string
+	cache  map[string]*template.Template
+	env    string
+	path   string
+	auther *auth.JwtAuthenticator
 }
 
-func NewTemplates(jwtSecret, env, path string) *Templates {
+func NewTemplates(env, path string, auther *auth.JwtAuthenticator) *Templates {
 	cache := parseTemplates(path)
 	return &Templates{
-		Cache:     cache,
-		JWTSecret: jwtSecret,
-		Env:       env,
-		Path:      path,
+		cache:  cache,
+		env:    env,
+		path:   path,
+		auther: auther,
 	}
 }
 
@@ -35,9 +35,9 @@ func parseTemplates(basePath string) map[string]*template.Template {
 	templatesPath := basePath
 
 	// parsing templates
-	layouts, _ := filepath.Glob(templatesPath + "\\*.layout.gohtml")
+	layouts, _ := filepath.Glob(filepath.Join(templatesPath, "*.layout.gohtml"))
 
-	pages, _ := filepath.Glob(templatesPath + "\\*.page.gohtml")
+	pages, _ := filepath.Glob(filepath.Join(templatesPath, "*.page.gohtml"))
 
 	for _, page := range pages {
 		name := filepath.Base(page)
@@ -59,12 +59,11 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 	td.CSRFToken = nosurf.Token(r)
 	td.IsAuthenticated = false
 	td.IsAdmin = false
-	cookie, err := r.Cookie("token")
+
+	claims, err := m.auther.GetClaimsFromRequest(r)
 	if err != nil {
 		return td
 	}
-
-	claims, err := service.ValidateToken(cookie.Value, m.JWTSecret)
 
 	td.IsAuthenticated = true
 	td.IsAdmin = false
@@ -89,13 +88,13 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 
 func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
 	// cache if in development mode
-	if m.Env == "development" {
-		templates := parseTemplates(m.Path)
-		m.Cache = templates
+	if m.env == "development" {
+		templates := parseTemplates(m.path)
+		m.cache = templates
 	}
 
 	// get requested template
-	rt, ok := m.Cache[tmpl+".gohtml"]
+	rt, ok := m.cache[tmpl+".gohtml"]
 	if !ok {
 		return errors.New(tmpl + ".gohtml not found")
 	}
