@@ -80,7 +80,7 @@ func run() error {
 		a.Logger.Error("Failed to close database", "error", err.Error())
 	}
 
-	a.Logger.Info("Server shutdown complete")
+	a.Logger.Info("Graceful shutdown complete")
 
 	return nil
 }
