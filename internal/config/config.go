@@ -1,34 +1,8 @@
 package config
 
 import (
-	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"path/filepath"
 )
-
-type Path struct {
-	Migrations string `env:"MIGRATIONS_PATH" env-default:"./pkg/postgres/migrations"`
-	Static     string `env:"STATIC_PATH" env-default:"./web/static"`
-	Templates  string `env:"TEMPLATES_PATH" env-default:"./web/templates"`
-}
-
-func (p *Path) ToMigrations() string {
-	migrationsAbsPath, _ := filepath.Abs(p.Migrations)
-	migrationsSlashPath := filepath.ToSlash(migrationsAbsPath)
-	return fmt.Sprintf("file://%s", migrationsSlashPath)
-}
-
-func (p *Path) ToStatic() string {
-	staticAbsPath, _ := filepath.Abs(p.Static)
-	staticSlashPath := filepath.ToSlash(staticAbsPath)
-	return staticSlashPath
-}
-
-func (p *Path) ToTemplates() string {
-	templateAbsPath, _ := filepath.Abs(p.Templates)
-	templateSlashPath := filepath.ToSlash(templateAbsPath)
-	return templateSlashPath
-}
 
 type Config struct {
 	Env string `env:"APP_ENV" env-default:"development"`
@@ -45,7 +19,11 @@ type Config struct {
 		Secret     string `env:"JWT_SECRET" env-default:"your_secret_key_here"`
 		Expiration int    `env:"JWT_EXPIRATION_HOURS" env-default:"24"`
 	}
-	Path Path
+	Path struct {
+		ToMigrations string `env:"MIGRATIONS_PATH" env-default:"./internal/db/migrations"`
+		ToStatic     string `env:"STATIC_PATH" env-default:"./web/static"`
+		ToTemplates  string `env:"TEMPLATES_PATH" env-default:"./web/templates"`
+	}
 }
 
 func New() (*Config, error) {

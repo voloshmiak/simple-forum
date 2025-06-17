@@ -12,19 +12,21 @@ import (
 )
 
 type Templates struct {
-	cache  map[string]*template.Template
-	env    string
-	path   string
-	auther *auth.JWTAuthenticator
+	cache         map[string]*template.Template
+	env           string
+	path          string
+	authenticator *auth.JWTAuthenticator
 }
 
 func NewTemplates(env, path string, auther *auth.JWTAuthenticator) *Templates {
-	cache := parseTemplates(path)
+	templateAbsPath, _ := filepath.Abs(path)
+	templateSlashPath := filepath.ToSlash(templateAbsPath)
+	cache := parseTemplates(templateSlashPath)
 	return &Templates{
-		cache:  cache,
-		env:    env,
-		path:   path,
-		auther: auther,
+		cache:         cache,
+		env:           env,
+		path:          templateSlashPath,
+		authenticator: auther,
 	}
 }
 
@@ -60,7 +62,7 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 	td.IsAuthenticated = false
 	td.IsAdmin = false
 
-	claims, err := m.auther.GetClaimsFromRequest(r)
+	claims, err := m.authenticator.GetClaimsFromRequest(r)
 	if err != nil {
 		return td
 	}

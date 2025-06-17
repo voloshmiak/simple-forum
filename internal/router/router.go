@@ -3,6 +3,7 @@ package router
 import (
 	"github.com/justinas/nosurf"
 	"net/http"
+	"path/filepath"
 	"simple-forum/internal/app"
 	"simple-forum/internal/handler"
 	"simple-forum/internal/middleware"
@@ -27,8 +28,10 @@ func RegisterRoutes(app *app.App) http.Handler {
 	authMiddleware := middleware.AuthMiddleware(app)
 	loggingMiddleware := middleware.LoggingMiddleware(app)
 
-	// Static
-	fileserver := http.FileServer(http.Dir(app.Config.Path.ToStatic()))
+	// ToStatic
+	staticAbsPath, _ := filepath.Abs(app.Config.Path.ToStatic)
+	staticSlashPath := filepath.ToSlash(staticAbsPath)
+	fileserver := http.FileServer(http.Dir(staticSlashPath))
 	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	// Home

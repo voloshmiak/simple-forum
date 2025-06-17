@@ -35,7 +35,7 @@ func run() error {
 	}
 
 	// Migrate
-	err = db.Migrate(cfg.DB.Addr, cfg.Path.ToMigrations())
+	err = db.Migrate(cfg.DB.Addr, cfg.Path.ToMigrations)
 	if err != nil {
 		return err
 	}
