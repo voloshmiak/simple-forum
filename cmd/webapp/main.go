@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"simple-forum/internal/app"
 	"simple-forum/internal/config"
@@ -52,18 +53,19 @@ func run() error {
 
 	a.Logger.Info(fmt.Sprintf("Starting server on port %s", server.Addr))
 
+	signs := make(chan os.Signal)
+
 	// Run server
 	go func() {
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			a.Logger.Error("Server failed to start", "error", err)
+			signs <- syscall.SIGTERM
 		}
 	}()
 
-	// Wait for interruption
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-	<-ctx.Done()
+	signal.Notify(signs, syscall.SIGINT, syscall.SIGTERM)
 
+	<-signs
 	a.Logger.Info("Shutting down server gracefully")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
