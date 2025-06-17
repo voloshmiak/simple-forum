@@ -17,14 +17,13 @@ func RegisterRoutes(app *app.App) http.Handler {
 
 	// Mux
 	mux := http.NewServeMux()
-	authorizedMux := http.NewServeMux()
+	authMux := http.NewServeMux()
 	adminMux := http.NewServeMux()
 
 	// Middleware
-	isAdmin := middleware.IsAdmin
-	isPostAuthor := middleware.IsPostAuthor(app)
-	isPostAuthorOrAdmin := middleware.IsPostAuthorOrAdmin(app)
-
+	adminMiddleware := middleware.PermissionMiddleware(app, "admin")
+	authorMiddleware := middleware.PermissionMiddleware(app, "author")
+	sharedMiddleware := middleware.PermissionMiddleware(app, "admin", "author")
 	authMiddleware := middleware.AuthMiddleware(app.Authenticator)
 	loggingMiddleware := middleware.LoggingMiddleware(app.Logger)
 
@@ -45,13 +44,13 @@ func RegisterRoutes(app *app.App) http.Handler {
 
 	// Post
 	mux.HandleFunc("GET /topics/{topicID}/posts/{postID}", ph.GetPost)
-	authorizedMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)
-	authorizedMux.HandleFunc("POST /posts", ph.PostCreatePost)
-	authorizedMux.Handle("GET /posts/{postID}/edit", isPostAuthor(http.HandlerFunc(ph.GetEditPost)))
-	authorizedMux.Handle("POST /posts/{postID}/edit", isPostAuthor(http.HandlerFunc(ph.PostEditPost)))
-	authorizedMux.Handle("GET /posts/{postID}/delete", isPostAuthorOrAdmin(http.HandlerFunc(ph.GetDeletePost)))
+	authMux.HandleFunc("GET /topics/{topicID}/posts/new", ph.GetCreatePost)
+	authMux.HandleFunc("POST /posts", ph.PostCreatePost)
+	authMux.HandleFunc("GET /posts/{postID}/edit", authorMiddleware(http.HandlerFunc(ph.GetEditPost)))
+	authMux.HandleFunc("POST /posts/{postID}/edit", authorMiddleware(http.HandlerFunc(ph.PostEditPost)))
+	authMux.HandleFunc("GET /posts/{postID}/delete", sharedMiddleware(http.HandlerFunc(ph.GetDeletePost)))
 
-	mux.Handle("/user/", http.StripPrefix("/user", authMiddleware(authorizedMux))) // grouping
+	mux.Handle("/user/", http.StripPrefix("/user", authMiddleware(authMux))) // grouping
 
 	// Topic
 	mux.HandleFunc("GET /topics", th.GetTopics)
@@ -62,7 +61,7 @@ func RegisterRoutes(app *app.App) http.Handler {
 	adminMux.HandleFunc("POST /topics/{topicID}/edit", th.PostEditTopic)
 	adminMux.HandleFunc("GET /topics/{topicID}/delete", th.GetDeleteTopic)
 
-	mux.Handle("/admin/", http.StripPrefix("/admin", authMiddleware(isAdmin(adminMux)))) // grouping
+	mux.Handle("/admin/", http.StripPrefix("/admin", authMiddleware(adminMiddleware(adminMux)))) // grouping
 
 	return nosurf.New(loggingMiddleware(mux))
 }

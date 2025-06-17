@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"forum-project/internal/app"
 	"forum-project/internal/model"
-	"forum-project/internal/service"
 	"net/http"
 	"strconv"
 )
@@ -41,8 +40,7 @@ func (p *PostHandler) GetPost(rw http.ResponseWriter, r *http.Request) {
 		userIDFloat := user["id"].(float64)
 		userIDInt := int(userIDFloat)
 
-		isAuthor := service.VerifyPostAuthor(post, userIDInt)
-		if isAuthor {
+		if post.AuthorId == userIDInt {
 			viewData.IsAuthor = true
 		}
 	}

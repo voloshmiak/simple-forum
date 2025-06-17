@@ -7,10 +7,10 @@ import (
 	"net/http"
 )
 
-func AuthMiddleware(auther *auth.JwtAuthenticator) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			claims, err := auther.GetClaimsFromRequest(r)
+func AuthMiddleware(authenticator *auth.JWTAuthenticator) func(http.Handler) http.HandlerFunc {
+	return func(next http.Handler) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
+			claims, err := authenticator.GetClaimsFromRequest(r)
 			if err != nil {
 				http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 				return
@@ -32,6 +32,6 @@ func AuthMiddleware(auther *auth.JwtAuthenticator) func(http.Handler) http.Handl
 			ctx := context.WithValue(r.Context(), "user", authorizedUser)
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
-		})
+		}
 	}
 }

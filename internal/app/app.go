@@ -42,7 +42,7 @@ type UserServicer interface {
 type App struct {
 	Config        *config.Config
 	Logger        *slog.Logger
-	Authenticator *auth.JwtAuthenticator
+	Authenticator *auth.JWTAuthenticator
 	Templates     Renderer
 	TopicService  TopicServicer
 	PostService   PostServicer

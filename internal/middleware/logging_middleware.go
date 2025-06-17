@@ -21,9 +21,9 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.HandlerFunc {
+	return func(next http.Handler) http.HandlerFunc {
+		return func(rw http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
 			wrappedRW := newResponseWriter(rw)
@@ -39,6 +39,6 @@ func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.Handler {
 				"path", r.URL.Path,
 				"duration", duration,
 			)
-		})
+		}
 	}
 }

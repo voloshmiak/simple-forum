@@ -15,10 +15,10 @@ type Templates struct {
 	cache  map[string]*template.Template
 	env    string
 	path   string
-	auther *auth.JwtAuthenticator
+	auther *auth.JWTAuthenticator
 }
 
-func NewTemplates(env, path string, auther *auth.JwtAuthenticator) *Templates {
+func NewTemplates(env, path string, auther *auth.JWTAuthenticator) *Templates {
 	cache := parseTemplates(path)
 	return &Templates{
 		cache:  cache,

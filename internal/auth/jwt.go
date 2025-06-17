@@ -7,19 +7,19 @@ import (
 	"time"
 )
 
-type JwtAuthenticator struct {
+type JWTAuthenticator struct {
 	secret      string
 	expiryHours int
 }
 
-func NewJwtAuthenticator(secret string, expiryHours int) *JwtAuthenticator {
-	return &JwtAuthenticator{
+func NewJwtAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
+	return &JWTAuthenticator{
 		secret:      secret,
 		expiryHours: expiryHours,
 	}
 }
 
-func (a *JwtAuthenticator) GenerateToken(user *model.User) (string, error) {
+func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
 	authorizedUser := model.AuthorizedUser{
 		ID:       user.ID,
 		Username: user.Username,
@@ -41,7 +41,7 @@ func (a *JwtAuthenticator) GenerateToken(user *model.User) (string, error) {
 	return signedToken, nil
 }
 
-func (a *JwtAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.secret), nil
 	})
@@ -58,7 +58,7 @@ func (a *JwtAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, err
 	return claims, nil
 }
 
-func (a *JwtAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
+func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		return nil, err

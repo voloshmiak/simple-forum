@@ -85,11 +85,3 @@ func (p *PostService) DeletePost(postID int) error {
 	}
 	return nil
 }
-
-func VerifyPostAuthor(post *model.Post, userID int) bool {
-	return post.AuthorId == userID
-}
-
-func VerifyPostAuthorOrAdmin(post *model.Post, userID int, userRole string) bool {
-	return post.AuthorId == userID || userRole == "admin"
-}
