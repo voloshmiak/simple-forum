@@ -8,6 +8,14 @@ import (
 	"strconv"
 )
 
+func RBACMiddleware(app *app.App) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+
+		})
+	}
+}
+
 func IsAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value("user").(*model.AuthorizedUser)
