@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -20,35 +21,24 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-type logger struct {
-	h http.Handler
-	l *slog.Logger
-}
+func LoggingMiddleware(l *slog.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			start := time.Now()
 
-func (l *logger) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	start := time.Now()
+			wrappedRW := newResponseWriter(rw)
 
-	wrappedRW := newResponseWriter(rw)
+			next.ServeHTTP(wrappedRW, r)
 
-	l.h.ServeHTTP(wrappedRW, r)
+			duration := fmt.Sprintf("%fs", time.Since(start).Seconds())
 
-	duration := time.Since(start).Seconds()
-
-	l.l.Info(
-		"HTTP request",
-		"status", wrappedRW.statusCode,
-		"method", r.Method,
-		"path", r.URL.Path,
-		"duration", duration,
-	)
-}
-
-func NewLogging(l *slog.Logger) func(http.Handler) http.Handler {
-	fn := func(h http.Handler) http.Handler {
-		return &logger{
-			h: h,
-			l: l,
-		}
+			l.Info(
+				"HTTP request",
+				"status", wrappedRW.statusCode,
+				"method", r.Method,
+				"path", r.URL.Path,
+				"duration", duration,
+			)
+		})
 	}
-	return fn
 }
