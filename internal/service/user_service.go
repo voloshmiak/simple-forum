@@ -2,8 +2,8 @@ package service
 
 import (
 	"errors"
-	"forum-project/internal/model"
 	"golang.org/x/crypto/bcrypt"
+	"simple-forum/internal/model"
 	"time"
 )
 

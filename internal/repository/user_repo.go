@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"forum-project/internal/model"
+	"simple-forum/internal/model"
 )
 
 type UserRepository struct {

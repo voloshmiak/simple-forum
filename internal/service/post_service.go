@@ -1,7 +1,7 @@
 package service
 
 import (
-	"forum-project/internal/model"
+	"simple-forum/internal/model"
 	"time"
 )
 

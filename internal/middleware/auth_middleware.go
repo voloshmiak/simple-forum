@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"context"
-	"forum-project/internal/auth"
-	"forum-project/internal/model"
 	"net/http"
+	"simple-forum/internal/auth"
+	"simple-forum/internal/model"
 )
 
 func AuthMiddleware(authenticator *auth.JWTAuthenticator) func(http.Handler) http.HandlerFunc {

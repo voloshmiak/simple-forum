@@ -2,15 +2,15 @@ package app
 
 import (
 	"database/sql"
-	"forum-project/internal/auth"
-	"forum-project/internal/config"
-	"forum-project/internal/model"
-	"forum-project/internal/repository"
-	"forum-project/internal/service"
-	"forum-project/internal/template"
 	"log/slog"
 	"net/http"
 	"os"
+	"simple-forum/internal/auth"
+	"simple-forum/internal/config"
+	"simple-forum/internal/model"
+	"simple-forum/internal/repository"
+	"simple-forum/internal/service"
+	"simple-forum/internal/template"
 )
 
 type Renderer interface {
@@ -54,7 +54,7 @@ func New(conn *sql.DB, config *config.Config) *App {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	// authenticator
-	authenticator := auth.NewJwtAuthenticator(config.JWT.Secret, config.JWT.Expiration)
+	authenticator := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Expiration)
 
 	// templates
 	templates := template.NewTemplates(config.Env, config.Path.ToTemplates(), authenticator)

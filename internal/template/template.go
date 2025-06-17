@@ -2,11 +2,11 @@ package template
 
 import (
 	"errors"
-	"forum-project/internal/auth"
-	"forum-project/internal/model"
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"simple-forum/internal/auth"
+	"simple-forum/internal/model"
 
 	"github.com/justinas/nosurf"
 )

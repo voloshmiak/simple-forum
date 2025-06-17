@@ -2,10 +2,10 @@ package handler
 
 import (
 	"errors"
-	"forum-project/internal/app"
-	"forum-project/internal/model"
-	"forum-project/internal/service"
 	"net/http"
+	"simple-forum/internal/app"
+	"simple-forum/internal/model"
+	"simple-forum/internal/service"
 	"time"
 )
 

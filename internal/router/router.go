@@ -1,11 +1,11 @@
 package router
 
 import (
-	"forum-project/internal/app"
-	"forum-project/internal/handler"
-	"forum-project/internal/middleware"
 	"github.com/justinas/nosurf"
 	"net/http"
+	"simple-forum/internal/app"
+	"simple-forum/internal/handler"
+	"simple-forum/internal/middleware"
 )
 
 func RegisterRoutes(app *app.App) http.Handler {

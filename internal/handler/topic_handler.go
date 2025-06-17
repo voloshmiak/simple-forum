@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"forum-project/internal/app"
-	"forum-project/internal/model"
 	"net/http"
+	"simple-forum/internal/app"
+	"simple-forum/internal/model"
 	"strconv"
 )
 

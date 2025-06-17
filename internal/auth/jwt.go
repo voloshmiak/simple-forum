@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"forum-project/internal/model"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+	"simple-forum/internal/model"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type JWTAuthenticator struct {
 	expiryHours int
 }
 
-func NewJwtAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
+func NewJWTAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
 	return &JWTAuthenticator{
 		secret:      secret,
 		expiryHours: expiryHours,

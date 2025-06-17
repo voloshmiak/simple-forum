@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"forum-project/internal/model"
+	"simple-forum/internal/model"
 )
 
 type PostRepository struct {
