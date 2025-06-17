@@ -45,6 +45,7 @@ func (p *PostService) CreatePost(title, content string, topicID, authorID int, a
 		AuthorId:   authorID,
 		AuthorName: authorName,
 		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	postID, err := p.repository.InsertPost(post)
@@ -64,6 +65,7 @@ func (p *PostService) EditPost(title, content string, postID int) error {
 
 	post.Title = title
 	post.Content = content
+	post.UpdatedAt = time.Now()
 
 	err = p.repository.UpdatePost(post)
 	if err != nil {
