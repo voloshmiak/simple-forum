@@ -75,13 +75,13 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		a.Logger.Error("Server forced to shutdown", "error", err.Error())
+	if err = server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		a.Logger.Error("Server forced to shutdown", "error", err)
 	}
 
 	err = conn.Close()
 	if err != nil {
-		a.Logger.Error("Failed to close db", "error", err.Error())
+		a.Logger.Error("Failed to close db", "error", err)
 	}
 
 	a.Logger.Info("Graceful shutdown complete")
