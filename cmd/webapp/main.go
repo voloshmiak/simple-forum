@@ -39,6 +39,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	// App
 	a := app.New(conn, cfg)
@@ -59,31 +60,30 @@ func run() error {
 
 	a.Logger.Info("Starting server on port: " + server.Addr)
 
-	signs := make(chan os.Signal)
+	done := make(chan bool)
 
 	go func() {
-		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			a.Logger.Error("Server failed to start", "error", err)
-			signs <- syscall.SIGTERM
+		signs := make(chan os.Signal)
+		signal.Notify(signs, syscall.SIGINT, syscall.SIGTERM)
+
+		<-signs
+		a.Logger.Info("Shutting down server gracefully")
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		if err = server.Shutdown(shutdownCtx); err != nil {
+			a.Logger.Error("Server forced to shutdown", "error", err)
 		}
+
+		done <- true
 	}()
 
-	signal.Notify(signs, syscall.SIGINT, syscall.SIGTERM)
-
-	<-signs
-	a.Logger.Info("Shutting down server gracefully")
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	if err = server.Shutdown(shutdownCtx); err != nil {
-		a.Logger.Error("Server forced to shutdown", "error", err)
+	if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
 	}
 
-	if err = conn.Close(); err != nil {
-		a.Logger.Error("Failed to close db", "error", err)
-	}
-
+	<-done
 	a.Logger.Info("Graceful shutdown complete")
 
 	return nil
