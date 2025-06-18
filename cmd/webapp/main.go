@@ -55,11 +55,12 @@ func run() error {
 		IdleTimeout:  time.Duration(cfg.Server.IdleTimeout) * time.Second,
 	}
 
+	// Serve
+
 	a.Logger.Info("Starting server on port: " + server.Addr)
 
 	signs := make(chan os.Signal)
 
-	// Run server
 	go func() {
 		if err = server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			a.Logger.Error("Server failed to start", "error", err)
@@ -75,12 +76,11 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	if err = server.Shutdown(shutdownCtx); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err = server.Shutdown(shutdownCtx); err != nil {
 		a.Logger.Error("Server forced to shutdown", "error", err)
 	}
 
-	err = conn.Close()
-	if err != nil {
+	if err = conn.Close(); err != nil {
 		a.Logger.Error("Failed to close db", "error", err)
 	}
 
