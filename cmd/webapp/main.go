@@ -28,14 +28,14 @@ func run() error {
 		return err
 	}
 
-	// Connection
-	conn, err := db.NewConnection(cfg.DB.Addr)
+	// Migrate
+	err = db.Migrate(cfg.DB.Addr, cfg.Path.ToMigrations)
 	if err != nil {
 		return err
 	}
 
-	// Migrate
-	err = db.Migrate(cfg.DB.Addr, cfg.Path.ToMigrations)
+	// Connection
+	conn, err := db.NewConnection(cfg.DB.Addr)
 	if err != nil {
 		return err
 	}
