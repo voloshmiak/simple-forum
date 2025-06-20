@@ -54,10 +54,6 @@ func (a *JWTAuthenticator) validateToken(tokenString string) (jwt.MapClaims, err
 		return nil, err
 	}
 
-	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
 	claims := token.Claims.(jwt.MapClaims)
 
 	return claims, nil
