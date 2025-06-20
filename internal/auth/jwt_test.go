@@ -78,8 +78,9 @@ func TestValidateToken(t *testing.T) {
 	expiryHours := 24
 
 	authenticator := NewJWTAuthenticator(secret, expiryHours)
-
-	token, _ := authenticator.GenerateToken(testUser)
+	validToken, _ := authenticator.GenerateToken(testUser)
+	expiredToken, _ := NewJWTAuthenticator("mysecretkey", -1).GenerateToken(testUser)
+	tokenWithWrongSecret, _ := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(testUser)
 
 	tests := []struct {
 		name        string
@@ -89,21 +90,33 @@ func TestValidateToken(t *testing.T) {
 	}{
 		{
 			name:        "Valid Token",
-			token:       token,
+			token:       validToken,
 			expectValid: true,
 			err:         "",
 		},
 		{
-			name:        "Invalid Token",
-			token:       "invalidtoken",
+			name:        "Malformed Token",
+			token:       "token",
 			expectValid: false,
 			err:         "token is malformed: token contains an invalid number of segments",
+		},
+		{
+			name:        "Expired Token",
+			token:       expiredToken,
+			expectValid: false,
+			err:         "token has invalid claims: token is expired",
+		},
+		{
+			name:        "Token with wrong signature",
+			token:       tokenWithWrongSecret,
+			expectValid: false,
+			err:         "token signature is invalid: signature is invalid",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			claims, err := authenticator.validateToken(tt.token)
+			claims, err := authenticator.ValidateToken(tt.token)
 
 			if tt.expectValid {
 				if err != nil {
@@ -163,18 +176,18 @@ func TestGetClaimsFromRequest(t *testing.T) {
 			err:         "",
 		},
 		{
-			name:        "Valid Request with Invalid Token",
-			token:       "invalidtoken",
-			needCookie:  true,
-			expectClaim: false,
-			err:         "token is malformed: token contains an invalid number of segments",
-		},
-		{
 			name:        "Request without Token",
 			token:       "",
 			needCookie:  false,
 			expectClaim: false,
 			err:         "http: named cookie not present",
+		},
+		{
+			name:        "Request with Invalid Token",
+			token:       "token",
+			needCookie:  true,
+			expectClaim: false,
+			err:         "token is malformed: token contains an invalid number of segments",
 		},
 	}
 
