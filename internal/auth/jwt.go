@@ -21,11 +21,16 @@ func NewJWTAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
 }
 
 func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
+	if user == nil {
+		return "", errors.New("user cannot be nil")
+	}
+
 	authorizedUser := model.AuthorizedUser{
 		ID:       user.ID,
 		Username: user.Username,
 		Role:     user.Role,
 	}
+
 	claims := jwt.MapClaims{
 		"user": authorizedUser,
 		"exp":  time.Now().Add(time.Hour * time.Duration(a.expiryHours)).Unix(),
@@ -34,7 +39,6 @@ func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signedToken, err := token.SignedString([]byte(a.secret))
-
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +46,7 @@ func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
 	return signedToken, nil
 }
 
-func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+func (a *JWTAuthenticator) validateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(a.secret), nil
 	})
@@ -65,7 +69,7 @@ func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims,
 		return nil, err
 	}
 
-	claims, err := a.ValidateToken(cookie.Value)
+	claims, err := a.validateToken(cookie.Value)
 	if err != nil {
 		return nil, err
 	}
