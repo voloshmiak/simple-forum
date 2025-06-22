@@ -8,6 +8,19 @@ import (
 	"time"
 )
 
+var (
+	secret        string
+	expiryHours   int
+	authenticator *JWTAuthenticator
+)
+
+func setup() {
+	secret = "mysecretkey"
+	expiryHours = 24
+
+	authenticator = NewJWTAuthenticator(secret, expiryHours)
+}
+
 func TestGenerateToken(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -36,12 +49,10 @@ func TestGenerateToken(t *testing.T) {
 		},
 	}
 
+	setup()
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			secret := "mysecretkey"
-			expiryHours := 24
-
-			authenticator := NewJWTAuthenticator(secret, expiryHours)
 
 			token, err := authenticator.GenerateToken(tt.user)
 
@@ -74,10 +85,8 @@ func TestValidateToken(t *testing.T) {
 		Role:         "user",
 	}
 
-	secret := "mysecretkey"
-	expiryHours := 24
+	setup()
 
-	authenticator := NewJWTAuthenticator(secret, expiryHours)
 	validToken, _ := authenticator.GenerateToken(testUser)
 	expiredToken, _ := NewJWTAuthenticator("mysecretkey", -1).GenerateToken(testUser)
 	tokenWithWrongSecret, _ := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(testUser)
@@ -154,10 +163,7 @@ func TestGetClaimsFromRequest(t *testing.T) {
 		Role:         "user",
 	}
 
-	secret := "mysecretkey"
-	expiryHours := 24
-
-	authenticator := NewJWTAuthenticator(secret, expiryHours)
+	setup()
 
 	token, _ := authenticator.GenerateToken(testUser)
 

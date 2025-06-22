@@ -39,11 +39,8 @@ func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signedToken, err := token.SignedString([]byte(a.secret))
-	if err != nil {
-		return "", err
-	}
 
-	return signedToken, nil
+	return signedToken, err
 }
 
 func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, error) {
@@ -65,10 +62,5 @@ func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims,
 		return nil, err
 	}
 
-	claims, err := a.ValidateToken(cookie.Value)
-	if err != nil {
-		return nil, err
-	}
-
-	return claims, nil
+	return a.ValidateToken(cookie.Value)
 }

@@ -102,6 +102,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().Add(time.Hour * 24),
 	}
 
