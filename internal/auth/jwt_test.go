@@ -12,6 +12,7 @@ var (
 	secret        string
 	expiryHours   int
 	authenticator *JWTAuthenticator
+	testUser      *model.User
 )
 
 func setup() {
@@ -19,9 +20,20 @@ func setup() {
 	expiryHours = 24
 
 	authenticator = NewJWTAuthenticator(secret, expiryHours)
+
+	testUser = &model.User{
+		ID:           1,
+		Username:     "testuser",
+		Email:        "test@email.com",
+		PasswordHash: "testpassword",
+		CreatedAt:    time.Now(),
+		Role:         "user",
+	}
 }
 
 func TestGenerateToken(t *testing.T) {
+	setup()
+
 	tests := []struct {
 		name        string
 		user        *model.User
@@ -29,15 +41,8 @@ func TestGenerateToken(t *testing.T) {
 		err         string
 	}{
 		{
-			name: "Valid User",
-			user: &model.User{
-				ID:           1,
-				Username:     "testuser",
-				Email:        "test@email.com",
-				PasswordHash: "testpassword",
-				CreatedAt:    time.Now(),
-				Role:         "user",
-			},
+			name:        "Valid User",
+			user:        testUser,
 			expectToken: true,
 			err:         "",
 		},
@@ -76,15 +81,6 @@ func TestGenerateToken(t *testing.T) {
 }
 
 func TestValidateToken(t *testing.T) {
-	testUser := &model.User{
-		ID:           1,
-		Username:     "testuser",
-		Email:        "test@email.com",
-		PasswordHash: "testpassword",
-		CreatedAt:    time.Now(),
-		Role:         "user",
-	}
-
 	setup()
 
 	validToken, _ := authenticator.GenerateToken(testUser)
@@ -154,15 +150,6 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestGetClaimsFromRequest(t *testing.T) {
-	testUser := &model.User{
-		ID:           1,
-		Username:     "testuser",
-		Email:        "test@email.com",
-		PasswordHash: "testpassword",
-		CreatedAt:    time.Now(),
-		Role:         "user",
-	}
-
 	setup()
 
 	token, _ := authenticator.GenerateToken(testUser)
