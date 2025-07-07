@@ -57,6 +57,10 @@ func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, err
 }
 
 func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
+	if r == nil {
+		return nil, errors.New("request cannot be nil")
+	}
+
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		return nil, err

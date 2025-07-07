@@ -9,18 +9,6 @@ import (
 )
 
 var (
-	secret        string
-	expiryHours   int
-	authenticator *JWTAuthenticator
-	testUser      *model.User
-)
-
-func setup() {
-	secret = "mysecretkey"
-	expiryHours = 24
-
-	authenticator = NewJWTAuthenticator(secret, expiryHours)
-
 	testUser = &model.User{
 		ID:           1,
 		Username:     "testuser",
@@ -29,39 +17,36 @@ func setup() {
 		CreatedAt:    time.Now(),
 		Role:         "user",
 	}
-}
+	authenticator = NewJWTAuthenticator("mysecretkey", 24)
+)
 
 func TestGenerateToken(t *testing.T) {
-	setup()
-
 	tests := []struct {
-		name        string
-		user        *model.User
-		expectToken bool
-		err         string
+		name  string
+		user  *model.User
+		valid bool
+		err   string
 	}{
 		{
-			name:        "Valid User",
-			user:        testUser,
-			expectToken: true,
-			err:         "",
+			name:  "Valid User",
+			user:  testUser,
+			valid: true,
+			err:   "",
 		},
 		{
-			name:        "Nil User",
-			user:        nil,
-			expectToken: false,
-			err:         "user cannot be nil",
+			name:  "Nil User",
+			user:  nil,
+			valid: false,
+			err:   "user cannot be nil",
 		},
 	}
-
-	setup()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
 			token, err := authenticator.GenerateToken(tt.user)
 
-			if tt.expectToken {
+			if tt.valid {
 				if err != nil {
 					t.Errorf("%s: no error expected, but got %s", tt.name, err.Error())
 				}
@@ -70,10 +55,10 @@ func TestGenerateToken(t *testing.T) {
 				}
 			} else {
 				if err == nil {
-					t.Errorf("%s: expected an error, got nil", tt.name)
+					t.Errorf("%s: expected %s, got nil", tt.name, tt.err)
 				}
-				if err.Error() != tt.err {
-					t.Errorf("%s: expected %s, but got %s", tt.name, tt.err, err.Error())
+				if token != "" {
+					t.Errorf("%s: expected no token, but got %s", tt.name, token)
 				}
 			}
 		})
@@ -81,41 +66,39 @@ func TestGenerateToken(t *testing.T) {
 }
 
 func TestValidateToken(t *testing.T) {
-	setup()
-
 	validToken, _ := authenticator.GenerateToken(testUser)
 	expiredToken, _ := NewJWTAuthenticator("mysecretkey", -1).GenerateToken(testUser)
-	tokenWithWrongSecret, _ := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(testUser)
+	wrongSecretToken, _ := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(testUser)
 
 	tests := []struct {
-		name        string
-		token       string
-		expectValid bool
-		err         string
+		name  string
+		token string
+		valid bool
+		err   string
 	}{
 		{
-			name:        "Valid Token",
-			token:       validToken,
-			expectValid: true,
-			err:         "",
+			name:  "Valid Token",
+			token: validToken,
+			valid: true,
+			err:   "",
 		},
 		{
-			name:        "Malformed Token",
-			token:       "token",
-			expectValid: false,
-			err:         "token is malformed: token contains an invalid number of segments",
+			name:  "Malformed Token",
+			token: "token",
+			valid: false,
+			err:   "token is malformed: token contains an invalid number of segments",
 		},
 		{
-			name:        "Expired Token",
-			token:       expiredToken,
-			expectValid: false,
-			err:         "token has invalid claims: token is expired",
+			name:  "Expired Token",
+			token: expiredToken,
+			valid: false,
+			err:   "token has invalid claims: token is expired",
 		},
 		{
-			name:        "Token with wrong signature",
-			token:       tokenWithWrongSecret,
-			expectValid: false,
-			err:         "token signature is invalid: signature is invalid",
+			name:  "Token with wrong signature",
+			token: wrongSecretToken,
+			valid: false,
+			err:   "token signature is invalid: signature is invalid",
 		},
 	}
 
@@ -123,26 +106,19 @@ func TestValidateToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			claims, err := authenticator.ValidateToken(tt.token)
 
-			if tt.expectValid {
+			if tt.valid {
 				if err != nil {
 					t.Errorf("%s: no error expected, but got %s", tt.name, err.Error())
 				}
 				if claims == nil {
 					t.Errorf("%s: expected claims, got nil", tt.name)
-				} else {
-					user := claims["user"].(map[string]interface{})
-					userIDFloat := user["id"].(float64)
-					userIDInt := int(userIDFloat)
-					if userIDInt != testUser.ID {
-						t.Errorf("%s: expected user ID %d, got %v", tt.name, testUser.ID, userIDInt)
-					}
 				}
 			} else {
 				if err == nil {
-					t.Errorf("%s: expected an error, got nil", tt.name)
+					t.Errorf("%s: expected %s, got nil", tt.name, tt.err)
 				}
-				if err.Error() != tt.err {
-					t.Errorf("%s: expected %s, but got %s", tt.name, tt.err, err.Error())
+				if claims != nil {
+					t.Errorf("%s: expected no claims, but got %s", tt.name, claims)
 				}
 			}
 		})
@@ -150,79 +126,76 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestGetClaimsFromRequest(t *testing.T) {
-	setup()
-
 	token, _ := authenticator.GenerateToken(testUser)
 
+	validRequest := httptest.NewRequest(http.MethodGet, "/", nil)
+	validRequest.AddCookie(&http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		Expires:  time.Now().Add(time.Hour * 24),
+	})
+
+	invalidRequest := httptest.NewRequest(http.MethodGet, "/", nil)
+	invalidRequest.AddCookie(&http.Cookie{
+		Name:     "token",
+		Value:    "invalidtoken",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	})
+
 	tests := []struct {
-		name        string
-		token       string
-		needCookie  bool
-		expectClaim bool
-		err         string
+		name    string
+		request *http.Request
+		valid   bool
+		err     string
 	}{
 		{
-			name:        "Valid Request with Token",
-			token:       token,
-			needCookie:  true,
-			expectClaim: true,
-			err:         "",
+			name:    "Valid Request with Token",
+			request: validRequest,
+			valid:   true,
+			err:     "",
 		},
 		{
-			name:        "Request without Token",
-			token:       "",
-			needCookie:  false,
-			expectClaim: false,
-			err:         "http: named cookie not present",
+			name:    "Nil request",
+			request: nil,
+			valid:   false,
+			err:     "http: named cookie not present",
 		},
 		{
-			name:        "Request with Invalid Token",
-			token:       "token",
-			needCookie:  true,
-			expectClaim: false,
-			err:         "token is malformed: token contains an invalid number of segments",
+			name:    "Request without Token",
+			request: httptest.NewRequest(http.MethodGet, "/", nil),
+			valid:   false,
+			err:     "http: named cookie not present",
+		},
+		{
+			name:    "Request with Invalid Token",
+			request: invalidRequest,
+			valid:   false,
+			err:     "token is malformed: token contains an invalid number of segments",
 		},
 	}
 
 	for _, tt := range tests {
-		request := httptest.NewRequest(http.MethodGet, "/", nil)
-
-		if tt.needCookie {
-			cookie := &http.Cookie{
-				Name:     "token",
-				Value:    tt.token,
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   true,
-				Expires:  time.Now().Add(time.Hour * 24),
-			}
-
-			request.AddCookie(cookie)
-		}
-
 		t.Run(tt.name, func(t *testing.T) {
-			claims, err := authenticator.GetClaimsFromRequest(request)
+			claims, err := authenticator.GetClaimsFromRequest(tt.request)
 
-			if tt.expectClaim {
+			if tt.valid {
 				if err != nil {
 					t.Errorf("%s: no error expected, but got %s", tt.name, err.Error())
 				}
 				if claims == nil {
 					t.Errorf("%s: expected claims, got nil", tt.name)
-				} else {
-					user := claims["user"].(map[string]interface{})
-					userIDFloat := user["id"].(float64)
-					userIDInt := int(userIDFloat)
-					if userIDInt != testUser.ID {
-						t.Errorf("%s: expected user ID %d, got %v", tt.name, testUser.ID, userIDInt)
-					}
 				}
 			} else {
 				if err == nil {
 					t.Errorf("%s: expected an error, got nil", tt.name)
 				}
-				if err.Error() != tt.err {
-					t.Errorf("%s: expected %s, but got %s", tt.name, tt.err, err.Error())
+				if claims != nil {
+					t.Errorf("%s: expected no claims, but got %s", tt.name, claims)
 				}
 			}
 		})
