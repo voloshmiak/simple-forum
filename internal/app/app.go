@@ -9,9 +9,18 @@ import (
 	"simple-forum/internal/config"
 	"simple-forum/internal/model"
 	"simple-forum/internal/repository"
+	"simple-forum/internal/responder"
 	"simple-forum/internal/service"
 	"simple-forum/internal/template"
 )
+
+type Responder interface {
+	InternalServerError(rw http.ResponseWriter, msg string, err error)
+	BadRequest(rw http.ResponseWriter, msg string, err error)
+	Unauthorized(rw http.ResponseWriter, msg string, err error)
+	Forbidden(rw http.ResponseWriter, msg string, err error)
+	NotFound(rw http.ResponseWriter, msg string, err error)
+}
 
 type Renderer interface {
 	Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error
@@ -43,6 +52,7 @@ type App struct {
 	Config        *config.Config
 	Logger        *slog.Logger
 	Authenticator *auth.JWTAuthenticator
+	Responder     Responder
 	Templates     Renderer
 	TopicService  TopicServicer
 	PostService   PostServicer
@@ -55,6 +65,9 @@ func New(conn *sql.DB, config *config.Config) *App {
 
 	// authenticator
 	authenticator := auth.NewJWTAuthenticator(config.JWT.Secret, config.JWT.Expiration)
+
+	// responder
+	honestResponder := responder.NewHonestResponder(logger)
 
 	// templates
 	templates := template.NewTemplates(config.Env, config.Path.ToTemplates, authenticator)
@@ -73,6 +86,7 @@ func New(conn *sql.DB, config *config.Config) *App {
 		Config:        config,
 		Logger:        logger,
 		Authenticator: authenticator,
+		Responder:     honestResponder,
 		Templates:     templates,
 		TopicService:  topicService,
 		PostService:   postService,
