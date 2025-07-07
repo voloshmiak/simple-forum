@@ -4,8 +4,14 @@ import (
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"simple-forum/internal/model"
 	"time"
+)
+
+var (
+	ZeroIDErr     = errors.New("id cannot be 0")
+	EmptyNameErr  = errors.New("username cannot be empty")
+	EmptyRoleErr  = errors.New("role cannot be empty")
+	NilRequestErr = errors.New("request cannot be nil")
 )
 
 type JWTAuthenticator struct {
@@ -20,19 +26,27 @@ func NewJWTAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
 	}
 }
 
-func (a *JWTAuthenticator) GenerateToken(user *model.User) (string, error) {
-	if user == nil {
-		return "", errors.New("user cannot be nil")
+func (a *JWTAuthenticator) GenerateToken(id int, name, role string) (string, error) {
+	if id == 0 {
+		return "", ZeroIDErr
 	}
 
-	authorizedUser := model.AuthorizedUser{
-		ID:       user.ID,
-		Username: user.Username,
-		Role:     user.Role,
+	if name == "" {
+		return "", EmptyNameErr
+	}
+
+	if role == "" {
+		return "", EmptyRoleErr
+	}
+
+	user := map[string]interface{}{
+		"id":   id,
+		"name": name,
+		"role": role,
 	}
 
 	claims := jwt.MapClaims{
-		"user": authorizedUser,
+		"user": user,
 		"exp":  time.Now().Add(time.Hour * time.Duration(a.expiryHours)).Unix(),
 	}
 
@@ -58,7 +72,7 @@ func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, err
 
 func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
 	if r == nil {
-		return nil, errors.New("request cannot be nil")
+		return nil, NilRequestErr
 	}
 
 	cookie, err := r.Cookie("token")
