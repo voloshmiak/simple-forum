@@ -21,7 +21,7 @@ func (u *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 
 	err := u.conn.QueryRow(query, email).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Name,
 		&user.Email,
 		&user.PasswordHash,
 		&user.CreatedAt,
@@ -44,7 +44,7 @@ func (u *UserRepository) GetUserByUsername(username string) (*model.User, error)
 
 	err := u.conn.QueryRow(query, username).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Name,
 		&user.Email,
 		&user.PasswordHash,
 		&user.CreatedAt,
@@ -63,7 +63,7 @@ func (u *UserRepository) InsertUser(user *model.User) (int, error) {
 	query := `INSERT INTO users (username, email, password_hash, created_at, role) VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
 	err := u.conn.QueryRow(query,
-		user.Username,
+		user.Name,
 		user.Email,
 		user.PasswordHash,
 		user.CreatedAt,
@@ -83,7 +83,7 @@ func (u *UserRepository) GetUserByID(id int) (*model.User, error) {
 
 	err := u.conn.QueryRow(query, id).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Name,
 		&user.Email,
 		&user.PasswordHash,
 		&user.CreatedAt,

@@ -78,10 +78,10 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 		td.IsAdmin = true
 	}
 
-	userName := user["username"].(string)
+	userName := user["name"].(string)
 
 	stringMap := make(map[string]string)
-	stringMap["username"] = userName
+	stringMap["name"] = userName
 
 	td.StringMap = stringMap
 

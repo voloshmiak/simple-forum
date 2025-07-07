@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"simple-forum/internal/app"
-	"simple-forum/internal/model"
 )
 
 func AuthMiddleware(app *app.App) func(http.Handler) http.HandlerFunc {
@@ -18,18 +17,7 @@ func AuthMiddleware(app *app.App) func(http.Handler) http.HandlerFunc {
 
 			user := claims["user"].(map[string]interface{})
 
-			userIDFloat := user["id"].(float64)
-			userIDInt := int(userIDFloat)
-			username := user["username"].(string)
-			role := user["role"].(string)
-
-			authorizedUser := &model.AuthorizedUser{
-				ID:       userIDInt,
-				Username: username,
-				Role:     role,
-			}
-
-			ctx := context.WithValue(r.Context(), "user", authorizedUser)
+			ctx := context.WithValue(r.Context(), "user", user)
 
 			next.ServeHTTP(rw, r.WithContext(ctx))
 		}

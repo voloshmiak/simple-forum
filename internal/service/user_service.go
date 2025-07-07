@@ -72,7 +72,7 @@ func (u *UserService) Register(username, email, password1, password2 string) err
 	}
 
 	user := &model.User{
-		Username:  username,
+		Name:      username,
 		Email:     email,
 		Role:      "user",
 		CreatedAt: time.Now(),

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"simple-forum/internal/app"
@@ -93,9 +94,31 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := r.Context().Value("user").(*model.AuthorizedUser)
-	userID := user.ID
-	userName := user.Username
+	userValue := r.Context().Value("user")
+	if userValue == nil {
+		p.handleError(rw, "Unauthorized", errors.New("user not found in context"), http.StatusUnauthorized)
+		return
+	}
+
+	user, ok := userValue.(map[string]interface{})
+	if !ok {
+		p.handleError(rw, "Internal Server Error", errors.New("invalid user type in context"), http.StatusInternalServerError)
+		return
+	}
+
+	userIDFloat, ok := user["id"].(float64)
+	if !ok {
+		p.handleError(rw, "Internal Server Error", errors.New("invalid user ID type"), http.StatusInternalServerError)
+		return
+	}
+
+	userName, ok := user["name"].(string)
+	if !ok {
+		p.handleError(rw, "Internal Server Error", errors.New("invalid user name type"), http.StatusInternalServerError)
+		return
+	}
+
+	userID := int(userIDFloat)
 
 	err = p.app.PostService.CreatePost(title, content, id, userID, userName)
 	if err != nil {

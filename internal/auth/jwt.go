@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ZeroIDErr     = errors.New("id cannot be 0")
-	EmptyNameErr  = errors.New("username cannot be empty")
-	EmptyRoleErr  = errors.New("role cannot be empty")
-	NilRequestErr = errors.New("request cannot be nil")
+	ErrZeroID     = errors.New("id cannot be 0")
+	ErrEmptyName  = errors.New("username cannot be empty")
+	ErrEmptyRole  = errors.New("role cannot be empty")
+	ErrNilRequest = errors.New("request cannot be nil")
 )
 
 type JWTAuthenticator struct {
@@ -28,15 +28,15 @@ func NewJWTAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
 
 func (a *JWTAuthenticator) GenerateToken(id int, name, role string) (string, error) {
 	if id == 0 {
-		return "", ZeroIDErr
+		return "", ErrZeroID
 	}
 
 	if name == "" {
-		return "", EmptyNameErr
+		return "", ErrEmptyName
 	}
 
 	if role == "" {
-		return "", EmptyRoleErr
+		return "", ErrEmptyRole
 	}
 
 	user := map[string]interface{}{
@@ -72,7 +72,7 @@ func (a *JWTAuthenticator) ValidateToken(tokenString string) (jwt.MapClaims, err
 
 func (a *JWTAuthenticator) GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error) {
 	if r == nil {
-		return nil, NilRequestErr
+		return nil, ErrNilRequest
 	}
 
 	cookie, err := r.Cookie("token")

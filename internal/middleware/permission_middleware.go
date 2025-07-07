@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"simple-forum/internal/app"
-	"simple-forum/internal/model"
 	"strconv"
 )
 
@@ -15,10 +14,37 @@ func PermissionMiddleware(app *app.App, permissions ...string) func(http.Handler
 
 	return func(next http.Handler) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
-			user := r.Context().Value("user").(*model.AuthorizedUser)
+			userValue := r.Context().Value("user")
+			if userValue == nil {
+				http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			user, ok := userValue.(map[string]interface{})
+			if !ok {
+				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
+				app.Logger.Error("Invalid user type in context", "method", r.Method, "path", r.URL.Path)
+				return
+			}
+
+			userIDFloat, ok := user["id"].(float64)
+			if !ok {
+				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
+				app.Logger.Error("Invalid user ID type", "method", r.Method, "path", r.URL.Path)
+				return
+			}
+
+			userRole, ok := user["role"].(string)
+			if !ok {
+				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
+				app.Logger.Error("Invalid user role type", "method", r.Method, "path", r.URL.Path)
+				return
+			}
+
+			userID := int(userIDFloat)
 
 			if _, ok := requiredPerms["admin"]; ok {
-				if user.Role == "admin" {
+				if userRole == "admin" {
 					next.ServeHTTP(rw, r)
 					return
 				}
@@ -42,7 +68,7 @@ func PermissionMiddleware(app *app.App, permissions ...string) func(http.Handler
 					return
 				}
 
-				if post.AuthorId == user.ID {
+				if post.AuthorId == userID {
 					next.ServeHTTP(rw, r)
 					return
 				}

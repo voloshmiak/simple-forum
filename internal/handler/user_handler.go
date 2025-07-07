@@ -82,7 +82,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		page := &model.Page{
 			Error: errorMsg,
 		}
-		err := u.app.Templates.Render(rw, r, "login.page", page)
+		err = u.app.Templates.Render(rw, r, "login.page", page)
 		if err != nil {
 			u.handleError(rw, "Unable to render template", err, http.StatusInternalServerError)
 			return
@@ -90,7 +90,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := u.app.Authenticator.GenerateToken(user)
+	token, err := u.app.Authenticator.GenerateToken(user.ID, user.Name, user.Role)
 	if err != nil {
 		u.handleError(rw, "Failed to generate token", err, http.StatusInternalServerError)
 		return
