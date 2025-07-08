@@ -21,37 +21,39 @@ func PermissionMiddleware(l *slog.Logger, ps handler.PostService, permissions ..
 				return
 			}
 
+			msg := "Failed to get user"
+
 			user, ok := userValue.(map[string]interface{})
 			if !ok {
-				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
-				l.Error("Invalid user type in context", "method", r.Method, "path", r.URL.Path)
+				http.Error(rw, msg, http.StatusInternalServerError)
+				l.Error(msg, "method", r.Method, "path", r.URL.Path)
 				return
 			}
 
 			userIDFloat, ok := user["id"].(float64)
 			if !ok {
-				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
-				l.Error("Invalid user ID type", "method", r.Method, "path", r.URL.Path)
+				http.Error(rw, msg, http.StatusInternalServerError)
+				l.Error(msg, "method", r.Method, "path", r.URL.Path)
 				return
 			}
 
 			userRole, ok := user["role"].(string)
 			if !ok {
-				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
-				l.Error("Invalid user role type", "method", r.Method, "path", r.URL.Path)
+				http.Error(rw, msg, http.StatusInternalServerError)
+				l.Error(msg, "method", r.Method, "path", r.URL.Path)
 				return
 			}
 
 			userID := int(userIDFloat)
 
-			if _, ok := requiredPerms["admin"]; ok {
+			if _, ok = requiredPerms["admin"]; ok {
 				if userRole == "admin" {
 					next.ServeHTTP(rw, r)
 					return
 				}
 			}
 
-			if _, ok := requiredPerms["author"]; ok {
+			if _, ok = requiredPerms["author"]; ok {
 				stringPostID := r.PathValue("postID")
 				id, err := strconv.Atoi(stringPostID)
 				if err != nil {
