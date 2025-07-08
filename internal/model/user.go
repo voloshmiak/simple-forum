@@ -10,9 +10,3 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 	Role         string    `json:"role"`
 }
-
-type AuthorizedUser struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
