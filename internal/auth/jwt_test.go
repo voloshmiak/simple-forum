@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-var authenticator = NewJWTAuthenticator("mysecretkey", 24)
-
 func TestGenerateToken(t *testing.T) {
+	authenticator := NewJWTAuthenticator("mysecretkey", 24)
+
 	tests := []struct {
 		name     string
 		id       int
@@ -42,7 +42,7 @@ func TestGenerateToken(t *testing.T) {
 			err:      "username cannot be empty",
 		},
 		{
-			name:     "Zero User role",
+			name:     "Empty User role",
 			id:       1,
 			username: "testuser",
 			role:     "",
@@ -79,6 +79,7 @@ func TestGenerateToken(t *testing.T) {
 }
 
 func TestValidateToken(t *testing.T) {
+	authenticator := NewJWTAuthenticator("mysecretkey", 24)
 	validToken, _ := authenticator.GenerateToken(1, "testuser", "user")
 	expiredToken, _ := NewJWTAuthenticator("mysecretkey", -1).GenerateToken(1, "testuser", "user")
 	wrongSecretToken, _ := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(1, "testuser", "user")
@@ -142,6 +143,7 @@ func TestValidateToken(t *testing.T) {
 }
 
 func TestGetClaimsFromRequest(t *testing.T) {
+	authenticator := NewJWTAuthenticator("mysecretkey", 24)
 	token, _ := authenticator.GenerateToken(1, "testuser", "user")
 
 	validRequest := httptest.NewRequest(http.MethodGet, "/", nil)
