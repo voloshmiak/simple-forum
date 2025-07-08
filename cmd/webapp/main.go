@@ -31,7 +31,7 @@ func main() {
 
 func run() error {
 	// Config
-	cfg, err := config.New()
+	cfg, err := config.New(".env")
 	if err != nil {
 		return err
 	}

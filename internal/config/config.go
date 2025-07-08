@@ -26,10 +26,10 @@ type Config struct {
 	}
 }
 
-func New() (*Config, error) {
+func New(path string) (*Config, error) {
 	var config Config
 
-	if err := cleanenv.ReadConfig(".env", &config); err != nil {
+	if err := cleanenv.ReadConfig(path, &config); err != nil {
 		return nil, err
 	}
 
