@@ -2,25 +2,37 @@ package handler
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
-	"simple-forum/internal/app"
+	"simple-forum/internal/auth"
 	"simple-forum/internal/model"
 	"simple-forum/internal/service"
+	"simple-forum/internal/template"
 	"time"
 )
 
-type UserHandler struct {
-	app *app.App
+type UserService interface {
+	Login(email, password string) (*model.User, error)
+	Register(username, email, password1, password2 string) error
 }
 
-func NewUserHandler(app *app.App) *UserHandler {
-	return &UserHandler{app: app}
+type UserHandler struct {
+	l  *slog.Logger
+	a  *auth.JWTAuthenticator
+	t  *template.Templates
+	us UserService
+}
+
+func NewUserHandler(l *slog.Logger, a *auth.JWTAuthenticator, t *template.Templates, us UserService) *UserHandler {
+	return &UserHandler{l: l, t: t, a: a, us: us}
 }
 
 func (u *UserHandler) GetRegister(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "register.page", new(model.Page))
+	err := u.t.Render(rw, r, "register.page", new(model.Page))
 	if err != nil {
-		u.app.Responder.InternalServerError(rw, "Unable to render template", err)
+		msg := "Unable to render template"
+		http.Error(rw, msg, http.StatusInternalServerError)
+		u.l.Error(msg, "error", err.Error())
 		return
 	}
 }
@@ -31,7 +43,7 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 	password1 := r.PostFormValue("password1")
 	password2 := r.PostFormValue("password2")
 
-	err := u.app.UserService.Register(username, email, password1, password2)
+	err := u.us.Register(username, email, password1, password2)
 	if err != nil {
 		var errorMsg string
 		switch {
@@ -45,9 +57,11 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 		page := &model.Page{
 			Error: errorMsg,
 		}
-		err = u.app.Templates.Render(rw, r, "register.page", page)
+		err = u.t.Render(rw, r, "register.page", page)
 		if err != nil {
-			u.app.Responder.InternalServerError(rw, "Unable to render template", err)
+			msg := "Unable to render template"
+			http.Error(rw, msg, http.StatusInternalServerError)
+			u.l.Error(msg, "error", err.Error())
 			return
 		}
 		return
@@ -57,9 +71,11 @@ func (u *UserHandler) PostRegister(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UserHandler) GetLogin(rw http.ResponseWriter, r *http.Request) {
-	err := u.app.Templates.Render(rw, r, "login.page", new(model.Page))
+	err := u.t.Render(rw, r, "login.page", new(model.Page))
 	if err != nil {
-		u.app.Responder.InternalServerError(rw, "Unable to render template", err)
+		msg := "Unable to render template"
+		http.Error(rw, msg, http.StatusInternalServerError)
+		u.l.Error(msg, "error", err.Error())
 		return
 	}
 }
@@ -68,7 +84,7 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
 
-	user, err := u.app.UserService.Login(email, password)
+	user, err := u.us.Login(email, password)
 	if err != nil {
 		var errorMsg string
 		switch {
@@ -82,17 +98,21 @@ func (u *UserHandler) PostLogin(rw http.ResponseWriter, r *http.Request) {
 		page := &model.Page{
 			Error: errorMsg,
 		}
-		err = u.app.Templates.Render(rw, r, "login.page", page)
+		err = u.t.Render(rw, r, "login.page", page)
 		if err != nil {
-			u.app.Responder.InternalServerError(rw, "Unable to render template", err)
+			msg := "Unable to render template"
+			http.Error(rw, msg, http.StatusInternalServerError)
+			u.l.Error(msg, "error", err.Error())
 			return
 		}
 		return
 	}
 
-	token, err := u.app.Authenticator.GenerateToken(user.ID, user.Name, user.Role)
+	token, err := u.a.GenerateToken(user.ID, user.Name, user.Role)
 	if err != nil {
-		u.app.Responder.InternalServerError(rw, "Failed to generate token", err)
+		msg := "Failed to generate token"
+		http.Error(rw, msg, http.StatusInternalServerError)
+		u.l.Error(msg, "error", err.Error())
 		return
 	}
 

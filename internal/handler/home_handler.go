@@ -1,33 +1,40 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
-	"simple-forum/internal/app"
 	"simple-forum/internal/model"
+	"simple-forum/internal/template"
 )
 
 type HomeHandler struct {
-	app *app.App
+	l *slog.Logger
+	t *template.Templates
 }
 
-func NewHomeHandler(app *app.App) *HomeHandler {
+func NewHomeHandler(l *slog.Logger, t *template.Templates) *HomeHandler {
 	return &HomeHandler{
-		app: app,
+		l: l,
+		t: t,
 	}
 }
 
 func (h *HomeHandler) GetHome(rw http.ResponseWriter, r *http.Request) {
-	err := h.app.Templates.Render(rw, r, "home.page", new(model.Page))
+	err := h.t.Render(rw, r, "home.page", new(model.Page))
 	if err != nil {
-		h.app.Responder.InternalServerError(rw, "Unable to render template", err)
+		msg := "Unable to render template"
+		http.Error(rw, msg, http.StatusInternalServerError)
+		h.l.Error(msg, "error", err.Error())
 		return
 	}
 }
 
 func (h *HomeHandler) GetAbout(rw http.ResponseWriter, r *http.Request) {
-	err := h.app.Templates.Render(rw, r, "about.page", new(model.Page))
+	err := h.t.Render(rw, r, "about.page", new(model.Page))
 	if err != nil {
-		h.app.Responder.InternalServerError(rw, "Unable to render template", err)
+		msg := "Unable to render template"
+		http.Error(rw, msg, http.StatusInternalServerError)
+		h.l.Error(msg, "error", err.Error())
 		return
 	}
 }
