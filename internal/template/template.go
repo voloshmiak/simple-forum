@@ -33,13 +33,10 @@ func NewTemplates(env, path string, auther *auth.JWTAuthenticator) *Templates {
 func parseTemplates(basePath string) map[string]*template.Template {
 	templates := map[string]*template.Template{}
 
-	// getting path to templates
-	templatesPath := basePath
-
 	// parsing templates
-	layouts, _ := filepath.Glob(filepath.Join(templatesPath, "*.layout.gohtml"))
+	layouts, _ := filepath.Glob(filepath.Join(basePath, "*.layout.gohtml"))
 
-	pages, _ := filepath.Glob(filepath.Join(templatesPath, "*.page.gohtml"))
+	pages, _ := filepath.Glob(filepath.Join(basePath, "*.page.gohtml"))
 
 	for _, page := range pages {
 		name := filepath.Base(page)
