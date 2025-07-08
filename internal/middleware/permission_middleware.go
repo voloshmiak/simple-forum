@@ -58,16 +58,12 @@ func PermissionMiddleware(l *slog.Logger, ps handler.PostService, permissions ..
 				id, err := strconv.Atoi(stringPostID)
 				if err != nil {
 					http.Error(rw, "Invalid Post ID", http.StatusBadRequest)
-					l.Error(err.Error(), "method", r.Method, "status",
-						http.StatusBadRequest, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 					return
 				}
 
 				post, err := ps.GetPostByID(id)
 				if err != nil {
 					http.Error(rw, "Post Not Found", http.StatusNotFound)
-					l.Error(err.Error(), "method", r.Method, "status",
-						http.StatusNotFound, "path", r.URL.Path, "context", map[string]interface{}{"postID": stringPostID})
 					return
 				}
 
