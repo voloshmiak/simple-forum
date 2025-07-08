@@ -1,60 +1,118 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func TestGenerateToken(t *testing.T) {
-	authenticator := NewJWTAuthenticator("mysecretkey", 24)
-
+func TestTokenPayload_Valid(t *testing.T) {
 	tests := []struct {
-		name     string
-		id       int
-		username string
-		role     string
-		valid    bool
-		err      string
+		name    string
+		payload *TokenPayload
+		valid   bool
+		err     error
 	}{
 		{
-			name:     "Valid User",
-			id:       1,
-			username: "testuser",
-			role:     "user",
-			valid:    true,
+			name: "Valid User",
+			payload: &TokenPayload{
+				ID:   1,
+				Name: "testuser",
+				Role: "user",
+			},
+			valid: true,
 		},
 		{
-			name:     "Zero User ID",
-			id:       0,
-			username: "testuser",
-			role:     "user",
-			valid:    false,
-			err:      "id cannot be 0",
+			name: "Zero User ID",
+			payload: &TokenPayload{
+				ID:   0,
+				Name: "testuser",
+				Role: "user",
+			},
+			valid: false,
+			err:   ErrZeroID,
 		},
 		{
-			name:     "Empty User name",
-			id:       1,
-			username: "",
-			role:     "user",
-			valid:    false,
-			err:      "username cannot be empty",
+			name: "Empty User name",
+			payload: &TokenPayload{
+				ID:   1,
+				Name: "",
+				Role: "user",
+			},
+			valid: false,
+			err:   ErrEmptyName,
 		},
 		{
-			name:     "Empty User role",
-			id:       1,
-			username: "testuser",
-			role:     "",
-			valid:    false,
-			err:      "role cannot be empty",
+			name: "Empty User role",
+			payload: &TokenPayload{
+				ID:   1,
+				Name: "testuser",
+				Role: "",
+			},
+			valid: false,
+			err:   ErrEmptyRole,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			err := tt.payload.Valid()
 
-			token, err := authenticator.GenerateToken(tt.id, tt.username, tt.role)
+			if tt.valid {
+				if err != nil {
+					t.Errorf("%s: expected no error, but got %s", tt.name, err.Error())
+				}
+			} else {
+				if err == nil {
+					t.Errorf("%s: expected %s, got nil", tt.name, tt.err.Error())
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("%s: expected %s, got %s", tt.name, tt.err.Error(), err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateToken(t *testing.T) {
+	authenticator := NewJWTAuthenticator("mysecretkey", 24)
+
+	tests := []struct {
+		name  string
+		token *TokenPayload
+		valid bool
+		err   error
+	}{
+		{
+			name: "Valid User",
+			token: &TokenPayload{
+				ID:   1,
+				Name: "testuser",
+				Role: "user",
+			},
+			valid: true,
+		},
+		{
+			name: "Invalid User",
+			token: &TokenPayload{
+				ID:   0,
+				Name: "",
+				Role: "",
+			},
+			valid: false,
+			err:   ErrZeroID,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			token, err := authenticator.GenerateToken(tt.token)
 
 			if tt.valid {
 				if err != nil {
@@ -67,8 +125,8 @@ func TestGenerateToken(t *testing.T) {
 				if err == nil {
 					t.Errorf("%s: expected %s, got nil", tt.name, tt.err)
 				}
-				if tt.err != err.Error() {
-					t.Errorf("%s: expected %s, got %s", tt.name, tt.err, err.Error())
+				if !errors.Is(err, tt.err) {
+					t.Errorf("%s: expected %s, got %s", tt.name, tt.err.Error(), err.Error())
 				}
 				if token != "" {
 					t.Errorf("%s: expected no token, but got %s", tt.name, token)
@@ -78,52 +136,65 @@ func TestGenerateToken(t *testing.T) {
 	}
 }
 
+func generateTestToken(secret string, expiryHours int, payload *TokenPayload) string {
+	claims := jwt.MapClaims{
+		"user": payload,
+		"exp":  time.Now().Add(time.Hour * time.Duration(expiryHours)).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, _ := token.SignedString([]byte(secret))
+	return signedToken
+}
+
 func TestValidateToken(t *testing.T) {
 	authenticator := NewJWTAuthenticator("mysecretkey", 24)
-	validToken, err := authenticator.GenerateToken(1, "testuser", "user")
-	if err != nil {
-		t.Fatal(err)
-	}
+	wrongSecretAuthenticator := NewJWTAuthenticator("wrongsecret", 24)
 
-	expiredToken, err := NewJWTAuthenticator("mysecretkey", -1).GenerateToken(1, "testuser", "user")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	wrongSecretToken, err := NewJWTAuthenticator("wrongsecret", 24).GenerateToken(1, "testuser", "user")
-	if err != nil {
-		t.Fatal(err)
+	validPayload := &TokenPayload{
+		ID:   1,
+		Name: "testuser",
+		Role: "admin",
 	}
 
 	tests := []struct {
-		name  string
-		token string
-		valid bool
-		err   string
+		name           string
+		token          string
+		expectedClaims jwt.MapClaims
+		valid          bool
+		err            error
 	}{
 		{
 			name:  "Valid Token",
-			token: validToken,
+			token: generateTestToken(authenticator.secret, 1, validPayload),
+			expectedClaims: jwt.MapClaims{
+				"user": map[string]interface{}{
+					"id":   float64(1),
+					"name": "testuser",
+					"role": "admin",
+				},
+			},
 			valid: true,
-			err:   "",
 		},
 		{
-			name:  "Malformed Token",
-			token: "token",
-			valid: false,
-			err:   "token is malformed: token contains an invalid number of segments",
+			name:           "Malformed Token",
+			token:          "token",
+			expectedClaims: nil,
+			valid:          false,
+			err:            jwt.ErrTokenMalformed,
 		},
 		{
-			name:  "Expired Token",
-			token: expiredToken,
-			valid: false,
-			err:   "token has invalid claims: token is expired",
+			name:           "Expired Token",
+			token:          generateTestToken(authenticator.secret, -1, validPayload),
+			expectedClaims: nil,
+			valid:          false,
+			err:            jwt.ErrTokenExpired,
 		},
 		{
-			name:  "Token with wrong signature",
-			token: wrongSecretToken,
-			valid: false,
-			err:   "token signature is invalid: signature is invalid",
+			name:           "Wrong Signature Token",
+			token:          generateTestToken(wrongSecretAuthenticator.secret, 1, validPayload),
+			expectedClaims: nil,
+			valid:          false,
+			err:            jwt.ErrTokenSignatureInvalid,
 		},
 	}
 
@@ -138,11 +209,14 @@ func TestValidateToken(t *testing.T) {
 				if claims == nil {
 					t.Errorf("%s: expected claims, got nil", tt.name)
 				}
+				if !reflect.DeepEqual(claims["user"], tt.expectedClaims["user"]) {
+					t.Errorf("%s: expected claims %s, got %s", tt.name, tt.expectedClaims["user"], claims["user"])
+				}
 			} else {
 				if err == nil {
 					t.Errorf("%s: expected %s, got nil", tt.name, tt.err)
 				}
-				if tt.err != err.Error() {
+				if !errors.Is(err, tt.err) {
 					t.Errorf("%s: expected %s, got %s", tt.name, tt.err, err.Error())
 				}
 				if claims != nil {
@@ -155,58 +229,62 @@ func TestValidateToken(t *testing.T) {
 
 func TestGetClaimsFromRequest(t *testing.T) {
 	authenticator := NewJWTAuthenticator("mysecretkey", 24)
-	token, err := authenticator.GenerateToken(1, "testuser", "user")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	validRequest := httptest.NewRequest(http.MethodGet, "/", nil)
-	validRequest.AddCookie(&http.Cookie{
-		Name:     "token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		Expires:  time.Now().Add(time.Hour * 24),
-	})
-
-	invalidRequest := httptest.NewRequest(http.MethodGet, "/", nil)
-	invalidRequest.AddCookie(&http.Cookie{
-		Name:     "token",
-		Value:    "invalidtoken",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-	})
 
 	tests := []struct {
-		name    string
-		request *http.Request
-		valid   bool
-		err     string
+		name           string
+		request        *http.Request
+		expectedClaims jwt.MapClaims
+		valid          bool
+		err            error
 	}{
 		{
-			name:    "Valid Request with Token",
-			request: validRequest,
-			valid:   true,
+			name: "Valid Request with Cookie",
+			request: func() *http.Request {
+				token := generateTestToken(authenticator.secret, 1, &TokenPayload{
+					ID:   1,
+					Name: "testuser",
+					Role: "admin",
+				})
+				r := httptest.NewRequest(http.MethodGet, "/", nil)
+				r.AddCookie(&http.Cookie{Name: "token", Value: token})
+				return r
+			}(),
+			expectedClaims: jwt.MapClaims{
+				"user": map[string]interface{}{
+					"id":   float64(1),
+					"name": "testuser",
+					"role": "admin",
+				},
+			},
+			valid: true,
 		},
 		{
-			name:    "Nil request",
-			request: nil,
-			valid:   false,
-			err:     "request cannot be nil",
+			name: "Request with Invalid Token",
+			request: func() *http.Request {
+				r := httptest.NewRequest(http.MethodGet, "/", nil)
+				r.AddCookie(&http.Cookie{Name: "token", Value: "invalidtoken"})
+				return r
+			}(),
+			expectedClaims: nil,
+			valid:          false,
+			err:            jwt.ErrTokenMalformed,
 		},
 		{
-			name:    "Request without Token",
-			request: httptest.NewRequest(http.MethodGet, "/", nil),
-			valid:   false,
-			err:     "http: named cookie not present",
+			name: "Request without Token",
+			request: func() *http.Request {
+				r := httptest.NewRequest(http.MethodGet, "/", nil)
+				return r
+			}(),
+			expectedClaims: nil,
+			valid:          false,
+			err:            http.ErrNoCookie,
 		},
 		{
-			name:    "Request with Invalid Token",
-			request: invalidRequest,
-			valid:   false,
-			err:     "token is malformed: token contains an invalid number of segments",
+			name:           "Nil Request",
+			request:        nil,
+			expectedClaims: nil,
+			valid:          false,
+			err:            ErrNilRequest,
 		},
 	}
 
@@ -221,12 +299,15 @@ func TestGetClaimsFromRequest(t *testing.T) {
 				if claims == nil {
 					t.Errorf("%s: expected claims, got nil", tt.name)
 				}
+				if !reflect.DeepEqual(claims["user"], tt.expectedClaims["user"]) {
+					t.Errorf("%s: expected claims %s, got %s", tt.name, tt.expectedClaims["user"], claims["user"])
+				}
 			} else {
 				if err == nil {
 					t.Errorf("%s: expected an error, got nil", tt.name)
 				}
-				if tt.err != err.Error() {
-					t.Errorf("%s: expected %s, got %s", tt.name, tt.err, err.Error())
+				if !errors.Is(err, tt.err) {
+					t.Errorf("%s: expected %s, got %s", tt.name, tt.err.Error(), err.Error())
 				}
 				if claims != nil {
 					t.Errorf("%s: expected no claims, but got %s", tt.name, claims)
