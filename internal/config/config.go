@@ -20,7 +20,7 @@ type Config struct {
 		Expiration int    `env:"JWT_EXPIRATION_HOURS" env-default:"24"`
 	}
 	Path struct {
-		ToMigrations string `env:"MIGRATIONS_PATH" env-default:"./internal/db/migrations"`
+		ToMigrations string `env:"MIGRATIONS_PATH" env-default:"./migrations"`
 		ToStatic     string `env:"STATIC_PATH" env-default:"./web/static"`
 		ToTemplates  string `env:"TEMPLATES_PATH" env-default:"./web/templates"`
 	}
