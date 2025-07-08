@@ -27,7 +27,7 @@ A web application built with Golang, primarily utilizing standard library packag
 
 ## Migrations
 
-Database migrations are applied automatically when the application starts. Migration files are located in the `internal/db/migrations/` directory.
+Database migrations are applied automatically when the application starts. Migration files are located in the `migrations/` directory.
 
 ## Project Structure
 
@@ -41,18 +41,16 @@ simple-forum
 │   └── webapp/           # Application entry point
 │       └── main.go
 ├── internal/             # Internal application logic
-│   ├── app/              # Application running configuration and assembly
 │   ├── auth/             # Authentication logic (JWT)
 │   ├── config/           # Application configuration
-│   ├── db/               # Database connection and migration logic
-│   │   └── migrations/   # Database migration files
+│   ├── database/         # Database connection and migration logic
 │   ├── handler/          # HTTP handlers
 │   ├── middleware/       # HTTP middleware
 │   ├── model/            # Data models
 │   ├── repository/       # Database interaction logic
-│   ├── router/           # Route definitions
 │   ├── service/          # Business logic
 │   └── template/         # HTML template handling
+├── migrations/           # Database migration files
 ├── web/
     ├── static/           # Static files (CSS, JS, images)
     └── templates/        # HTML templates
@@ -72,7 +70,7 @@ The application uses the following environment variables, which can be configure
 -   `APP_ENV`: Application environment, affects template caching (e.g., `development` or `production`, example: `development`)
 -   `TEMPLATES_PATH`: Path to the HTML templates directory (example: `web/templates`)
 -   `STATIC_PATH`: Path to the static files directory (example: `web/static`)
--   `MIGRATIONS_PATH`: Path to the migrations directory (example: `internal/db/migrations`)
+-   `MIGRATIONS_PATH`: Path to the migrations directory (example: `migrations`)
 
 ## Login Credentials (Examples)
 
@@ -80,4 +78,4 @@ The application uses the following environment variables, which can be configure
 -   Email: `admin@email.com`
 -   Password: `12345`
 
-You can register other users via the registration form in the application.
+You can register other users via the registration form in the
