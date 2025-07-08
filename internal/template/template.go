@@ -18,7 +18,7 @@ type Templates struct {
 	authenticator *auth.JWTAuthenticator
 }
 
-func NewTemplates(env, path string, auther *auth.JWTAuthenticator) *Templates {
+func NewTemplates(env, path string, a *auth.JWTAuthenticator) *Templates {
 	templateAbsPath, _ := filepath.Abs(path)
 	templateSlashPath := filepath.ToSlash(templateAbsPath)
 	cache := parseTemplates(templateSlashPath)
@@ -26,7 +26,7 @@ func NewTemplates(env, path string, auther *auth.JWTAuthenticator) *Templates {
 		cache:         cache,
 		env:           env,
 		path:          templateSlashPath,
-		authenticator: auther,
+		authenticator: a,
 	}
 }
 
@@ -86,6 +86,18 @@ func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page 
 }
 
 func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
+	if rw == nil {
+		return errors.New("ResponseWriter is nil")
+	}
+
+	if r == nil {
+		return errors.New("Request is nil")
+	}
+
+	if td == nil {
+		td = new(model.Page)
+	}
+
 	// cache if in development mode
 	if m.env == "development" {
 		templates := parseTemplates(m.path)
