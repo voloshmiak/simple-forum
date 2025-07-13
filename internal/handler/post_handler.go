@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"log/slog"
 	"net/http"
 	"simple-forum/internal/auth"
@@ -9,6 +10,12 @@ import (
 	"simple-forum/internal/template"
 	"strconv"
 )
+
+type Authenticator interface {
+	GenerateToken(userID int, userName, userRole string) (string, error)
+	ValidateToken(tokenString string) (jwt.MapClaims, error)
+	GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error)
+}
 
 type PostService interface {
 	GetPostByID(postID int) (*model.Post, error)
@@ -20,7 +27,7 @@ type PostService interface {
 
 type PostHandler struct {
 	l  *slog.Logger
-	a  *auth.JWTAuthenticator
+	a  Authenticator
 	t  *template.Templates
 	ps PostService
 	ts TopicService
@@ -124,7 +131,7 @@ func (p *PostHandler) PostCreatePost(rw http.ResponseWriter, r *http.Request) {
 	user, ok := userValue.(map[string]interface{})
 	if !ok {
 		http.Error(rw, msg, http.StatusInternalServerError)
-		p.l.Error(msg, "error", "invalid user type in context")
+		p.l.Error(msg, "error", "invalid user type")
 		return
 	}
 

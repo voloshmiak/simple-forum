@@ -5,8 +5,8 @@ import (
 )
 
 type Config struct {
-	Env string `env:"APP_ENV" env-default:"development"`
-	DB  struct {
+	InProd bool `env:"IN_PROD" env-default:"false"`
+	DB     struct {
 		Addr string `env:"DB_ADDR" env-default:"postgres://postgres:your_password_here@localhost:5432/forum-database?sslmode=disable"`
 	}
 	Server struct {

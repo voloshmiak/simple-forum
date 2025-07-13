@@ -2,11 +2,15 @@ package middleware
 
 import (
 	"context"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"simple-forum/internal/auth"
 )
 
-func AuthMiddleware(a *auth.JWTAuthenticator) func(http.Handler) http.HandlerFunc {
+type Authenticator interface {
+	GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error)
+}
+
+func AuthMiddleware(a Authenticator) func(http.Handler) http.HandlerFunc {
 	return func(next http.Handler) http.HandlerFunc {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			claims, err := a.GetClaimsFromRequest(r)

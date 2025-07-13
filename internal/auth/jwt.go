@@ -14,28 +14,6 @@ var (
 	ErrNilRequest = errors.New("request cannot be nil")
 )
 
-type TokenPayload struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
-}
-
-func (t *TokenPayload) Valid() error {
-	if t.ID == 0 {
-		return ErrZeroID
-	}
-
-	if t.Name == "" {
-		return ErrEmptyName
-	}
-
-	if t.Role == "" {
-		return ErrEmptyRole
-	}
-
-	return nil
-}
-
 type JWTAuthenticator struct {
 	secret      string
 	expiryHours int
@@ -48,14 +26,26 @@ func NewJWTAuthenticator(secret string, expiryHours int) *JWTAuthenticator {
 	}
 }
 
-func (a *JWTAuthenticator) GenerateToken(payload *TokenPayload) (string, error) {
-	if err := payload.Valid(); err != nil {
-		return "", err
+func (a *JWTAuthenticator) GenerateToken(userID int, userName, userRole string) (string, error) {
+	if userID == 0 {
+		return "", ErrZeroID
+	}
+
+	if userName == "" {
+		return "", ErrEmptyName
+	}
+
+	if userRole == "" {
+		return "", ErrEmptyRole
 	}
 
 	claims := jwt.MapClaims{
-		"user": payload,
-		"exp":  time.Now().Add(time.Hour * time.Duration(a.expiryHours)).Unix(),
+		"user": map[string]interface{}{
+			"id":   userID,
+			"name": userName,
+			"role": userRole,
+		},
+		"exp": time.Now().Add(time.Hour * time.Duration(a.expiryHours)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

@@ -11,108 +11,54 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func TestTokenPayload_Valid(t *testing.T) {
-	tests := []struct {
-		name    string
-		payload *TokenPayload
-		valid   bool
-		err     error
-	}{
-		{
-			name: "Valid User",
-			payload: &TokenPayload{
-				ID:   1,
-				Name: "testuser",
-				Role: "user",
-			},
-			valid: true,
-		},
-		{
-			name: "Zero User ID",
-			payload: &TokenPayload{
-				ID:   0,
-				Name: "testuser",
-				Role: "user",
-			},
-			valid: false,
-			err:   ErrZeroID,
-		},
-		{
-			name: "Empty User name",
-			payload: &TokenPayload{
-				ID:   1,
-				Name: "",
-				Role: "user",
-			},
-			valid: false,
-			err:   ErrEmptyName,
-		},
-		{
-			name: "Empty User role",
-			payload: &TokenPayload{
-				ID:   1,
-				Name: "testuser",
-				Role: "",
-			},
-			valid: false,
-			err:   ErrEmptyRole,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.payload.Valid()
-
-			if tt.valid {
-				if err != nil {
-					t.Errorf("%s: expected no error, but got %s", tt.name, err.Error())
-				}
-			} else {
-				if err == nil {
-					t.Errorf("%s: expected %s, got nil", tt.name, tt.err.Error())
-				}
-
-				if !errors.Is(err, tt.err) {
-					t.Errorf("%s: expected %s, got %s", tt.name, tt.err.Error(), err.Error())
-				}
-			}
-		})
-	}
-}
-
-func TestGenerateToken(t *testing.T) {
+func TestJWTAuthenticator_GenerateToken(t *testing.T) {
+	t.Parallel()
 	authenticator := NewJWTAuthenticator("mysecretkey", 24)
 
 	tests := []struct {
-		name  string
-		token *TokenPayload
-		valid bool
-		err   error
+		name     string
+		userID   int
+		userName string
+		userRole string
+		valid    bool
+		err      error
 	}{
 		{
-			name: "Valid User",
-			token: &TokenPayload{
-				ID:   1,
-				Name: "testuser",
-				Role: "user",
-			},
-			valid: true,
+			name:     "Valid User",
+			userID:   1,
+			userName: "testuser",
+			userRole: "user",
+			valid:    true,
 		},
 		{
-			name: "Invalid User",
-			token: &TokenPayload{
-				ID:   0,
-				Name: "",
-				Role: "",
-			},
-			valid: false,
-			err:   ErrZeroID,
+			name:     "Invalid User ID",
+			userID:   0,
+			userName: "testuser",
+			userRole: "user",
+			valid:    false,
+			err:      ErrZeroID,
+		},
+		{
+			name:     "Invalid User name",
+			userID:   1,
+			userName: "",
+			userRole: "user",
+			valid:    false,
+			err:      ErrEmptyName,
+		},
+		{
+			name:     "Invalid User role",
+			userID:   1,
+			userName: "testuser",
+			userRole: "",
+			valid:    false,
+			err:      ErrEmptyRole,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			token, err := authenticator.GenerateToken(tt.token)
+			token, err := authenticator.GenerateToken(tt.userID, tt.userName, tt.userRole)
 
 			if tt.valid {
 				if err != nil {
@@ -136,25 +82,24 @@ func TestGenerateToken(t *testing.T) {
 	}
 }
 
-func generateTestToken(secret string, expiryHours int, payload *TokenPayload) string {
+func generateTestToken(secret string, expiryHours int, userID int, userName, userRole string) string {
 	claims := jwt.MapClaims{
-		"user": payload,
-		"exp":  time.Now().Add(time.Hour * time.Duration(expiryHours)).Unix(),
+		"user": map[string]interface{}{
+			"id":   userID,
+			"name": userName,
+			"role": userRole,
+		},
+		"exp": time.Now().Add(time.Hour * time.Duration(expiryHours)).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, _ := token.SignedString([]byte(secret))
 	return signedToken
 }
 
-func TestValidateToken(t *testing.T) {
+func TestJWTAuthenticator_ValidateToken(t *testing.T) {
+	t.Parallel()
 	authenticator := NewJWTAuthenticator("mysecretkey", 24)
 	wrongSecretAuthenticator := NewJWTAuthenticator("wrongsecret", 24)
-
-	validPayload := &TokenPayload{
-		ID:   1,
-		Name: "testuser",
-		Role: "admin",
-	}
 
 	tests := []struct {
 		name           string
@@ -165,7 +110,7 @@ func TestValidateToken(t *testing.T) {
 	}{
 		{
 			name:  "Valid Token",
-			token: generateTestToken(authenticator.secret, 1, validPayload),
+			token: generateTestToken(authenticator.secret, 1, 1, "testuser", "admin"),
 			expectedClaims: jwt.MapClaims{
 				"user": map[string]interface{}{
 					"id":   float64(1),
@@ -176,25 +121,22 @@ func TestValidateToken(t *testing.T) {
 			valid: true,
 		},
 		{
-			name:           "Malformed Token",
-			token:          "token",
-			expectedClaims: nil,
-			valid:          false,
-			err:            jwt.ErrTokenMalformed,
+			name:  "Malformed Token",
+			token: "token",
+			valid: false,
+			err:   jwt.ErrTokenMalformed,
 		},
 		{
-			name:           "Expired Token",
-			token:          generateTestToken(authenticator.secret, -1, validPayload),
-			expectedClaims: nil,
-			valid:          false,
-			err:            jwt.ErrTokenExpired,
+			name:  "Expired Token",
+			token: generateTestToken(authenticator.secret, -1, 1, "testuser", "admin"),
+			valid: false,
+			err:   jwt.ErrTokenExpired,
 		},
 		{
-			name:           "Wrong Signature Token",
-			token:          generateTestToken(wrongSecretAuthenticator.secret, 1, validPayload),
-			expectedClaims: nil,
-			valid:          false,
-			err:            jwt.ErrTokenSignatureInvalid,
+			name:  "Wrong Signature Token",
+			token: generateTestToken(wrongSecretAuthenticator.secret, 1, 1, "testuser", "admin"),
+			valid: false,
+			err:   jwt.ErrTokenSignatureInvalid,
 		},
 	}
 
@@ -227,7 +169,8 @@ func TestValidateToken(t *testing.T) {
 	}
 }
 
-func TestGetClaimsFromRequest(t *testing.T) {
+func TestJWTAuthenticator_GetClaimsFromRequest(t *testing.T) {
+	t.Parallel()
 	authenticator := NewJWTAuthenticator("mysecretkey", 24)
 
 	tests := []struct {
@@ -240,11 +183,7 @@ func TestGetClaimsFromRequest(t *testing.T) {
 		{
 			name: "Valid Request with Cookie",
 			request: func() *http.Request {
-				token := generateTestToken(authenticator.secret, 1, &TokenPayload{
-					ID:   1,
-					Name: "testuser",
-					Role: "admin",
-				})
+				token := generateTestToken(authenticator.secret, 1, 1, "testuser", "admin")
 				r := httptest.NewRequest(http.MethodGet, "/", nil)
 				r.AddCookie(&http.Cookie{Name: "token", Value: token})
 				return r
@@ -265,9 +204,8 @@ func TestGetClaimsFromRequest(t *testing.T) {
 				r.AddCookie(&http.Cookie{Name: "token", Value: "invalidtoken"})
 				return r
 			}(),
-			expectedClaims: nil,
-			valid:          false,
-			err:            jwt.ErrTokenMalformed,
+			valid: false,
+			err:   jwt.ErrTokenMalformed,
 		},
 		{
 			name: "Request without Token",
@@ -275,16 +213,14 @@ func TestGetClaimsFromRequest(t *testing.T) {
 				r := httptest.NewRequest(http.MethodGet, "/", nil)
 				return r
 			}(),
-			expectedClaims: nil,
-			valid:          false,
-			err:            http.ErrNoCookie,
+			valid: false,
+			err:   http.ErrNoCookie,
 		},
 		{
-			name:           "Nil Request",
-			request:        nil,
-			expectedClaims: nil,
-			valid:          false,
-			err:            ErrNilRequest,
+			name:    "Nil Request",
+			request: nil,
+			valid:   false,
+			err:     ErrNilRequest,
 		},
 	}
 

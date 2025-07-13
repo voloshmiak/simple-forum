@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -56,7 +57,10 @@ func run() error {
 	a := auth.NewJWTAuthenticator(cfg.JWT.Secret, cfg.JWT.Expiration)
 
 	// Templates
-	t := template.NewTemplates(cfg.Env, cfg.Path.ToTemplates, a)
+	t, err := template.NewTemplates(cfg.Path.ToTemplates, cfg.InProd, a)
+	if err != nil {
+		return fmt.Errorf("failed to create templates: %w", err)
+	}
 
 	// Repository
 	postRepository := repository.NewPostRepository(conn)

@@ -18,7 +18,7 @@ type UserService interface {
 
 type UserHandler struct {
 	l  *slog.Logger
-	a  *auth.JWTAuthenticator
+	a  Authenticator
 	t  *template.Templates
 	us UserService
 }

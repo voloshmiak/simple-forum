@@ -20,7 +20,7 @@ type TopicService interface {
 
 type TopicHandler struct {
 	l  *slog.Logger
-	a  *auth.JWTAuthenticator
+	a  Authenticator
 	t  *template.Templates
 	ps PostService
 	ts TopicService

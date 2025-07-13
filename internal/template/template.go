@@ -2,41 +2,67 @@ package template
 
 import (
 	"errors"
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/justinas/nosurf"
 	"html/template"
 	"net/http"
 	"path/filepath"
 	"simple-forum/internal/auth"
 	"simple-forum/internal/model"
-
-	"github.com/justinas/nosurf"
 )
 
+var (
+	ErrInvalidUser     = errors.New("invalid user type")
+	ErrInvalidRole     = errors.New("invalid role type")
+	ErrInvalidUserName = errors.New("invalid user name type")
+)
+
+type Authenticator interface {
+	GetClaimsFromRequest(r *http.Request) (jwt.MapClaims, error)
+}
+
 type Templates struct {
-	cache         map[string]*template.Template
-	env           string
-	path          string
-	authenticator *auth.JWTAuthenticator
+	basePath string
+	inProd   bool
+	auther   Authenticator
+	cache    map[string]*template.Template
 }
 
-func NewTemplates(env, path string, a *auth.JWTAuthenticator) *Templates {
-	templateAbsPath, _ := filepath.Abs(path)
-	templateSlashPath := filepath.ToSlash(templateAbsPath)
-	cache := parseTemplates(templateSlashPath)
-	return &Templates{
-		cache:         cache,
-		env:           env,
-		path:          templateSlashPath,
-		authenticator: a,
+func NewTemplates(basePath string, inProd bool, auther *auth.JWTAuthenticator) (*Templates, error) {
+	templateAbsPath, err := filepath.Abs(basePath)
+	if err != nil {
+		return nil, err
 	}
+
+	templateSlashPath := filepath.ToSlash(templateAbsPath)
+
+	cache, err := parseTemplates(templateSlashPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Templates{
+		cache:    cache,
+		basePath: basePath,
+		inProd:   inProd,
+		auther:   auther,
+	}, nil
 }
 
-func parseTemplates(basePath string) map[string]*template.Template {
+func parseTemplates(basePath string) (map[string]*template.Template, error) {
 	templates := map[string]*template.Template{}
 
 	// parsing templates
-	layouts, _ := filepath.Glob(filepath.Join(basePath, "*.layout.gohtml"))
+	layouts, err := filepath.Glob(filepath.Join(basePath, "*.layout.gohtml"))
+	if err != nil {
+		return templates, err
+	}
 
-	pages, _ := filepath.Glob(filepath.Join(basePath, "*.page.gohtml"))
+	pages, err := filepath.Glob(filepath.Join(basePath, "*.page.gohtml"))
+	if err != nil {
+		return templates, err
+	}
 
 	for _, page := range pages {
 		name := filepath.Base(page)
@@ -46,52 +72,63 @@ func parseTemplates(basePath string) map[string]*template.Template {
 		filenames = append(filenames, page)
 		filenames = append(filenames, layouts...)
 
-		tmpl, _ := template.New(name).ParseFiles(filenames...)
+		tmpl, err := template.New(name).ParseFiles(filenames...)
+		if err != nil {
+			return templates, err
+		}
 
 		templates[name] = tmpl
 	}
 
-	return templates
+	return templates, nil
 }
 
-func (m *Templates) addDefaultData(td *model.Page, r *http.Request) *model.Page {
-	td.CSRFToken = nosurf.Token(r)
-	td.IsAuthenticated = false
-	td.IsAdmin = false
-
-	claims, err := m.authenticator.GetClaimsFromRequest(r)
+func (m *Templates) addDefaultData(td *model.Page, r *http.Request) (*model.Page, error) {
+	claims, err := m.auther.GetClaimsFromRequest(r)
 	if err != nil {
-		return td
+		if errors.Is(err, http.ErrNoCookie) {
+			return td, nil
+		}
+		return td, err
 	}
 
 	td.IsAuthenticated = true
-	td.IsAdmin = false
 
-	user := claims["user"].(map[string]interface{})
+	user, ok := claims["user"].(map[string]interface{})
+	if !ok {
+		return td, ErrInvalidUser
+	}
 
-	role := user["role"].(string)
+	role, ok := user["role"].(string)
+	if !ok {
+		return td, ErrInvalidRole
+	}
+
+	userName, ok := user["name"].(string)
+	if !ok {
+		return td, ErrInvalidUserName
+	}
+
+	td.StringMap = map[string]string{
+		"name": userName,
+	}
 
 	if role == "admin" {
 		td.IsAdmin = true
 	}
 
-	userName := user["name"].(string)
+	td.CSRFToken = nosurf.Token(r)
 
-	stringMap := make(map[string]string)
-	stringMap["name"] = userName
-
-	td.StringMap = stringMap
-
-	return td
+	return td, nil
 }
 
 func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string, td *model.Page) error {
 	if rw == nil {
-		return errors.New("ResponseWriter is nil")
+		return errors.New("responseWriter is nil")
 	}
 
 	if r == nil {
-		return errors.New("Request is nil")
+		return errors.New("request is nil")
 	}
 
 	if td == nil {
@@ -99,18 +136,24 @@ func (m *Templates) Render(rw http.ResponseWriter, r *http.Request, tmpl string,
 	}
 
 	// cache if in development mode
-	if m.env == "development" {
-		templates := parseTemplates(m.path)
+	if m.inProd {
+		templates, err := parseTemplates(m.basePath)
+		if err != nil {
+			return err
+		}
 		m.cache = templates
 	}
 
 	// get requested template
 	rt, ok := m.cache[tmpl+".gohtml"]
 	if !ok {
-		return errors.New(tmpl + ".gohtml not found")
+		return fmt.Errorf("%s.gohtml not found", tmpl)
 	}
 
-	td = m.addDefaultData(td, r)
+	td, err := m.addDefaultData(td, r)
+	if err != nil {
+		return err
+	}
 
 	// rendering template
 	return rt.Execute(rw, td)
